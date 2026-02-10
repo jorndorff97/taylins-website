@@ -159,28 +159,35 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
           )}
 
-          {/* Order action - instant buy or request mode */}
+          {/* Order action - instant buy and/or request mode */}
           {!soldOut && (
-            <div className="mt-8">
-              {listing.instantBuy ? (
-                <InstantBuyButton 
-                  listingId={listing.id} 
-                  moq={listing.moq}
-                  totalAvailablePairs={getTotalPairs(listing)}
-                />
-              ) : (
-                <>
-                  <Link
-                    href={`/order/request?listingId=${listing.id}`}
-                    className="inline-flex items-center gap-2 rounded-lg bg-hero-accent px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
-                  >
-                    Request quote
-                  </Link>
-                  <p className="mt-2 text-xs text-slate-500">
-                    You'll be redirected to submit your order request. The seller will follow up.
-                  </p>
-                </>
+            <div className="mt-8 space-y-4">
+              {listing.instantBuy && (
+                <div>
+                  <InstantBuyButton 
+                    listingId={listing.id} 
+                    moq={listing.moq}
+                    totalAvailablePairs={getTotalPairs(listing)}
+                  />
+                </div>
               )}
+              <div>
+                <Link
+                  href={`/order/request?listingId=${listing.id}`}
+                  className={`inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-medium transition ${
+                    listing.instantBuy 
+                      ? "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50" 
+                      : "bg-hero-accent text-white hover:opacity-90"
+                  }`}
+                >
+                  Request quote
+                </Link>
+                <p className="mt-2 text-xs text-slate-500">
+                  {listing.instantBuy 
+                    ? "Have questions? Want to negotiate? Submit a quote request to discuss with the seller."
+                    : "You'll be redirected to submit your order request. The seller will follow up."}
+                </p>
+              </div>
             </div>
           )}
         </div>
