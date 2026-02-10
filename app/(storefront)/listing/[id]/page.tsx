@@ -6,6 +6,7 @@ import { isSoldOut } from "@/lib/inventory";
 import { getStartingPricePerPair } from "@/lib/pricing";
 import { InventoryMode, PricingMode } from "@prisma/client";
 import { ListingActions } from "@/components/storefront/ListingActions";
+import { StockXPriceComparison } from "@/components/storefront/StockXPriceComparison";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -106,6 +107,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
               Minimum order: {listing.moq} pairs
             </p>
           </div>
+
+          {/* StockX Price Comparison */}
+          {listing.productSKU && startingPrice && (
+            <div className="border-b border-slate-200 pb-6">
+              <StockXPriceComparison
+                listingId={listing.id}
+                yourPrice={Number(startingPrice)}
+              />
+            </div>
+          )}
 
           {/* Additional Info */}
           {(listing.stockXLink || listing.discordLink || listing.instagramLink) && (

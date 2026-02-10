@@ -29,6 +29,9 @@ model Listing {
   instantBuy     Boolean           @default(false)
   sellerNotes   String?
   stockXLink     String?
+  productSKU     String?
+  stockXPrice    Decimal?
+  stockXPriceUpdatedAt DateTime?
   discordLink   String?
   instagramLink String?
   createdAt      DateTime          @default(now())

@@ -19,6 +19,7 @@ export default function NewListingPage() {
     const instantBuy = formData.get("instantBuy") === "true";
     const sellerNotes = String(formData.get("sellerNotes") ?? "").trim() || null;
     const stockXLink = String(formData.get("stockXLink") ?? "").trim() || null;
+    const productSKU = String(formData.get("productSKU") ?? "").trim() || null;
     const discordLink = String(formData.get("discordLink") ?? "").trim() || null;
     const instagramLink = String(formData.get("instagramLink") ?? "").trim() || null;
     const intent = String(formData.get("intent") ?? "draft");
@@ -49,6 +50,7 @@ export default function NewListingPage() {
           instantBuy,
           sellerNotes,
           stockXLink,
+          productSKU,
           discordLink,
           instagramLink,
         },

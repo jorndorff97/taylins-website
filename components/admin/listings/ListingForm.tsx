@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ImageUploader } from "./ImageUploader";
+import { extractStockXSlug } from "@/lib/stockx";
 
 type ListingFormListing = Listing & {
   sizes?: ListingSize[];
@@ -50,6 +51,9 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
   const [imageUrls, setImageUrls] = useState<string[]>(
     initialListing?.images?.sort((a, b) => a.sortOrder - b.sortOrder).map(img => img.url) ?? []
   );
+  const [extractedSKU, setExtractedSKU] = useState<string>(
+    initialListing?.productSKU ?? ""
+  );
 
   const handleImageUpload = (url: string) => {
     setImageUrls(prev => [...prev, url]);
@@ -57,6 +61,16 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
 
   const handleRemoveImage = (index: number) => {
     setImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleStockXUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    if (url) {
+      const slug = extractStockXSlug(url);
+      if (slug) {
+        setExtractedSKU(slug);
+      }
+    }
   };
 
   // Note: for MVP, we submit as a standard <form> with FormData
@@ -299,7 +313,25 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
                   name="stockXLink"
                   defaultValue={initialListing?.stockXLink ?? ""}
                   placeholder="https://stockx.com/..."
+                  onChange={handleStockXUrlChange}
                 />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-slate-600">
+                  Product SKU / Search Query
+                  {extractedSKU && (
+                    <span className="ml-2 text-xs text-emerald-600">✓ Auto-extracted</span>
+                  )}
+                </label>
+                <Input
+                  name="productSKU"
+                  value={extractedSKU}
+                  onChange={(e) => setExtractedSKU(e.target.value)}
+                  placeholder="air-jordan-1-high-heritage or CW2288-111"
+                />
+                <p className="text-[10px] text-slate-500">
+                  Used to fetch StockX pricing. Auto-extracted from URL or enter manually.
+                </p>
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-medium text-slate-600">Discord</label>
