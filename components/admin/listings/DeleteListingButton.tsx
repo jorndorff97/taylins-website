@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { deleteListing } from "../../actions";
+import { deleteListing } from "@/app/admin/(dashboard)/listings/actions";
 
 interface DeleteListingButtonProps {
   listingId: number;
