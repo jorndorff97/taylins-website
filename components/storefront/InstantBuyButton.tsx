@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { QuantitySelector } from "./QuantitySelector";
 import type { Listing, ListingSize, ListingTierPrice } from "@prisma/client";
 import { InventoryMode } from "@prisma/client";
 
@@ -11,31 +10,28 @@ interface InstantBuyButtonProps {
     sizes: ListingSize[];
     tierPrices: ListingTierPrice[];
   };
+  quantities: Record<number, number> | null;
+  totalPairs: number;
+  totalAmount: number | null;
+  moqMet: boolean;
 }
 
-export function InstantBuyButton({ listing }: InstantBuyButtonProps) {
-  const [showModal, setShowModal] = useState(false);
+export function InstantBuyButton({
+  listing,
+  quantities,
+  totalPairs,
+  totalAmount,
+  moqMet,
+}: InstantBuyButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [quantities, setQuantities] = useState<Record<number, number> | null>(null);
-  const [totalPairs, setTotalPairs] = useState(0);
-  const [totalAmount, setTotalAmount] = useState<number | null>(null);
-
-  const moqMet = totalPairs >= listing.moq;
-
-  const handleQuantityChange = (
-    newQuantities: Record<number, number> | null,
-    newTotalPairs: number,
-    newTotalAmount: number | null
-  ) => {
-    setQuantities(newQuantities);
-    setTotalPairs(newTotalPairs);
-    setTotalAmount(newTotalAmount);
-  };
 
   const handlePurchase = async () => {
-    if (!moqMet || totalPairs === 0) return;
-    
+    if (!moqMet || totalPairs === 0) {
+      setError("Please select quantities that meet the minimum order requirement.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -69,7 +65,7 @@ export function InstantBuyButton({ listing }: InstantBuyButtonProps) {
       }
 
       const { checkoutUrl } = await response.json();
-      
+
       // Redirect to Stripe Checkout
       window.location.href = checkoutUrl;
     } catch (err) {
@@ -79,62 +75,26 @@ export function InstantBuyButton({ listing }: InstantBuyButtonProps) {
   };
 
   return (
-    <>
-      <div className="space-y-2">
-        <Button
-          onClick={() => setShowModal(true)}
-          className="w-full bg-hero-accent px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
-        >
-          Buy Now
-        </Button>
-        <p className="text-xs text-slate-500">
-          Select quantity and proceed to secure checkout.
-        </p>
-      </div>
-
-      {/* Quantity Selection Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Select Quantity</h2>
-              <button
-                onClick={() => setShowModal(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <QuantitySelector listing={listing} onQuantityChange={handleQuantityChange} />
-
-            {error && (
-              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
-
-            <div className="mt-6 flex gap-3">
-              <Button
-                onClick={() => setShowModal(false)}
-                variant="secondary"
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handlePurchase}
-                disabled={!moqMet || totalPairs === 0 || loading}
-                className="flex-1 bg-hero-accent text-white hover:opacity-90 disabled:opacity-50"
-              >
-                {loading ? "Processing..." : "Confirm Purchase"}
-              </Button>
-            </div>
-          </div>
+    <div className="space-y-2">
+      <Button
+        onClick={handlePurchase}
+        disabled={!moqMet || totalPairs === 0 || loading}
+        className="w-full bg-hero-accent px-6 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+      >
+        {loading ? "Processing..." : "Buy Now"}
+      </Button>
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+          <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
-    </>
+      <p className="text-xs text-slate-500">
+        {!moqMet && totalPairs > 0
+          ? `Select ${listing.moq - totalPairs} more pairs to proceed`
+          : totalPairs === 0
+            ? "Select quantity above to proceed"
+            : "Click to proceed to secure checkout"}
+      </p>
+    </div>
   );
 }

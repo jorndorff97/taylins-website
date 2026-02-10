@@ -2,10 +2,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
-import { isSoldOut, getTotalPairs } from "@/lib/inventory";
+import { isSoldOut } from "@/lib/inventory";
 import { getStartingPricePerPair } from "@/lib/pricing";
 import { InventoryMode, PricingMode } from "@prisma/client";
-import { InstantBuyButton } from "@/components/storefront/InstantBuyButton";
+import { ListingActions } from "@/components/storefront/ListingActions";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -96,7 +96,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             )}
           </div>
 
-          {/* Size run */}
+          {/* Size run - now just display, quantity selection moved below */}
           {listing.inventoryMode === InventoryMode.SIZE_RUN && listing.sizes.length > 0 && (
             <div className="mt-6">
               <h2 className="text-sm font-medium text-slate-800">Size run</h2>
@@ -159,33 +159,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
           )}
 
-          {/* Order action - instant buy and/or request mode */}
-          {!soldOut && (
-            <div className="mt-8 space-y-4">
-              {listing.instantBuy && (
-                <div>
-                  <InstantBuyButton listing={listing} />
-                </div>
-              )}
-              <div>
-                <Link
-                  href={`/order/request?listingId=${listing.id}`}
-                  className={`inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-medium transition ${
-                    listing.instantBuy 
-                      ? "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50" 
-                      : "bg-hero-accent text-white hover:opacity-90"
-                  }`}
-                >
-                  Request quote
-                </Link>
-                <p className="mt-2 text-xs text-slate-500">
-                  {listing.instantBuy 
-                    ? "Have questions? Want to negotiate? Submit a quote request to discuss with the seller."
-                    : "You'll be redirected to submit your order request. The seller will follow up."}
-                </p>
-              </div>
-            </div>
-          )}
+          {/* Quantity selection and action buttons */}
+          {!soldOut && <ListingActions listing={listing} />}
         </div>
       </div>
     </div>
