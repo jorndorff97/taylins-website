@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { ListingRowActions } from "@/components/admin/listings/ListingRowActions";
+import { ListingMobileCard } from "@/components/admin/listings/ListingMobileCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +22,18 @@ export default async function ListingsPage() {
     orderBy: { updatedAt: "desc" },
   });
 
+  // Serialize listings for client components (convert Decimal to number)
+  const serializedListings = listings.map((listing) => ({
+    ...listing,
+    flatPricePerPair: listing.flatPricePerPair
+      ? Number(listing.flatPricePerPair)
+      : null,
+    tierPrices: listing.tierPrices.map((tier) => ({
+      ...tier,
+      pricePerPair: Number(tier.pricePerPair),
+    })),
+  }));
+
   return (
     <>
       <AdminHeader
@@ -31,7 +44,7 @@ export default async function ListingsPage() {
           </Link>
         }
       />
-      <main className="flex-1 bg-background px-6 pb-10 pt-6">
+      <main className="flex-1 bg-background px-4 pb-10 pt-6 md:px-6">
         <div className="mx-auto max-w-6xl space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -45,13 +58,37 @@ export default async function ListingsPage() {
             <div className="flex gap-2">
               <Input
                 placeholder="Search by title..."
-                className="w-56"
+                className="w-full sm:w-56"
                 // Note: search behavior can be wired later
               />
             </div>
           </div>
 
-          <Card className="p-0">
+          {/* Mobile Card Grid */}
+          <div className="block space-y-4 md:hidden">
+            {serializedListings.length === 0 ? (
+              <Card className="p-6">
+                <div className="text-center">
+                  <p className="text-sm font-medium text-slate-700">
+                    No listings yet
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Create your first batch to start taking orders.
+                  </p>
+                  <Link href="/admin/listings/new" className="mt-4 inline-block">
+                    <Button variant="secondary">Create listing</Button>
+                  </Link>
+                </div>
+              </Card>
+            ) : (
+              serializedListings.map((listing) => (
+                <ListingMobileCard key={listing.id} listing={listing} />
+              ))
+            )}
+          </div>
+
+          {/* Desktop Table */}
+          <Card className="hidden p-0 md:block">
             <Table>
               <THead>
                 <TR>

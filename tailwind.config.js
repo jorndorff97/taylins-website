@@ -7,25 +7,43 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: "#f3f4f6", // page bg
+        background: "#fafafa",
         card: "#ffffff",
         accent: {
-          DEFAULT: "#22c55e", // primary accent
+          DEFAULT: "#22c55e",
           muted: "#bbf7d0",
         },
         hero: {
           bg: "#f8fafc",
-          accent: "#7c3aed", // purple for storefront hero (Legend-inspired)
+          accent: "#7c3aed",
         },
+        brand: "#0f172a",
       },
       fontFamily: {
-        sans: ["system-ui", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+      },
+      fontWeight: {
+        thin: "100",
+        extralight: "200",
+        light: "300",
+      },
+      letterSpacing: {
+        tighter: "-0.05em",
+        tight: "-0.025em",
+      },
+      spacing: {
+        18: "4.5rem",
+        88: "22rem",
+        112: "28rem",
+        128: "32rem",
       },
       borderRadius: {
         xl: "1rem",
+        "2xl": "1.25rem",
       },
       boxShadow: {
-        soft: "0 10px 25px rgba(15, 23, 42, 0.07)",
+        soft: "0 4px 16px rgba(15, 23, 42, 0.04)",
+        xs: "0 1px 2px rgba(15, 23, 42, 0.05)",
       },
     },
   },

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { OrderMobileCard } from "@/components/admin/orders/OrderMobileCard";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
@@ -24,10 +25,16 @@ export default async function AdminOrdersPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  // Serialize orders for client components (convert Decimal to number)
+  const serializedOrders = orders.map((order) => ({
+    ...order,
+    totalAmount: Number(order.totalAmount),
+  }));
+
   return (
     <>
       <AdminHeader title="Orders" />
-      <main className="flex-1 bg-background px-6 pb-10 pt-6">
+      <main className="flex-1 bg-background px-4 pb-10 pt-6 md:px-6">
         <div className="mx-auto max-w-6xl space-y-4">
           <div>
             <h2 className="text-sm font-medium text-slate-700">Order requests</h2>
@@ -36,7 +43,27 @@ export default async function AdminOrdersPage() {
             </p>
           </div>
 
-          <Card className="p-0">
+          {/* Mobile Card Grid */}
+          <div className="block space-y-4 md:hidden">
+            {serializedOrders.length === 0 ? (
+              <Card className="p-6">
+                <div className="text-center text-sm text-slate-500">
+                  No orders yet.
+                </div>
+              </Card>
+            ) : (
+              serializedOrders.map((order) => (
+                <OrderMobileCard
+                  key={order.id}
+                  order={order}
+                  statusVariant={STATUS_VARIANT}
+                />
+              ))
+            )}
+          </div>
+
+          {/* Desktop Table */}
+          <Card className="hidden p-0 md:block">
             <Table>
               <THead>
                 <TR>
@@ -50,7 +77,7 @@ export default async function AdminOrdersPage() {
                 </TR>
               </THead>
               <TBody>
-                {orders.length === 0 ? (
+                {serializedOrders.length === 0 ? (
                   <TR>
                     <TD colSpan={7}>
                       <div className="py-8 text-center text-sm text-slate-500">
@@ -59,7 +86,7 @@ export default async function AdminOrdersPage() {
                     </TD>
                   </TR>
                 ) : (
-                  orders.map((order) => (
+                  serializedOrders.map((order) => (
                     <TR key={order.id}>
                       <TD>
                         <span className="font-medium text-slate-900">#{order.id}</span>

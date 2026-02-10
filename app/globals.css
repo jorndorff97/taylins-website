@@ -2,15 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   height: 100%;
 }
 
 body {
-  @apply bg-background text-slate-900 font-sans antialiased;
+  @apply bg-white text-slate-900 font-sans antialiased;
 }
 
 main {
   min-height: 100vh;
+}
+
+* {
+  @apply transition-colors duration-200;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 1s ease-out forwards;
 }

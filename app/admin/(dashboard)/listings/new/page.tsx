@@ -12,7 +12,6 @@ export default function NewListingPage() {
     const title = String(formData.get("title") ?? "");
     const category = String(formData.get("category") ?? "");
     const moq = Number(formData.get("moq") ?? 0);
-    const primaryImage = String(formData.get("primaryImage") ?? "");
     const inventoryMode = (formData.get("inventoryMode") ??
       InventoryMode.SIZE_RUN) as InventoryMode;
     const pricingMode = (formData.get("pricingMode") ??
@@ -23,6 +22,13 @@ export default function NewListingPage() {
     const discordLink = String(formData.get("discordLink") ?? "").trim() || null;
     const instagramLink = String(formData.get("instagramLink") ?? "").trim() || null;
     const intent = String(formData.get("intent") ?? "draft");
+
+    // Collect image URLs
+    const imageUrls: string[] = [];
+    for (let i = 0; i < 20; i++) {
+      const url = formData.get(`images[${i}]`);
+      if (url) imageUrls.push(String(url));
+    }
 
     if (!title || !category || !moq) {
       throw new Error("Missing required fields");
@@ -48,13 +54,14 @@ export default function NewListingPage() {
         },
       });
 
-      if (primaryImage) {
-        await tx.listingImage.create({
-          data: {
+      // Images
+      if (imageUrls.length > 0) {
+        await tx.listingImage.createMany({
+          data: imageUrls.map((url, idx) => ({
             listingId: created.id,
-            url: primaryImage,
-            sortOrder: 0,
-          },
+            url,
+            sortOrder: idx,
+          })),
         });
       }
 

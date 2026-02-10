@@ -2,15 +2,17 @@
 "use client";
 
 import { useState } from "react";
-import type { Listing, ListingSize, ListingTierPrice } from "@prisma/client";
+import type { Listing, ListingSize, ListingTierPrice, ListingImage } from "@prisma/client";
 import { InventoryMode, PricingMode } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ImageUploader } from "./ImageUploader";
 
 type ListingFormListing = Listing & {
   sizes?: ListingSize[];
   tierPrices?: ListingTierPrice[];
+  images?: ListingImage[];
 };
 
 interface ListingFormProps {
@@ -45,6 +47,17 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
   const [instantBuy, setInstantBuy] = useState<boolean>(
     initialListing?.instantBuy ?? false,
   );
+  const [imageUrls, setImageUrls] = useState<string[]>(
+    initialListing?.images?.sort((a, b) => a.sortOrder - b.sortOrder).map(img => img.url) ?? []
+  );
+
+  const handleImageUpload = (url: string) => {
+    setImageUrls(prev => [...prev, url]);
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
 
   // Note: for MVP, we submit as a standard <form> with FormData
 
@@ -88,18 +101,24 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-slate-700">
-              Primary image URL
+              Product Images
             </label>
-            <Input
-              name="primaryImage"
-              defaultValue={
-                (initialListing as { images?: { url: string }[] } | undefined)
-                  ?.images?.[0]?.url ?? ""
-              }
-              placeholder="https://..."
+            <ImageUploader
+              onUpload={handleImageUpload}
+              currentImages={imageUrls.map((url, idx) => ({ url, sortOrder: idx }))}
+              onRemove={handleRemoveImage}
             />
+            {/* Hidden inputs to pass image URLs to form submission */}
+            {imageUrls.map((url, idx) => (
+              <input
+                key={idx}
+                type="hidden"
+                name={`images[${idx}]`}
+                value={url}
+              />
+            ))}
             <p className="text-[11px] text-slate-500">
-              File uploads can be wired later; for now, paste an image URL.
+              Upload product images or paste URLs. First image will be the primary.
             </p>
           </div>
         </div>

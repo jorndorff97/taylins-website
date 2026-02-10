@@ -32,7 +32,6 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     const title = String(formData.get("title") ?? "");
     const category = String(formData.get("category") ?? "");
     const moq = Number(formData.get("moq") ?? 0);
-    const primaryImage = String(formData.get("primaryImage") ?? "");
     const intent = String(formData.get("intent") ?? "draft");
     const inventoryMode = (formData.get("inventoryMode") ??
       InventoryMode.SIZE_RUN) as InventoryMode;
@@ -43,6 +42,13 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     const stockXLink = String(formData.get("stockXLink") ?? "").trim() || null;
     const discordLink = String(formData.get("discordLink") ?? "").trim() || null;
     const instagramLink = String(formData.get("instagramLink") ?? "").trim() || null;
+
+    // Collect image URLs
+    const imageUrls: string[] = [];
+    for (let i = 0; i < 20; i++) {
+      const url = formData.get(`images[${i}]`);
+      if (url) imageUrls.push(String(url));
+    }
 
     if (!title || !category || !moq) {
       throw new Error("Missing required fields");
@@ -69,22 +75,16 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
         },
       });
 
-      if (primaryImage && listing) {
-        const existingPrimary = listing.images[0];
-        if (existingPrimary) {
-          await tx.listingImage.update({
-            where: { id: existingPrimary.id },
-            data: { url: primaryImage },
-          });
-        } else {
-          await tx.listingImage.create({
-            data: {
-              listingId: id,
-              url: primaryImage,
-              sortOrder: 0,
-            },
-          });
-        }
+      // Images - delete all and recreate
+      await tx.listingImage.deleteMany({ where: { listingId: id } });
+      if (imageUrls.length > 0) {
+        await tx.listingImage.createMany({
+          data: imageUrls.map((url, idx) => ({
+            listingId: id,
+            url,
+            sortOrder: idx,
+          })),
+        });
       }
 
       // Inventory
