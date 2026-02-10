@@ -164,11 +164,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <div className="mt-8 space-y-4">
               {listing.instantBuy && (
                 <div>
-                  <InstantBuyButton 
-                    listingId={listing.id} 
-                    moq={listing.moq}
-                    totalAvailablePairs={getTotalPairs(listing)}
-                  />
+                  <InstantBuyButton listing={listing} />
                 </div>
               )}
               <div>
