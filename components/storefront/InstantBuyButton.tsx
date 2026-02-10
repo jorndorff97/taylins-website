@@ -12,7 +12,6 @@ interface InstantBuyButtonProps {
 export function InstantBuyButton({ listingId, moq, totalAvailablePairs }: InstantBuyButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleInstantBuy = async () => {
     setLoading(true);
