@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import Stripe from "stripe";
 
 export async function POST(req: NextRequest) {
   try {
@@ -63,8 +64,8 @@ export async function POST(req: NextRequest) {
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
-      success_url: `${baseUrl}/buyer/orders/${orderId}?payment=success`,
-      cancel_url: `${baseUrl}/buyer/orders/${orderId}?payment=cancelled`,
+      success_url: `${baseUrl}/order/${orderId}?payment=success`,
+      cancel_url: `${baseUrl}/order/${orderId}?payment=cancelled`,
       customer_email: order.buyer.email,
       metadata: {
         orderId: order.id.toString(),
