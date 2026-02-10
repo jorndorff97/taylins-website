@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { STOREFRONT_CATEGORIES } from "@/lib/categories";
+import { STOREFRONT_CATEGORIES, getActiveCategories } from "@/lib/categories";
 import { ListingCard } from "@/components/storefront/ListingCard";
 import { ListingStatus } from "@prisma/client";
 
 export default async function HomePage() {
+  // Get active categories for badge display
+  const activeCategoryLabels = await getActiveCategories();
+  
   // Get trending listings (most purchased)
   const trendingListings = await prisma.listing.findMany({
     where: { 
@@ -92,15 +95,23 @@ export default async function HomePage() {
             Browse by Categories
           </h2>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:mt-10 sm:gap-8">
-            {STOREFRONT_CATEGORIES.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/browse?category=${cat.slug}`}
-                className="text-sm font-medium text-slate-600 transition hover:text-slate-900 hover:underline sm:text-base"
-              >
-                {cat.label}
-              </Link>
-            ))}
+            {STOREFRONT_CATEGORIES.map((cat) => {
+              const hasListings = activeCategoryLabels.includes(cat.label);
+              return (
+                <Link
+                  key={cat.slug}
+                  href={`/browse?category=${cat.slug}`}
+                  className={`text-sm font-medium transition hover:text-slate-900 hover:underline sm:text-base ${
+                    hasListings ? "text-slate-600" : "text-slate-400"
+                  }`}
+                >
+                  {cat.label}
+                  {!hasListings && (
+                    <span className="ml-1 text-xs text-amber-600">(Soon)</span>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

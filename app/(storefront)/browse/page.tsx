@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { STOREFRONT_CATEGORIES } from "@/lib/categories";
+import { STOREFRONT_CATEGORIES, getCategoryStatus, getActiveCategories } from "@/lib/categories";
 import { ListingCard } from "@/components/storefront/ListingCard";
+import { ComingSoon } from "@/components/storefront/ComingSoon";
 import { ListingStatus } from "@prisma/client";
 
 interface BrowsePageProps {
@@ -20,6 +21,17 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   const sort = params.sort ?? "newest";
 
   const categoryLabel = categorySlug ? slugToCategoryFilter(categorySlug) : null;
+  
+  // Get active categories for badge display
+  const activeCategoryLabels = await getActiveCategories();
+  
+  // Check if selected category has listings
+  const categoryHasListings = categoryLabel ? await getCategoryStatus(categoryLabel) : true;
+  
+  // Show coming soon page if category has no listings and no search query
+  if (categoryLabel && !categoryHasListings && !search) {
+    return <ComingSoon categoryLabel={categoryLabel} categorySlug={categorySlug} />;
+  }
 
   const listings = await prisma.listing.findMany({
     where: {
@@ -102,15 +114,27 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
         >
           All
         </Link>
-        {STOREFRONT_CATEGORIES.map((cat) => (
-          <Link
-            key={cat.slug}
-            href={`/browse?category=${cat.slug}`}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${categorySlug === cat.slug ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
-          >
-            {cat.label}
-          </Link>
-        ))}
+        {STOREFRONT_CATEGORIES.map((cat) => {
+          const hasListings = activeCategoryLabels.includes(cat.label);
+          return (
+            <Link
+              key={cat.slug}
+              href={`/browse?category=${cat.slug}`}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                categorySlug === cat.slug 
+                  ? "bg-slate-900 text-white" 
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              } ${!hasListings ? "opacity-60" : ""}`}
+            >
+              <span className="flex items-center gap-2">
+                {cat.label}
+                {!hasListings && (
+                  <span className="text-xs text-amber-600">(Soon)</span>
+                )}
+              </span>
+            </Link>
+          );
+        })}
       </div>
 
       {listings.length === 0 ? (
