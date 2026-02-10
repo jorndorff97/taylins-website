@@ -3,12 +3,14 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getBuyerId } from "@/lib/buyer-auth";
 import { OrderThread } from "./OrderThread";
+import { PaymentButton } from "@/components/storefront/PaymentButton";
 
 interface OrderPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ payment?: string }>;
 }
 
-export default async function OrderPage({ params }: OrderPageProps) {
+export default async function OrderPage({ params, searchParams }: OrderPageProps) {
   const buyerId = await getBuyerId();
   if (!buyerId) {
     return (
@@ -24,6 +26,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
   }
 
   const { id } = await params;
+  const { payment } = await searchParams;
   const order = await prisma.order.findUnique({
     where: { id: Number(id) },
     include: {
@@ -52,6 +55,46 @@ export default async function OrderPage({ params }: OrderPageProps) {
         {order.totalPairs} pairs · ${Number(order.totalAmount).toLocaleString()} ·{" "}
         <span className="rounded-full bg-slate-100 px-2 py-0.5">{order.status}</span>
       </p>
+
+      {/* Payment status messages */}
+      {payment === "success" && (
+        <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+          <p className="text-sm text-emerald-800">
+            ✓ Payment successful! Your order is being processed.
+          </p>
+        </div>
+      )}
+      {payment === "cancelled" && (
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm text-amber-800">
+            Payment was cancelled. You can try again below.
+          </p>
+        </div>
+      )}
+
+      {/* Payment button (only show if not paid yet) */}
+      {!order.paidAt && (
+        <div className="mt-6">
+          <div className="rounded-lg border border-slate-200 bg-white p-6">
+            <h2 className="text-lg font-semibold text-slate-900">Payment</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Complete your payment to process this order.
+            </p>
+            <div className="mt-4">
+              <PaymentButton orderId={order.id} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Show paid status */}
+      {order.paidAt && (
+        <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+          <p className="text-sm text-emerald-800">
+            ✓ Paid on {new Date(order.paidAt).toLocaleDateString()}
+          </p>
+        </div>
+      )}
 
       <OrderThread orderId={order.id} messages={order.messages} />
     </div>

@@ -5,7 +5,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { replyToOrder, sendInvoice, updateOrderStatus } from "../actions";
+import { replyToOrder, sendInvoice, updateOrderStatus, sendPaymentLink } from "../actions";
 import { SenderType } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -68,6 +68,21 @@ export default async function AdminOrderDetailPage({
                 <p className="font-medium text-slate-900">
                   {order.totalPairs} pairs · ${Number(order.totalAmount).toLocaleString()}
                 </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase text-slate-500">Payment Status</p>
+                {order.paidAt ? (
+                  <p className="mt-1 text-sm text-emerald-600">
+                    Paid on {new Date(order.paidAt).toLocaleDateString()}
+                  </p>
+                ) : (
+                  <form action={sendPaymentLink} className="mt-1">
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <Button type="submit" variant="secondary" className="!py-1 text-xs">
+                      Send payment link
+                    </Button>
+                  </form>
+                )}
               </div>
               <div>
                 <p className="text-xs font-medium uppercase text-slate-500">Status</p>

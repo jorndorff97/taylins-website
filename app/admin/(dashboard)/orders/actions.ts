@@ -38,6 +38,48 @@ export async function sendInvoice(formData: FormData) {
   revalidatePath("/admin/orders");
 }
 
+export async function sendPaymentLink(formData: FormData) {
+  const orderId = Number(formData.get("orderId"));
+  if (!orderId) return { error: "Invalid order ID" };
+
+  try {
+    // Create a checkout session via the API
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : "http://localhost:3000";
+
+    const response = await fetch(`${baseUrl}/api/checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to create checkout session");
+    }
+
+    const { url } = await response.json();
+
+    // Create a message with the payment link
+    await prisma.orderMessage.create({
+      data: {
+        orderId,
+        senderType: SenderType.SELLER,
+        body: `Payment link sent: ${url}`,
+      },
+    });
+
+    revalidatePath(`/admin/orders/${orderId}`);
+    revalidatePath("/admin/orders");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending payment link:", error);
+    return { error: "Failed to send payment link" };
+  }
+}
+
 export async function updateOrderStatus(formData: FormData) {
   const orderId = Number(formData.get("orderId"));
   const status = String(formData.get("status"));

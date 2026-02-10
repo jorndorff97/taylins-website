@@ -54,16 +54,19 @@ model Buyer {
 }
 
 model Order {
-  id              Int          @id @default(autoincrement())
-  buyerId         Int
-  listingId       Int
-  status          OrderStatus  @default(PENDING)
-  totalPairs      Int
-  totalAmount     Decimal
-  shippingAddress Json?
-  notes           String?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id                      Int          @id @default(autoincrement())
+  buyerId                 Int
+  listingId               Int
+  status                  OrderStatus  @default(PENDING)
+  totalPairs              Int
+  totalAmount             Decimal
+  shippingAddress         Json?
+  notes                   String?
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?
+  paidAt                  DateTime?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
 
   buyer           Buyer        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   listing         Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
