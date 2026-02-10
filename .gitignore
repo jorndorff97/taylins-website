@@ -24,6 +24,3 @@ npm-debug.log*
 
 # Prisma
 prisma/migrations/**/migration_lock.toml
-
-# Uploads
-public/uploads/

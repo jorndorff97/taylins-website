@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { InventoryMode, ListingStatus, PricingMode } from "@prisma/client";
 
 interface EditListingPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditListingPage({ params }: EditListingPageProps) {
-  const id = Number(params.id);
+  const { id: idParam } = await params;
+  const id = Number(idParam);
   if (!id) notFound();
 
   const listing = await prisma.listing.findUnique({
