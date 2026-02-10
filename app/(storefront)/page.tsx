@@ -5,16 +5,49 @@ import { ListingCard } from "@/components/storefront/ListingCard";
 import { ListingStatus } from "@prisma/client";
 
 export default async function HomePage() {
-  const listings = await prisma.listing.findMany({
-    where: { status: ListingStatus.ACTIVE },
+  // Get trending listings (most purchased)
+  const trendingListings = await prisma.listing.findMany({
+    where: { 
+      status: ListingStatus.ACTIVE,
+      orders: {
+        some: {
+          status: { in: ["CONFIRMED", "PAID", "SHIPPED"] }
+        }
+      }
+    },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
       sizes: true,
       tierPrices: true,
+      _count: {
+        select: { orders: true }
+      }
     },
-    orderBy: { updatedAt: "desc" },
+    orderBy: {
+      orders: { _count: "desc" }
+    },
     take: 10,
   });
+
+  // Fallback to recent listings if not enough trending ones
+  let listings = trendingListings;
+  if (trendingListings.length < 10) {
+    const recentListings = await prisma.listing.findMany({
+      where: { 
+        status: ListingStatus.ACTIVE,
+        id: { notIn: trendingListings.map(l => l.id) }
+      },
+      include: {
+        images: { orderBy: { sortOrder: "asc" } },
+        sizes: true,
+        tierPrices: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 10 - trendingListings.length,
+    });
+    
+    listings = [...trendingListings, ...recentListings];
+  }
 
   const heroProduct = listings.find((l) => l.images.length > 0);
 
@@ -75,12 +108,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Top Listings Grid */}
+      {/* Trending Listings Grid */}
       <section className="border-t border-slate-100 bg-slate-50/30 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex items-end justify-between">
             <h2 className="text-2xl font-light tracking-tight text-slate-900 sm:text-3xl">
-              Top Listings
+              Trending
             </h2>
             <Link
               href="/browse"
