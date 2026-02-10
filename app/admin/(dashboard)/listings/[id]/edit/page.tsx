@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { archiveListingAndRedirect } from "../../actions";
 import { AdminHeader } from "@/components/admin/AdminHeader";
@@ -144,6 +145,7 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
       }
     });
 
+    revalidatePath("/admin/listings");
     redirect("/admin/listings");
   }
 
