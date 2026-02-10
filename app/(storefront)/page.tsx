@@ -19,9 +19,6 @@ export default async function HomePage() {
       images: { orderBy: { sortOrder: "asc" } },
       sizes: true,
       tierPrices: true,
-      _count: {
-        select: { orders: true }
-      }
     },
     orderBy: {
       orders: { _count: "desc" }
