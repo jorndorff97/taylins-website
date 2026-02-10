@@ -1,9 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { archiveListingAndRedirect, deleteListing } from "../../actions";
+import { archiveListingAndRedirect } from "../../actions";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { ListingForm } from "@/components/admin/listings/ListingForm";
+import { DeleteListingButton } from "@/components/admin/listings/DeleteListingButton";
 import { Button } from "@/components/ui/button";
 import { InventoryMode, ListingStatus, PricingMode } from "@prisma/client";
 
@@ -177,21 +178,7 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
                 </Button>
               </form>
             )}
-            <form action={deleteListing} className="ml-auto">
-              <input type="hidden" name="listingId" value={id} />
-              <Button 
-                type="submit" 
-                variant="ghost" 
-                className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                onClick={(e) => {
-                  if (!confirm("Are you sure you want to permanently delete this listing? This action cannot be undone.")) {
-                    e.preventDefault();
-                  }
-                }}
-              >
-                Delete listing
-              </Button>
-            </form>
+            <DeleteListingButton listingId={id} />
           </div>
         </div>
       </main>
