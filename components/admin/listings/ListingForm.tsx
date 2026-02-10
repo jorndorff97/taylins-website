@@ -54,6 +54,12 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
   const [extractedSKU, setExtractedSKU] = useState<string>(
     initialListing?.productSKU ?? ""
   );
+  const [suggestedTitle, setSuggestedTitle] = useState<string>("");
+  const [suggestedCategory, setSuggestedCategory] = useState<string>("");
+  const [useManualPrice, setUseManualPrice] = useState<boolean>(false);
+  const [manualPrice, setManualPrice] = useState<string>(
+    initialListing?.stockXPrice ? String(initialListing.stockXPrice) : ""
+  );
 
   const handleImageUpload = (url: string) => {
     setImageUrls(prev => [...prev, url]);
@@ -69,17 +75,98 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
       const slug = extractStockXSlug(url);
       if (slug) {
         setExtractedSKU(slug);
+        
+        // Auto-generate title from slug
+        const title = slug
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        setSuggestedTitle(title);
+        
+        // Auto-suggest category based on keywords
+        const lowerUrl = url.toLowerCase();
+        if (lowerUrl.includes('jordan') || lowerUrl.includes('nike') || lowerUrl.includes('adidas') || lowerUrl.includes('yeezy')) {
+          if (lowerUrl.includes('slide') || lowerUrl.includes('mule')) {
+            setSuggestedCategory('Slides & Mules');
+          } else if (lowerUrl.includes('boot')) {
+            setSuggestedCategory('Boots');
+          } else {
+            setSuggestedCategory('Sneakers');
+          }
+        } else {
+          setSuggestedCategory('Sneakers'); // Default
+        }
       }
     }
   };
-
-  // Note: for MVP, we submit as a standard <form> with FormData
 
   return (
     <form
       action={onSubmit}
       className="space-y-6"
     >
+      {/* StockX Integration - At the top! */}
+      <Card>
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-sm font-medium text-slate-800">StockX Integration (Optional)</h2>
+            <p className="text-xs text-slate-500">
+              Paste a StockX product URL to auto-suggest title/category and enable price comparison.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-700">StockX Product URL</label>
+              <Input
+                name="stockXLink"
+                defaultValue={initialListing?.stockXLink ?? ""}
+                placeholder="https://stockx.com/nike-zoom-vomero-5"
+                onChange={handleStockXUrlChange}
+              />
+              {suggestedTitle && (
+                <p className="text-xs text-emerald-600">
+                  ✓ Suggested title: &quot;{suggestedTitle}&quot; • Category: &quot;{suggestedCategory}&quot;
+                </p>
+              )}
+            </div>
+            
+            {/* Manual Price Override Option */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="useManualPrice"
+                checked={useManualPrice}
+                onChange={(e) => setUseManualPrice(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300"
+              />
+              <label htmlFor="useManualPrice" className="text-xs text-slate-600">
+                Manually set StockX price (overrides API lookup)
+              </label>
+            </div>
+            
+            {useManualPrice && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-700">Manual StockX Price ($)</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  name="manualStockXPrice"
+                  value={manualPrice}
+                  onChange={(e) => setManualPrice(e.target.value)}
+                  placeholder="299.99"
+                />
+                <p className="text-[10px] text-slate-500">
+                  This will be used instead of fetching from RapidAPI
+                </p>
+              </div>
+            )}
+          </div>
+          
+          {/* Hidden field for the extracted SKU */}
+          <input type="hidden" name="productSKU" value={extractedSKU} />
+        </div>
+      </Card>
+
       {/* Basics */}
       <Card>
         <div className="space-y-4">
@@ -97,6 +184,8 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               <Input
                 name="title"
                 defaultValue={initialListing?.title ?? ""}
+                value={suggestedTitle || undefined}
+                onChange={(e) => setSuggestedTitle(e.target.value)}
                 required
                 placeholder="Foam runners – mixed size run"
               />
@@ -108,6 +197,8 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               <Input
                 name="category"
                 defaultValue={initialListing?.category ?? ""}
+                value={suggestedCategory || undefined}
+                onChange={(e) => setSuggestedCategory(e.target.value)}
                 required
                 placeholder="Slides & Mules"
               />
@@ -297,7 +388,7 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
           <input type="hidden" name="instantBuy" value={instantBuy ? "true" : "false"} />
 
           <div className="border-t border-slate-200 pt-4">
-            <h3 className="text-xs font-medium text-slate-700 mb-3">Contextual links (optional)</h3>
+            <h3 className="text-xs font-medium text-slate-700 mb-3">Additional links (optional)</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <label className="text-[11px] font-medium text-slate-600">Seller notes</label>
@@ -306,32 +397,6 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
                   defaultValue={initialListing?.sellerNotes ?? ""}
                   placeholder="Condition, shipment, resale advice..."
                 />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-slate-600">StockX link</label>
-                <Input
-                  name="stockXLink"
-                  defaultValue={initialListing?.stockXLink ?? ""}
-                  placeholder="https://stockx.com/..."
-                  onChange={handleStockXUrlChange}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-slate-600">
-                  Product SKU / Search Query
-                  {extractedSKU && (
-                    <span className="ml-2 text-xs text-emerald-600">✓ Auto-extracted</span>
-                  )}
-                </label>
-                <Input
-                  name="productSKU"
-                  value={extractedSKU}
-                  onChange={(e) => setExtractedSKU(e.target.value)}
-                  placeholder="air-jordan-1-high-heritage or CW2288-111"
-                />
-                <p className="text-[10px] text-slate-500">
-                  Used to fetch StockX pricing. Auto-extracted from URL or enter manually.
-                </p>
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-medium text-slate-600">Discord</label>

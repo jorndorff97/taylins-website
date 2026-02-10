@@ -43,6 +43,9 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     const sellerNotes = String(formData.get("sellerNotes") ?? "").trim() || null;
     const stockXLink = String(formData.get("stockXLink") ?? "").trim() || null;
     const productSKU = String(formData.get("productSKU") ?? "").trim() || null;
+    const manualStockXPrice = formData.get("manualStockXPrice") 
+      ? Number(formData.get("manualStockXPrice")) 
+      : null;
     const discordLink = String(formData.get("discordLink") ?? "").trim() || null;
     const instagramLink = String(formData.get("instagramLink") ?? "").trim() || null;
 
@@ -74,6 +77,10 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
           sellerNotes,
           stockXLink,
           productSKU,
+          ...(manualStockXPrice && {
+            stockXPrice: manualStockXPrice,
+            stockXPriceUpdatedAt: new Date(),
+          }),
           discordLink,
           instagramLink,
         },
