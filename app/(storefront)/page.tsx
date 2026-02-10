@@ -95,23 +95,17 @@ export default async function HomePage() {
             Browse by Categories
           </h2>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:mt-10 sm:gap-8">
-            {STOREFRONT_CATEGORIES.map((cat) => {
-              const hasListings = activeCategoryLabels.includes(cat.label);
-              return (
-                <Link
-                  key={cat.slug}
-                  href={`/browse?category=${cat.slug}`}
-                  className={`text-sm font-medium transition hover:text-slate-900 hover:underline sm:text-base ${
-                    hasListings ? "text-slate-600" : "text-slate-400"
-                  }`}
-                >
-                  {cat.label}
-                  {!hasListings && (
-                    <span className="ml-1 text-xs text-amber-600">(Soon)</span>
-                  )}
-                </Link>
-              );
-            })}
+            {STOREFRONT_CATEGORIES.filter((cat) => 
+              activeCategoryLabels.includes(cat.label)
+            ).map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/browse?category=${cat.slug}`}
+                className="text-sm font-medium text-slate-600 transition hover:text-slate-900 hover:underline sm:text-base"
+              >
+                {cat.label}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
