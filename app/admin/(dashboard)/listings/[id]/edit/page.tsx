@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { archiveListingAndRedirect } from "../../actions";
+import { archiveListingAndRedirect, deleteListing } from "../../actions";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { ListingForm } from "@/components/admin/listings/ListingForm";
 import { Button } from "@/components/ui/button";
@@ -168,14 +168,31 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
             mode="edit"
             onSubmit={handleSubmit}
           />
-          {!isArchived && (
-            <form action={archiveListingAndRedirect} className="pt-4 border-t border-slate-200">
+          <div className="flex items-center justify-between gap-4 border-t border-slate-200 pt-4">
+            {!isArchived && (
+              <form action={archiveListingAndRedirect}>
+                <input type="hidden" name="listingId" value={id} />
+                <Button type="submit" variant="ghost" className="text-slate-500 hover:text-slate-700">
+                  Archive listing
+                </Button>
+              </form>
+            )}
+            <form action={deleteListing} className="ml-auto">
               <input type="hidden" name="listingId" value={id} />
-              <Button type="submit" variant="ghost" className="text-slate-500 hover:text-red-600">
-                Archive listing
+              <Button 
+                type="submit" 
+                variant="ghost" 
+                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                onClick={(e) => {
+                  if (!confirm("Are you sure you want to permanently delete this listing? This action cannot be undone.")) {
+                    e.preventDefault();
+                  }
+                }}
+              >
+                Delete listing
               </Button>
             </form>
-          )}
+          </div>
         </div>
       </main>
     </>

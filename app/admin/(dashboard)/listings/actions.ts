@@ -111,3 +111,15 @@ export async function archiveListingAndRedirect(formData: FormData) {
   await archiveListing(formData);
   redirect("/admin/listings");
 }
+
+export async function deleteListing(formData: FormData) {
+  const listingId = Number(formData.get("listingId"));
+  
+  // Delete listing and all related data (cascade delete configured in schema)
+  await prisma.listing.delete({
+    where: { id: listingId },
+  });
+  
+  revalidatePath("/admin/listings");
+  redirect("/admin/listings");
+}
