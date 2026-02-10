@@ -58,3 +58,34 @@ export function getStartingPricePerPair(options: {
   return null;
 }
 
+/** Calculate total order details including price per pair and total amount */
+export function calculateOrderTotal(options: {
+  listing: Listing;
+  tiers: ListingTierPrice[];
+  totalPairs: number;
+}): { pricePerPair: number; totalPairs: number; totalAmount: number } {
+  const { listing, tiers, totalPairs } = options;
+
+  let pricePerPair: number;
+
+  if (listing.pricingMode === PricingMode.FLAT && listing.flatPricePerPair != null) {
+    pricePerPair = Number(listing.flatPricePerPair);
+  } else if (listing.pricingMode === PricingMode.TIER) {
+    const tier = getApplicableTier(tiers, totalPairs);
+    if (!tier) {
+      throw new Error("No applicable pricing tier found");
+    }
+    pricePerPair = Number(tier.pricePerPair);
+  } else {
+    throw new Error("Invalid pricing configuration");
+  }
+
+  const totalAmount = pricePerPair * totalPairs;
+
+  return {
+    pricePerPair,
+    totalPairs,
+    totalAmount,
+  };
+}
+
