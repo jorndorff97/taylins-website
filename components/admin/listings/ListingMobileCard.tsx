@@ -20,7 +20,8 @@ interface ListingMobileCardProps {
 }
 
 export function ListingMobileCard({ listing }: ListingMobileCardProps) {
-  const totalPairs = getTotalPairs(listing);
+  // Cast to compatible type for getTotalPairs (it only uses inventoryMode, totalPairs, and sizes)
+  const totalPairs = getTotalPairs(listing as any);
   const primaryImage = listing.images[0]?.url;
 
   return (
