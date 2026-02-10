@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model AdminUser {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Listing {
+  id             Int               @id @default(autoincrement())
+  title          String
+  category       String
+  status         ListingStatus     @default(DRAFT)
+  moq            Int
+  inventoryMode  InventoryMode     @default(SIZE_RUN)
+  pricingMode    PricingMode       @default(FLAT)
+  flatPricePerPair Decimal?
+  totalPairs     Int?
+  instantBuy     Boolean           @default(false)
+  sellerNotes   String?
+  stockXLink     String?
+  discordLink   String?
+  instagramLink String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  images         ListingImage[]
+  sizes          ListingSize[]
+  tierPrices     ListingTierPrice[]
+  orders         Order[]
+}
+
+model Buyer {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  passwordHash   String
+  name           String?
+  phone          String?
+  emailVerifiedAt DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  orders         Order[]
+}
+
+model Order {
+  id              Int          @id @default(autoincrement())
+  buyerId         Int
+  listingId       Int
+  status          OrderStatus  @default(PENDING)
+  totalPairs      Int
+  totalAmount     Decimal
+  shippingAddress Json?
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  buyer           Buyer        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  listing         Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  items           OrderItem[]
+  messages        OrderMessage[]
+}
+
+model OrderItem {
+  id          Int     @id @default(autoincrement())
+  orderId     Int
+  sizeLabel   String?
+  quantity    Int
+  pricePerPair Decimal
+
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model OrderMessage {
+  id            Int       @id @default(autoincrement())
+  orderId       Int
+  senderType    SenderType
+  body          String
+  invoiceSentAt DateTime?
+  createdAt     DateTime  @default(now())
+
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PAID
+  SHIPPED
+  CANCELLED
+}
+
+enum SenderType {
+  BUYER
+  SELLER
+}
+
+model ListingImage {
+  id        Int     @id @default(autoincrement())
+  url       String
+  sortOrder Int     @default(0)
+
+  listingId Int
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+model ListingSize {
+  id        Int     @id @default(autoincrement())
+  sizeLabel String
+  quantity  Int     @default(0)
+  soldOut   Boolean @default(false)
+
+  listingId Int
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+model ListingTierPrice {
+  id           Int     @id @default(autoincrement())
+  minQty       Int
+  pricePerPair Decimal
+
+  listingId Int
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  SOLD_OUT
+  ARCHIVED
+}
+
+enum InventoryMode {
+  SIZE_RUN
+  MIXED_BATCH
+}
+
+enum PricingMode {
+  FLAT
+  TIER
+}

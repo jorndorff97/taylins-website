@@ -1,0 +1,71 @@
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { isSoldOut } from "@/lib/inventory";
+import { getStartingPricePerPair } from "@/lib/pricing";
+import type { Listing, ListingImage, ListingSize, ListingTierPrice } from "@prisma/client";
+import { PricingMode } from "@prisma/client";
+
+interface ListingCardProps {
+  listing: Listing & {
+    images: ListingImage[];
+    sizes?: ListingSize[];
+    tierPrices?: ListingTierPrice[];
+  };
+  rank?: number;
+}
+
+export function ListingCard({ listing, rank }: ListingCardProps) {
+  const primaryImage = listing.images[0]?.url;
+  const soldOut = isSoldOut(listing);
+  const startingPrice = getStartingPricePerPair({
+    listing,
+    tiers: listing.tierPrices ?? [],
+  });
+
+  return (
+    <Link
+      href={`/listing/${listing.id}`}
+      className="group block rounded-xl bg-white p-4 shadow-soft transition-shadow hover:shadow-md"
+    >
+      <div className="relative aspect-square overflow-hidden rounded-lg bg-slate-100">
+        {rank != null && (
+          <span className="absolute left-2 top-2 text-6xl font-bold text-white/40">
+            {rank}
+          </span>
+        )}
+        {soldOut && (
+          <span className="absolute left-2 top-2 rounded-full bg-slate-600 px-2 py-0.5 text-xs font-medium text-white">
+            Sold Out
+          </span>
+        )}
+        {primaryImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={primaryImage}
+            alt={listing.title}
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-slate-300">
+            No image
+          </div>
+        )}
+      </div>
+      <div className="mt-3 space-y-1">
+        <p className="font-semibold text-slate-900">{listing.title}</p>
+        <p className="text-xs text-slate-500">By {listing.category}</p>
+        <div className="flex items-center gap-2 pt-1">
+          <Badge variant="muted" className="text-[10px]">
+            MOQ {listing.moq}
+          </Badge>
+          {startingPrice != null && (
+            <span className="text-sm font-medium text-slate-900">
+              ${startingPrice.toLocaleString()}
+              {listing.pricingMode === PricingMode.TIER && "+"}
+            </span>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}

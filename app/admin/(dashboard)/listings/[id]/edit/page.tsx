@@ -1,0 +1,180 @@
+import { notFound, redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { archiveListingAndRedirect } from "../../actions";
+import { AdminHeader } from "@/components/admin/AdminHeader";
+import { ListingForm } from "@/components/admin/listings/ListingForm";
+import { Button } from "@/components/ui/button";
+import { InventoryMode, ListingStatus, PricingMode } from "@prisma/client";
+
+interface EditListingPageProps {
+  params: { id: string };
+}
+
+export default async function EditListingPage({ params }: EditListingPageProps) {
+  const id = Number(params.id);
+  if (!id) notFound();
+
+  const listing = await prisma.listing.findUnique({
+    where: { id },
+    include: {
+      images: { orderBy: { sortOrder: "asc" } },
+      sizes: true,
+      tierPrices: { orderBy: { minQty: "asc" } },
+    },
+  });
+
+  if (!listing) notFound();
+
+  async function handleSubmit(formData: FormData) {
+    "use server";
+
+    const title = String(formData.get("title") ?? "");
+    const category = String(formData.get("category") ?? "");
+    const moq = Number(formData.get("moq") ?? 0);
+    const primaryImage = String(formData.get("primaryImage") ?? "");
+    const intent = String(formData.get("intent") ?? "draft");
+    const inventoryMode = (formData.get("inventoryMode") ??
+      InventoryMode.SIZE_RUN) as InventoryMode;
+    const pricingMode = (formData.get("pricingMode") ??
+      PricingMode.FLAT) as PricingMode;
+    const instantBuy = formData.get("instantBuy") === "true";
+    const sellerNotes = String(formData.get("sellerNotes") ?? "").trim() || null;
+    const stockXLink = String(formData.get("stockXLink") ?? "").trim() || null;
+    const discordLink = String(formData.get("discordLink") ?? "").trim() || null;
+    const instagramLink = String(formData.get("instagramLink") ?? "").trim() || null;
+
+    if (!title || !category || !moq) {
+      throw new Error("Missing required fields");
+    }
+
+    const status =
+      intent === "publish" ? ListingStatus.ACTIVE : ListingStatus.DRAFT;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.listing.update({
+        where: { id },
+        data: {
+          title,
+          category,
+          moq,
+          status,
+          inventoryMode,
+          pricingMode,
+          instantBuy,
+          sellerNotes,
+          stockXLink,
+          discordLink,
+          instagramLink,
+        },
+      });
+
+      if (primaryImage && listing) {
+        const existingPrimary = listing.images[0];
+        if (existingPrimary) {
+          await tx.listingImage.update({
+            where: { id: existingPrimary.id },
+            data: { url: primaryImage },
+          });
+        } else {
+          await tx.listingImage.create({
+            data: {
+              listingId: id,
+              url: primaryImage,
+              sortOrder: 0,
+            },
+          });
+        }
+      }
+
+      // Inventory
+      await tx.listingSize.deleteMany({ where: { listingId: id } });
+      if (inventoryMode === InventoryMode.SIZE_RUN) {
+        const sizes: { sizeLabel: string; quantity: number; soldOut: boolean }[] =
+          [];
+        for (let i = 0; i < 12; i++) {
+          const sizeLabel = formData.get(`sizes[${i}].sizeLabel`);
+          const quantityRaw = formData.get(`sizes[${i}].quantity`);
+          const soldOutRaw = formData.get(`sizes[${i}].soldOut`);
+          if (!sizeLabel) continue;
+          const label = String(sizeLabel);
+          const quantity = Number(quantityRaw ?? 0);
+          const soldOut = soldOutRaw === "on";
+          sizes.push({ sizeLabel: label, quantity, soldOut });
+        }
+        if (sizes.length) {
+          await tx.listingSize.createMany({
+            data: sizes.map((s) => ({ listingId: id, ...s })),
+          });
+        }
+      } else {
+        const totalPairsRaw = formData.get("totalPairs");
+        const totalPairs = totalPairsRaw ? Number(totalPairsRaw) : null;
+        await tx.listing.update({
+          where: { id },
+          data: { totalPairs },
+        });
+      }
+
+      // Pricing
+      await tx.listingTierPrice.deleteMany({ where: { listingId: id } });
+      if (pricingMode === PricingMode.FLAT) {
+        const flatPriceRaw = formData.get("flatPricePerPair");
+        await tx.listing.update({
+          where: { id },
+          data: {
+            flatPricePerPair: flatPriceRaw ? Number(flatPriceRaw) : null,
+          },
+        });
+      } else {
+        const tiers: { minQty: number; pricePerPair: number }[] = [];
+        for (let i = 0; i < 8; i++) {
+          const minQtyRaw = formData.get(`tiers[${i}].minQty`);
+          const priceRaw = formData.get(`tiers[${i}].pricePerPair`);
+          if (!minQtyRaw || !priceRaw) continue;
+          const minQty = Number(minQtyRaw);
+          const pricePerPair = Number(priceRaw);
+          if (!minQty || !pricePerPair) continue;
+          tiers.push({ minQty, pricePerPair });
+        }
+        if (tiers.length) {
+          await tx.listingTierPrice.createMany({
+            data: tiers.map((tier) => ({ listingId: id, ...tier })),
+          });
+        }
+      }
+    });
+
+    redirect("/admin/listings");
+  }
+
+  const listingForForm = {
+    ...listing,
+    sizes: listing.sizes,
+    tierPrices: listing.tierPrices,
+  };
+
+  const isArchived = listing.status === "ARCHIVED";
+
+  return (
+    <>
+      <AdminHeader title="Edit listing" />
+      <main className="flex-1 bg-background px-6 pb-10 pt-6">
+        <div className="mx-auto max-w-5xl space-y-6">
+          <ListingForm
+            initialListing={listingForForm}
+            mode="edit"
+            onSubmit={handleSubmit}
+          />
+          {!isArchived && (
+            <form action={archiveListingAndRedirect} className="pt-4 border-t border-slate-200">
+              <input type="hidden" name="listingId" value={id} />
+              <Button type="submit" variant="ghost" className="text-slate-500 hover:text-red-600">
+                Archive listing
+              </Button>
+            </form>
+          )}
+        </div>
+      </main>
+    </>
+  );
+}
