@@ -40,7 +40,7 @@ export async function sendInvoice(formData: FormData) {
 
 export async function sendPaymentLink(formData: FormData) {
   const orderId = Number(formData.get("orderId"));
-  if (!orderId) return { error: "Invalid order ID" };
+  if (!orderId) return;
 
   try {
     // Create a checkout session via the API
@@ -72,11 +72,9 @@ export async function sendPaymentLink(formData: FormData) {
 
     revalidatePath(`/admin/orders/${orderId}`);
     revalidatePath("/admin/orders");
-
-    return { success: true };
   } catch (error) {
     console.error("Error sending payment link:", error);
-    return { error: "Failed to send payment link" };
+    // Error is logged but we don't return it since this is a form action
   }
 }
 
