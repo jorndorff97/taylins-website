@@ -2,9 +2,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
-import { isSoldOut } from "@/lib/inventory";
+import { isSoldOut, getTotalPairs } from "@/lib/inventory";
 import { getStartingPricePerPair } from "@/lib/pricing";
 import { InventoryMode, PricingMode } from "@prisma/client";
+import { InstantBuyButton } from "@/components/storefront/InstantBuyButton";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -158,18 +159,28 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
           )}
 
-          {/* Order action - request mode for now */}
+          {/* Order action - instant buy or request mode */}
           {!soldOut && (
             <div className="mt-8">
-              <Link
-                href={`/order/request?listingId=${listing.id}`}
-                className="inline-flex items-center gap-2 rounded-lg bg-hero-accent px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
-              >
-                {listing.instantBuy ? "Request to buy" : "Request quote"}
-              </Link>
-              <p className="mt-2 text-xs text-slate-500">
-                You'll be redirected to submit your order request. The seller will follow up.
-              </p>
+              {listing.instantBuy ? (
+                <InstantBuyButton 
+                  listingId={listing.id} 
+                  moq={listing.moq}
+                  totalAvailablePairs={getTotalPairs(listing)}
+                />
+              ) : (
+                <>
+                  <Link
+                    href={`/order/request?listingId=${listing.id}`}
+                    className="inline-flex items-center gap-2 rounded-lg bg-hero-accent px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
+                  >
+                    Request quote
+                  </Link>
+                  <p className="mt-2 text-xs text-slate-500">
+                    You'll be redirected to submit your order request. The seller will follow up.
+                  </p>
+                </>
+              )}
             </div>
           )}
         </div>

@@ -72,8 +72,8 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
         </div>
       )}
 
-      {/* Payment button (only show if not paid yet) */}
-      {!order.paidAt && (
+      {/* Payment button (only show if not paid yet AND checkout session exists) */}
+      {!order.paidAt && order.stripeCheckoutSessionId && (
         <div className="mt-6">
           <div className="rounded-lg border border-slate-200 bg-white p-6">
             <h2 className="text-lg font-semibold text-slate-900">Payment</h2>
@@ -84,6 +84,15 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
               <PaymentButton orderId={order.id} />
             </div>
           </div>
+        </div>
+      )}
+      
+      {/* Show waiting for admin confirmation */}
+      {!order.paidAt && !order.stripeCheckoutSessionId && order.status === "PENDING" && (
+        <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm text-slate-600">
+            Waiting for admin to confirm your order and send payment link...
+          </p>
         </div>
       )}
 
