@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     };
 
     const response = await fetch(
-      `https://${process.env.RAPIDAPI_HOST}/productprice?styleid=${encodeURIComponent(listing.productSKU)}`,
+      `https://${process.env.RAPIDAPI_HOST}/productprice?styleId=${encodeURIComponent(listing.productSKU)}`,
       options
     );
 
