@@ -8,11 +8,17 @@ import { ListingStatus, PricingMode } from "@prisma/client";
 import type { Listing, ListingImage, ListingSize, ListingTierPrice } from "@prisma/client";
 
 // Serialized version with Decimal converted to number
-interface SerializedListing extends Omit<Listing, "flatPricePerPair"> {
+interface SerializedListing extends Omit<Listing, "flatPricePerPair" | "costPerPair" | "basePricePerPair" | "stockXPrice"> {
   flatPricePerPair: number | null;
+  costPerPair: number | null;
+  basePricePerPair: number | null;
+  stockXPrice: number | null;
   images: ListingImage[];
   sizes: ListingSize[];
-  tierPrices: (Omit<ListingTierPrice, "pricePerPair"> & { pricePerPair: number })[];
+  tierPrices: (Omit<ListingTierPrice, "pricePerPair" | "discountPercent"> & { 
+    pricePerPair: number | null;
+    discountPercent: number | null;
+  })[];
 }
 
 interface ListingMobileCardProps {
