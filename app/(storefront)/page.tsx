@@ -2,7 +2,11 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { STOREFRONT_CATEGORIES, getActiveCategories } from "@/lib/categories";
 import { ListingCard } from "@/components/storefront/ListingCard";
+import { HeroSection } from "@/components/storefront/HeroSection";
+import { AuthenticitySection } from "@/components/storefront/AuthenticitySection";
+import { PricingComparisonSection } from "@/components/storefront/PricingComparisonSection";
 import { ListingStatus } from "@prisma/client";
+import { getTotalPairs } from "@/lib/inventory";
 
 export default async function HomePage() {
   // Get active categories for badge display
@@ -49,44 +53,53 @@ export default async function HomePage() {
     listings = [...trendingListings, ...recentListings];
   }
 
-  const heroProduct = listings.find((l) => l.images.length > 0);
+  // Prepare hero products (listings with images)
+  const heroProducts = listings
+    .filter((l) => l.images.length > 0)
+    .slice(0, 4)
+    .map((l) => ({
+      id: l.id,
+      title: l.title,
+      imageUrl: l.images[0].url,
+    }));
+
+  // Calculate stats for hero
+  const allActiveListings = await prisma.listing.findMany({
+    where: { status: ListingStatus.ACTIVE },
+    include: { sizes: true },
+  });
+
+  const totalPairs = allActiveListings.reduce((sum, listing) => {
+    return sum + getTotalPairs(listing);
+  }, 0);
+
+  const activeListingsCount = allActiveListings.length;
+
+  // Calculate average StockX savings
+  const listingsWithStockX = allActiveListings.filter(
+    (l) => l.stockXPrice && l.flatPricePerPair
+  );
+  
+  const avgSavings = listingsWithStockX.length > 0
+    ? Math.round(
+        listingsWithStockX.reduce((sum, l) => {
+          const stockX = Number(l.stockXPrice);
+          const our = Number(l.flatPricePerPair);
+          return sum + ((stockX - our) / stockX) * 100;
+        }, 0) / listingsWithStockX.length
+      )
+    : 15; // Default fallback
+
+  const stats = {
+    totalPairs,
+    activeListings: activeListingsCount,
+    avgSavings,
+  };
 
   return (
     <>
-      {/* Hero - Full screen with product background */}
-      <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white">
-        {heroProduct && (
-          <div className="absolute inset-0 animate-fade-in">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={heroProduct.images[0].url}
-              alt=""
-              className="h-full w-full object-cover opacity-[0.08] blur-sm"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/60 to-white" />
-          </div>
-        )}
-        {!heroProduct && (
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-50 to-white" />
-        )}
-        <div className="relative z-10 mx-auto max-w-5xl px-4 text-center animate-fade-in-up">
-          <h1 className="text-5xl font-light tracking-tighter text-slate-900 sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
-            Wholesale sneakers.
-            <br />
-            <span className="font-extralight text-hero-accent">Done right.</span>
-          </h1>
-          <p className="mt-6 text-lg text-slate-500 sm:mt-8 sm:text-xl md:text-2xl">
-            Curated wholesale marketplace for premium sneakers.
-          </p>
-          <Link
-            href="/browse"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-brand px-8 py-3 text-sm font-medium text-white transition hover:bg-slate-800 sm:mt-12 sm:px-10 sm:py-4 sm:text-base"
-          >
-            Explore listings
-            <span aria-hidden>→</span>
-          </Link>
-        </div>
-      </section>
+      {/* Hero Section with Rotating Text */}
+      <HeroSection heroProducts={heroProducts} stats={stats} />
 
       {/* Browse by Categories */}
       <section className="border-t border-slate-100 bg-white py-16 sm:py-20">
@@ -110,6 +123,12 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Authenticity Section */}
+      <AuthenticitySection />
+
+      {/* StockX Pricing Comparison */}
+      <PricingComparisonSection />
+
       {/* Trending Listings Grid */}
       <section className="border-t border-slate-100 bg-slate-50/30 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -129,7 +148,7 @@ export default async function HomePage() {
           ) : (
             <div className="mt-8 grid grid-cols-2 gap-6 sm:mt-12 sm:grid-cols-3 sm:gap-8 md:grid-cols-4 lg:grid-cols-5">
               {listings.map((listing, i) => (
-                <ListingCard key={listing.id} listing={listing} rank={i + 1} />
+                <ListingCard key={listing.id} listing={listing} rank={i + 1} index={i} />
               ))}
             </div>
           )}

@@ -14,8 +14,13 @@ module.exports = {
           muted: "#bbf7d0",
         },
         hero: {
-          bg: "#f8fafc",
-          accent: "#7c3aed",
+          bg: "#fafafa",
+          accent: "#8b5cf6",
+          secondary: "#6366f1",
+        },
+        glass: {
+          bg: "rgba(255, 255, 255, 0.7)",
+          border: "rgba(255, 255, 255, 0.2)",
         },
         brand: "#0f172a",
       },

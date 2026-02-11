@@ -67,3 +67,43 @@ main {
 .animate-fade-in-up {
   animation: fade-in-up 1s ease-out forwards;
 }
+
+/* Glassmorphic styles */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+}
+
+.glass-card-dark {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Parallax utilities */
+.parallax-slow {
+  transform: translateY(calc(var(--scroll) * 0.5px));
+}
+
+.parallax-fast {
+  transform: translateY(calc(var(--scroll) * -0.3px));
+}
+
+/* Performance hints for animations */
+.will-animate {
+  will-change: transform, opacity;
+}
+
+/* 3D hover effects */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px) scale(1.02);
+}
