@@ -61,31 +61,60 @@ export function StockXPriceComparison({ listingId, yourPrice }: StockXPriceCompa
   // Only show if there's actually a discount
   if (savings.amount <= 0) return null;
 
+  // Calculate progress bar width (how far your price is from StockX)
+  const progressPercent = (yourPrice / stockXPrice) * 100;
+
   return (
-    <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-emerald-900">
-            Market Price (StockX)
-          </p>
-          <p className="mt-1 text-lg font-medium text-slate-600 line-through">
-            {formatPrice(stockXPrice)}
-          </p>
+    <div className="rounded-xl border-2 border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-5 shadow-sm">
+      {/* Header with savings badge */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🔥</span>
+          <h3 className="text-sm font-semibold text-slate-900">
+            {savings.percentage}% Below Market Price
+          </h3>
         </div>
-        <div className="rounded-full bg-emerald-600 px-3 py-1 text-sm font-bold text-white">
+        <div className="rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-1 text-xs font-bold text-white shadow-md">
           Save {savings.percentage}%
         </div>
       </div>
 
-      <div className="mt-4 border-t border-emerald-200 pt-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-emerald-900">
-          Your Price
-        </p>
-        <p className="mt-1 text-2xl font-bold text-emerald-700">
-          {formatPrice(yourPrice)}
-        </p>
-        <p className="mt-1 text-sm text-emerald-800">
-          You save ${savings.amount.toLocaleString()}
+      {/* Progress bar */}
+      <div className="mb-4">
+        <div className="relative h-3 overflow-hidden rounded-full bg-slate-200">
+          <div
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 shadow-sm transition-all duration-700 ease-out"
+            style={{ width: `${progressPercent}%` }}
+          >
+            <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Price comparison */}
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-emerald-900">
+            Your Price
+          </p>
+          <p className="text-2xl font-bold text-emerald-700">
+            {formatPrice(yourPrice)}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            StockX Price
+          </p>
+          <p className="text-lg font-medium text-slate-600 line-through">
+            {formatPrice(stockXPrice)}
+          </p>
+        </div>
+      </div>
+
+      {/* Savings amount */}
+      <div className="mt-3 rounded-lg bg-white/60 px-3 py-2 text-center">
+        <p className="text-sm font-semibold text-emerald-800">
+          You save ${savings.amount.toLocaleString()} per pair
         </p>
       </div>
     </div>

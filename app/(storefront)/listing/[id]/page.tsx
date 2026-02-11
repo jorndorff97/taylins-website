@@ -84,7 +84,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
               {listing.title}
             </h1>
-            <p className="text-sm uppercase tracking-wide text-slate-500">By {listing.category}</p>
           </div>
 
           {/* Pricing */}
