@@ -5,6 +5,8 @@ import { HeroSection } from "@/components/storefront/HeroSection";
 import { AuthenticitySection } from "@/components/storefront/AuthenticitySection";
 import { PricingComparisonSection } from "@/components/storefront/PricingComparisonSection";
 import { Top10Carousel } from "@/components/storefront/Top10Carousel";
+import { CustomCursor } from "@/components/effects/CustomCursor";
+import { ScrollReveal } from "@/components/effects/ScrollReveal";
 import { ListingStatus } from "@prisma/client";
 import { getTotalPairs } from "@/lib/inventory";
 
@@ -132,55 +134,66 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Hero Section with Rotating Text */}
-      <HeroSection heroProducts={heroProducts} stats={stats} />
+      <CustomCursor />
+      <div className="noise-texture">
+        {/* Hero Section with Rotating Text */}
+        <HeroSection heroProducts={heroProducts} stats={stats} />
 
-      {/* Trending Listings Grid - Zellerfeld "Top 10" Style */}
-      <section className="border-t border-slate-100 bg-white py-20 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mb-12 sm:mb-16">
-            <h2 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-              Top 10
-            </h2>
-            <p className="mt-3 text-base text-slate-500 sm:text-lg">
-              Most popular wholesale sneakers right now
-            </p>
-          </div>
-          <Top10Carousel listings={listings} />
-        </div>
-      </section>
-
-      {/* Authenticity Section */}
-      <AuthenticitySection />
-
-      {/* StockX Pricing Comparison - Only show if there are listings with StockX prices */}
-      {pricingData.length > 0 && (
-        <PricingComparisonSection products={pricingData} />
-      )}
-
-      {/* Browse by Categories - Only show if there's more than 1 category */}
-      {activeCategoryLabels.length > 1 && (
-        <section className="border-t border-slate-100 bg-white py-16 sm:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <h2 className="text-center text-2xl font-light tracking-tight text-slate-900 sm:text-3xl">
-              Browse by Categories
-            </h2>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:mt-10 sm:gap-8">
-              {STOREFRONT_CATEGORIES.filter((cat) => 
-                activeCategoryLabels.includes(cat.label)
-              ).map((cat) => (
-                <Link
-                  key={cat.slug}
-                  href={`/browse?category=${cat.slug}`}
-                  className="text-sm font-medium text-slate-600 transition hover:text-slate-900 hover:underline sm:text-base"
-                >
-                  {cat.label}
-                </Link>
-              ))}
+        {/* Trending Listings Grid - Zellerfeld "Top 10" Style */}
+        <ScrollReveal>
+          <section className="border-t border-purple-900/20 bg-gradient-to-b from-slate-900 to-slate-800 py-20 sm:py-24">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6">
+              <div className="mb-12 sm:mb-16">
+                <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+                  Top 10
+                </h2>
+                <p className="mt-3 text-base text-slate-300 sm:text-lg">
+                  Most popular wholesale sneakers right now
+                </p>
+              </div>
+              <Top10Carousel listings={listings} />
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        </ScrollReveal>
+
+        {/* Authenticity Section */}
+        <ScrollReveal>
+          <AuthenticitySection />
+        </ScrollReveal>
+
+        {/* StockX Pricing Comparison - Only show if there are listings with StockX prices */}
+        {pricingData.length > 0 && (
+          <ScrollReveal>
+            <PricingComparisonSection products={pricingData} />
+          </ScrollReveal>
+        )}
+
+        {/* Browse by Categories - Only show if there's more than 1 category */}
+        {activeCategoryLabels.length > 1 && (
+          <ScrollReveal>
+            <section className="border-t border-purple-900/20 bg-slate-900 py-16 sm:py-20">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6">
+                <h2 className="text-center text-2xl font-light tracking-tight text-white sm:text-3xl">
+                  Browse by Categories
+                </h2>
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:mt-10 sm:gap-8">
+                  {STOREFRONT_CATEGORIES.filter((cat) => 
+                    activeCategoryLabels.includes(cat.label)
+                  ).map((cat) => (
+                    <Link
+                      key={cat.slug}
+                      href={`/browse?category=${cat.slug}`}
+                      className="text-sm font-medium text-slate-300 transition hover:text-neon-cyan hover:underline sm:text-base"
+                    >
+                      {cat.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </ScrollReveal>
+        )}
+      </div>
     </>
   );
 }

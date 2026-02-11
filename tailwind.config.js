@@ -23,6 +23,18 @@ module.exports = {
           border: "rgba(255, 255, 255, 0.2)",
         },
         brand: "#0f172a",
+        neon: {
+          purple: "#a855f7",
+          pink: "#ec4899",
+          blue: "#3b82f6",
+          cyan: "#06b6d4",
+          green: "#10b981",
+        },
+        glow: {
+          purple: "rgba(168, 85, 247, 0.5)",
+          pink: "rgba(236, 72, 153, 0.5)",
+          blue: "rgba(59, 130, 246, 0.5)",
+        },
       },
       fontFamily: {
         sans: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
