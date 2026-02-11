@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Fetch fresh price from RapidAPI using productprices endpoint
+    // Fetch fresh price from RapidAPI using productprice endpoint
     const options = {
       method: 'GET',
       headers: {
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     };
 
     const response = await fetch(
-      `https://${process.env.RAPIDAPI_HOST}/productprices?styleid=${encodeURIComponent(listing.productSKU)}`,
+      `https://${process.env.RAPIDAPI_HOST}/productprice?styleid=${encodeURIComponent(listing.productSKU)}`,
       options
     );
 
@@ -65,19 +65,24 @@ export async function GET(req: NextRequest) {
     const data = await response.json();
     console.log('RapidAPI response data:', JSON.stringify(data, null, 2));
     
-    // Parse the price from response - try multiple possible structures
+    // Parse the price from response based on actual API structure
     let price = null;
     
-    // Try direct properties
-    if (data.lowestAsk) price = data.lowestAsk;
+    // Priority 1: Check lowestResellPrice structure (from API response)
+    if (data.lowestResellPrice?.stockX) price = data.lowestResellPrice.stockX;
+    else if (data.lowestResellPrice?.goat) price = data.lowestResellPrice.goat;
+    else if (data.lowestResellPrice?.flightClub) price = data.lowestResellPrice.flightClub;
+    else if (data.lowestResellPrice?.stadiumGoods) price = data.lowestResellPrice.stadiumGoods;
+    // Priority 2: Try direct properties
+    else if (data.lowestAsk) price = data.lowestAsk;
     else if (data.price) price = data.price;
     else if (data.retailPrice) price = data.retailPrice;
-    // Try nested structures
+    // Priority 3: Try nested structures
     else if (data.Product?.lowestAsk) price = data.Product.lowestAsk;
     else if (data.Product?.price) price = data.Product.price;
     else if (data.sneaker?.lowestAsk) price = data.sneaker.lowestAsk;
     else if (data.sneaker?.price) price = data.sneaker.price;
-    // Try market data
+    // Priority 4: Try market data
     else if (data.market?.lowestAsk) price = data.market.lowestAsk;
     else if (data.market?.lastSale) price = data.market.lastSale;
     
