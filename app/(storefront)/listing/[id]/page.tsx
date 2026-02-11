@@ -42,8 +42,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
           Back
         </Link>
 
-        {/* Main content - Single column until 1024px, then 2-column */}
-        <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-12 lg:space-y-0">
+        {/* Main content - Single column until 768px, then 2-column */}
+        <div className="space-y-4 md:grid md:grid-cols-2 md:gap-12 md:space-y-0">
           {/* Left column: Images */}
           <div>
             <ImageGallery images={listing.images} title={listing.title} />

@@ -16,7 +16,7 @@ export function VolumePricing({ tierPrices, currentQty, stockXPrice }: VolumePri
       <h2 className="text-lg font-semibold text-slate-900 md:text-xl">Volume Pricing</h2>
 
       {/* Mobile: Cards */}
-      <div className="space-y-3 lg:hidden">
+      <div className="space-y-3 md:hidden">
         {tierPrices.map((tier) => {
           const isActive = currentQty >= tier.minQty &&
             (tierPrices.indexOf(tier) === tierPrices.length - 1 ||
@@ -67,7 +67,7 @@ export function VolumePricing({ tierPrices, currentQty, stockXPrice }: VolumePri
       </div>
 
       {/* Desktop: Table */}
-      <div className="hidden overflow-hidden rounded-lg border border-slate-200 lg:block">
+      <div className="hidden overflow-hidden rounded-lg border border-slate-200 md:block">
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>

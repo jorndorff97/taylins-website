@@ -50,11 +50,11 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
   }
 
   return (
-    <div className="space-y-3 lg:space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {/* Main gallery with scroll snap */}
       <div
         ref={scrollRef}
-        className="flex aspect-square w-full snap-x snap-mandatory overflow-x-auto rounded-2xl bg-slate-100 scrollbar-hide lg:rounded-3xl"
+        className="flex aspect-square w-full snap-x snap-mandatory overflow-x-auto rounded-2xl bg-slate-100 scrollbar-hide md:rounded-3xl"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {images.map((image, index) => (
@@ -74,7 +74,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
 
       {/* Dot indicators - Mobile only */}
       {images.length > 1 && (
-        <div className="flex justify-center gap-2 lg:hidden">
+        <div className="flex justify-center gap-2 md:hidden">
           {images.map((_, index) => (
             <button
               key={index}
@@ -92,7 +92,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
 
       {/* Thumbnail grid - Desktop only */}
       {images.length > 1 && (
-        <div className="hidden lg:grid lg:grid-cols-4 lg:gap-3">
+        <div className="hidden md:grid md:grid-cols-4 md:gap-3">
           {images.map((image, index) => (
             <button
               key={image.id}

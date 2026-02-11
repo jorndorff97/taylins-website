@@ -176,11 +176,14 @@ export function ListingActions({ listing }: ListingActionsProps) {
                 {totalPairs} {totalPairs === 1 ? "pair" : "pairs"}
               </p>
             </div>
-            {listing.stockXPrice && pricePerPair && (
+            {listing.stockXPrice && pricePerPair && Number(listing.stockXPrice) > pricePerPair && (
               <div className="text-right">
                 <p className="text-xs text-slate-500">vs StockX</p>
                 <p className="text-lg font-bold text-emerald-700">
                   Save ${Math.round((Number(listing.stockXPrice) - pricePerPair) * totalPairs).toLocaleString()}
+                </p>
+                <p className="text-xs text-slate-600">
+                  (${Math.round(Number(listing.stockXPrice) - pricePerPair)} per pair)
                 </p>
               </div>
             )}
