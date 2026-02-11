@@ -9,7 +9,7 @@ interface MagneticHoverProps {
   className?: string;
 }
 
-export function MagneticHover({ children, strength = 0.3, className }: MagneticHoverProps) {
+export function MagneticHover({ children, strength = 0.05, className }: MagneticHoverProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 

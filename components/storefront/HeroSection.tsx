@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { textRotate } from "@/lib/animations";
-import { AnimatedGradientBackground } from "./AnimatedGradientBackground";
+import { LandscapeBackground } from "./LandscapeBackground";
 import { FloatingElements } from "./FloatingElements";
 import { useParallax } from "@/hooks/useScrollProgress";
 
@@ -45,15 +45,12 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
   const currentText = ROTATING_TEXTS[currentTextIndex];
 
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Animated Gradient Background */}
-      <AnimatedGradientBackground parallaxY={parallaxY} />
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-neutral-100 via-neutral-50 to-white">
+      {/* Landscape Background */}
+      <LandscapeBackground />
       
       {/* Floating Particles */}
       <FloatingElements />
-      
-      {/* Gradient overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/10 to-transparent" />
 
       {/* Hero Content */}
       <div className="relative z-10 mx-auto max-w-5xl px-4 text-center">
@@ -62,10 +59,10 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
         >
-          <h1 className="text-4xl font-light tracking-tight leading-tight text-white sm:text-5xl sm:tracking-tighter md:text-6xl lg:text-7xl xl:text-8xl">
+          <h1 className="text-4xl font-light tracking-tight leading-tight text-neutral-900 sm:text-5xl sm:tracking-tighter md:text-6xl lg:text-7xl xl:text-8xl">
             Wholesale sneakers.
             <br />
-            {/* Rotating Text with Gradient */}
+            {/* Rotating Text */}
             <div className="relative inline-block h-[1.2em] overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.span
@@ -74,7 +71,7 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  className="absolute left-0 right-0 font-extralight gradient-text"
+                  className="absolute left-0 right-0 font-extralight text-neutral-600"
                   style={{ transformOrigin: "center center" }}
                 >
                   {currentText.text}
@@ -88,7 +85,7 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
-          className="mt-6 text-base text-slate-300 leading-relaxed sm:mt-8 sm:text-lg md:text-xl lg:text-2xl px-2 sm:px-0 max-w-2xl mx-auto"
+          className="mt-6 text-base text-neutral-600 leading-relaxed sm:mt-8 sm:text-lg md:text-xl lg:text-2xl px-2 sm:px-0 max-w-2xl mx-auto"
         >
           Premium wholesale marketplace built for retailers who demand quality and value.
         </motion.p>
@@ -100,14 +97,14 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
         >
           <Link
             href="/browse"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-neon-purple to-neon-pink px-8 py-3 text-sm font-medium text-white transition hover:scale-105 hover:shadow-lg hover:shadow-neon-purple/50 sm:mt-12 sm:px-10 sm:py-4 sm:text-base will-animate"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-8 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 hover:scale-105 sm:mt-12 sm:px-10 sm:py-4 sm:text-base will-animate"
           >
             Explore listings
             <span aria-hidden>→</span>
           </Link>
         </motion.div>
 
-        {/* Glassmorphic Stat Cards - Desktop Only with 3D Effect */}
+        {/* Glassmorphic Stat Cards - Desktop Only */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -182,19 +179,16 @@ function StatCard({
         rotateY,
         transformStyle: "preserve-3d",
       }}
-      className={`glass-glow rounded-2xl px-6 py-4 backdrop-blur-xl will-animate relative overflow-hidden ${
-        highlight ? "ring-2 ring-neon-purple/50" : ""
+      className={`glass-card rounded-2xl px-6 py-4 backdrop-blur-xl will-animate relative overflow-hidden ${
+        highlight ? "ring-2 ring-neutral-400/20" : ""
       }`}
     >
-      {/* Glow effect on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-neon-purple/10 to-neon-pink/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      
       <div className="relative z-10">
-        <div className="text-sm font-medium text-slate-300 uppercase tracking-wide">
+        <div className="text-sm font-medium text-neutral-500 uppercase tracking-wide">
           {label}
         </div>
         <div className={`mt-1 text-2xl font-bold ${
-          highlight ? "gradient-text" : "text-white"
+          highlight ? "text-neutral-900" : "text-neutral-900"
         }`}>
           {value}
         </div>

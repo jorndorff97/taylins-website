@@ -35,6 +35,23 @@ module.exports = {
           pink: "rgba(236, 72, 153, 0.5)",
           blue: "rgba(59, 130, 246, 0.5)",
         },
+        neutral: {
+          50: "#fafaf9",
+          100: "#f5f5f4",
+          200: "#e7e5e4",
+          300: "#d6d3d1",
+          400: "#a8a29e",
+          500: "#78716c",
+          600: "#57534e",
+          700: "#44403c",
+          800: "#292524",
+          900: "#1c1917",
+        },
+        sage: {
+          light: "#e8ede8",
+          DEFAULT: "#a4b5a4",
+          dark: "#6b7c6b",
+        },
       },
       fontFamily: {
         sans: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
