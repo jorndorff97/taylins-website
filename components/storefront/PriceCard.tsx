@@ -55,7 +55,7 @@ export function PriceCard({
       : null;
 
   return (
-    <div className="rounded-xl border-2 border-slate-200 bg-white p-4 md:p-5">
+    <div className="rounded-xl border border-slate-200 bg-white p-4 md:p-5">
       {/* Price */}
       {pricingMode === PricingMode.FLAT && startingPrice ? (
         <p className="text-2xl font-bold text-slate-900 md:text-3xl">
@@ -76,7 +76,7 @@ export function PriceCard({
         Minimum order: <span className="font-medium text-slate-700">{moq} pairs</span>
       </p>
 
-      {/* StockX Comparison */}
+      {/* StockX Comparison - Subtle */}
       {productSKU && (
         <>
           <div className="my-3 border-t border-slate-200" />
@@ -86,20 +86,18 @@ export function PriceCard({
               Loading market price...
             </div>
           ) : stockXPrice && savings ? (
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <span className="text-slate-500">StockX:</span>{" "}
-                <span className="font-medium text-slate-700 line-through">
-                  {formatPrice(stockXPrice)}
-                </span>
-              </div>
-              <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
-                Save {savings.percentage}%
-              </div>
+            <div className="text-sm text-slate-600">
+              <span className="text-slate-500">StockX:</span>{" "}
+              <span className="font-medium line-through">{formatPrice(stockXPrice)}</span>
+              {" | "}
+              <span className="font-semibold text-emerald-700">
+                Save ${savings.amount} ({savings.percentage}% off)
+              </span>
             </div>
           ) : stockXPrice ? (
-            <p className="text-sm text-slate-500">
-              StockX: <span className="font-medium text-slate-700">{formatPrice(stockXPrice)}</span>
+            <p className="text-sm text-slate-600">
+              <span className="text-slate-500">StockX:</span>{" "}
+              <span className="font-medium">{formatPrice(stockXPrice)}</span>
             </p>
           ) : null}
         </>

@@ -29,6 +29,16 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
     }
   }, []);
 
+  const scrollToImage = (index: number) => {
+    setCurrentIndex(index);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        left: index * scrollRef.current.offsetWidth,
+        behavior: 'smooth',
+      });
+    }
+  };
+
   if (!images || images.length === 0) {
     return (
       <div className="aspect-square w-full overflow-hidden rounded-2xl bg-slate-100 lg:rounded-3xl">
@@ -62,20 +72,13 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
         ))}
       </div>
 
-      {/* Dot indicators */}
+      {/* Dot indicators - Mobile only */}
       {images.length > 1 && (
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-2 lg:hidden">
           {images.map((_, index) => (
             <button
               key={index}
-              onClick={() => {
-                if (scrollRef.current) {
-                  scrollRef.current.scrollTo({
-                    left: index * scrollRef.current.offsetWidth,
-                    behavior: 'smooth',
-                  });
-                }
-              }}
+              onClick={() => scrollToImage(index)}
               className={`h-2 rounded-full transition-all ${
                 index === currentIndex
                   ? 'w-6 bg-slate-900'
@@ -83,6 +86,30 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
               }`}
               aria-label={`View image ${index + 1}`}
             />
+          ))}
+        </div>
+      )}
+
+      {/* Thumbnail grid - Desktop only */}
+      {images.length > 1 && (
+        <div className="hidden lg:grid lg:grid-cols-4 lg:gap-3">
+          {images.map((image, index) => (
+            <button
+              key={image.id}
+              onClick={() => scrollToImage(index)}
+              className={`aspect-square overflow-hidden rounded-xl transition-all ${
+                index === currentIndex
+                  ? 'ring-2 ring-slate-900 ring-offset-2'
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={image.url}
+                alt={`Thumbnail ${index + 1}`}
+                className="h-full w-full object-cover"
+              />
+            </button>
           ))}
         </div>
       )}

@@ -42,15 +42,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
           Back
         </Link>
 
-        {/* Main content - Mobile: stacked, Desktop: 2-column */}
-        <div className="space-y-6 lg:grid lg:grid-cols-2 lg:gap-12 lg:space-y-0">
+        {/* Main content - Single column until 1024px, then 2-column */}
+        <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-12 lg:space-y-0">
           {/* Left column: Images */}
           <div>
             <ImageGallery images={listing.images} title={listing.title} />
           </div>
 
           {/* Right column: Product info */}
-          <div className="space-y-4 md:space-y-6 pb-32 lg:pb-0">
+          <div className="space-y-4">
             {/* Header */}
             <div className="space-y-2">
               {soldOut && (
@@ -101,7 +101,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             {/* Additional Info */}
             {(listing.stockXLink || listing.discordLink || listing.instagramLink) && (
-              <div className="space-y-2 border-t border-slate-200 pt-4 md:pt-6">
+              <div className="space-y-2 border-t border-slate-200 pt-4">
                 <h2 className="text-sm font-semibold text-slate-900">Links</h2>
                 <div className="flex flex-wrap gap-3">
                   {listing.stockXLink && (
@@ -139,7 +139,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             )}
 
             {listing.sellerNotes && (
-              <div className="space-y-2 border-t border-slate-200 pt-4 md:pt-6">
+              <div className="space-y-2 border-t border-slate-200 pt-4">
                 <h2 className="text-sm font-semibold text-slate-900">Details</h2>
                 <p className="text-sm leading-relaxed text-slate-600">{listing.sellerNotes}</p>
               </div>
