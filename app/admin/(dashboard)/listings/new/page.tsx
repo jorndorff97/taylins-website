@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { ListingForm } from "@/components/admin/listings/ListingForm";
-import { InventoryMode, ListingStatus, PricingMode } from "@prisma/client";
+import { InventoryMode, ListingStatus, PricingMode, TierPricingType } from "@prisma/client";
 
 export default function NewListingPage() {
   async function handleSubmit(formData: FormData) {
@@ -119,7 +119,7 @@ export default function NewListingPage() {
 
       // Tiers
       if (pricingMode === PricingMode.TIER) {
-        const tiers: Array<{ minQty: number; pricePerPair?: number; discountPercent?: number; pricingType: string }> = [];
+        const tiers: Array<{ minQty: number; pricePerPair?: number; discountPercent?: number; pricingType: TierPricingType }> = [];
         
         for (let i = 0; i < 8; i++) {
           const minQtyRaw = formData.get(`tiers[${i}].minQty`);
@@ -131,14 +131,14 @@ export default function NewListingPage() {
             const discountRaw = formData.get(`tiers[${i}].discountPercent`);
             if (discountRaw) {
               const discountPercent = Number(discountRaw);
-              tiers.push({ minQty, discountPercent, pricingType: "PERCENTAGE_OFF" });
+              tiers.push({ minQty, discountPercent, pricingType: TierPricingType.PERCENTAGE_OFF });
             }
           } else {
             const priceRaw = formData.get(`tiers[${i}].pricePerPair`);
             if (priceRaw) {
               const pricePerPair = Number(priceRaw);
               if (pricePerPair) {
-                tiers.push({ minQty, pricePerPair, pricingType: "FIXED_PRICE" });
+                tiers.push({ minQty, pricePerPair, pricingType: TierPricingType.FIXED_PRICE });
               }
             }
           }
