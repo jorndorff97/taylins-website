@@ -8,6 +8,7 @@ import { ListingActions } from "@/components/storefront/ListingActions";
 import { ImageGallery } from "@/components/storefront/ImageGallery";
 import { PriceCard } from "@/components/storefront/PriceCard";
 import { VolumePricing } from "@/components/storefront/VolumePricing";
+import { SavingsGauge } from "@/components/storefront/SavingsGauge";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -28,6 +29,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const soldOut = isSoldOut(listing);
 
+  // Calculate starting price per pair for static StockX display
+  const startingPricePerPair =
+    listing.pricingMode === PricingMode.FLAT && listing.flatPricePerPair
+      ? Number(listing.flatPricePerPair)
+      : listing.tierPrices.length > 0
+        ? Number(listing.tierPrices[0].pricePerPair)
+        : null;
+
   return (
     <>
       <div className="mx-auto max-w-7xl px-4 py-4 md:px-6 md:py-6 lg:px-8 lg:py-8">
@@ -47,6 +56,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
           {/* Left column: Images */}
           <div>
             <ImageGallery images={listing.images} title={listing.title} />
+            
+            {/* Static StockX comparison - Desktop only */}
+            {listing.stockXPrice && !soldOut && startingPricePerPair && (
+              <div className="mt-4 hidden md:block">
+                <SavingsGauge
+                  yourPrice={startingPricePerPair}
+                  stockXPrice={Number(listing.stockXPrice)}
+                  totalPairs={1}
+                />
+              </div>
+            )}
           </div>
 
           {/* Right column: Product info */}

@@ -32,10 +32,10 @@ export function SavingsGauge({ yourPrice, stockXPrice, totalPairs }: SavingsGaug
         {/* Main savings amount */}
         <div>
           <p className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-3xl font-bold text-transparent md:text-4xl">
-            ${totalSavings.toLocaleString()}
+            ${totalSavings.toLocaleString()} saved
           </p>
           <p className="mt-0.5 text-xs text-slate-600">
-            {percentage}% below StockX
+            {percentage}% below StockX (${stockXPrice.toLocaleString()})
           </p>
         </div>
         

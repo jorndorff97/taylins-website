@@ -115,13 +115,15 @@ export function ListingActions({ listing }: ListingActionsProps) {
         </div>
       </div>
 
-      {/* StockX Savings Gauge */}
+      {/* StockX Savings Gauge - Mobile only (desktop shows below image) */}
       {totalPairs > 0 && listing.stockXPrice && pricePerPair && (
-        <SavingsGauge
-          yourPrice={pricePerPair}
-          stockXPrice={Number(listing.stockXPrice)}
-          totalPairs={totalPairs}
-        />
+        <div className="md:hidden">
+          <SavingsGauge
+            yourPrice={pricePerPair}
+            stockXPrice={Number(listing.stockXPrice)}
+            totalPairs={totalPairs}
+          />
+        </div>
       )}
 
       {/* MOQ Warning */}
