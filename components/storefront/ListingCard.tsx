@@ -41,14 +41,14 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
         href={`/listing/${listing.id}`}
         className="group block relative"
       >
-        {/* Large Rank Number - Zellerfeld Style */}
+        {/* Large Rank Number - Zellerfeld Style - More Prominent */}
         {rank != null && (
-          <div className="absolute -left-2 -top-3 z-20 pointer-events-none">
+          <div className="absolute -left-2 -top-3 lg:-left-4 lg:-top-6 z-20 pointer-events-none">
             <motion.span 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: index * 0.08 + 0.2, duration: 0.5 }}
-              className="text-[120px] sm:text-[140px] font-black leading-none text-slate-900/[0.03] select-none"
+              className="text-[140px] sm:text-[160px] lg:text-[220px] font-black leading-none text-slate-900/[0.08] lg:text-slate-900/[0.12] select-none"
               style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
             >
               {rank}
@@ -56,9 +56,9 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
           </div>
         )}
 
-        {/* Product Image Container */}
+        {/* Product Image Container - Larger on Desktop */}
         <motion.div 
-          className="relative aspect-square overflow-hidden rounded-3xl bg-gradient-to-br from-slate-50 to-slate-100"
+          className="relative aspect-square overflow-hidden rounded-3xl bg-gradient-to-br from-slate-50 to-slate-100 lg:rounded-[2rem]"
           whileHover={{ scale: 1.02 }}
           transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
         >
@@ -90,23 +90,23 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
         </motion.div>
         
         {/* Product Info - Clean & Minimal */}
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 space-y-2 lg:mt-5 lg:space-y-2.5">
           {/* Brand Name - Replaces "By Category" */}
           {listing.brand && (
-            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">
+            <p className="text-[11px] lg:text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
               {listing.brand}
             </p>
           )}
           
           {/* Product Title */}
-          <h3 className="text-base font-semibold text-slate-900 leading-snug group-hover:text-slate-700 transition-colors line-clamp-2">
+          <h3 className="text-base lg:text-lg font-semibold text-slate-900 leading-snug group-hover:text-slate-700 transition-colors line-clamp-2">
             {listing.title}
           </h3>
           
           {/* Price & MOQ */}
           <div className="flex items-center gap-2.5 pt-0.5">
             {startingPrice != null && (
-              <span className="text-lg font-bold text-slate-900">
+              <span className="text-lg lg:text-xl font-bold text-slate-900">
                 ${startingPrice.toLocaleString()}
                 {listing.pricingMode === PricingMode.TIER && "+"}
               </span>

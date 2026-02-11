@@ -112,24 +112,61 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          className="mt-16 flex flex-wrap justify-center gap-4 sm:mt-20 sm:gap-6"
+          className="mt-16 sm:mt-20"
         >
-          <StatCard 
-            label="Total Pairs" 
-            value={stats.totalPairs.toLocaleString()} 
-            delay={0.7}
-          />
-          <StatCard 
-            label="Active Listings" 
-            value={stats.activeListings.toString()} 
-            delay={0.8}
-          />
-          <StatCard 
-            label="Avg. Savings" 
-            value={`${stats.avgSavings}%`} 
-            delay={0.9}
-            highlight
-          />
+          {/* Mobile: Horizontal Scroll Carousel */}
+          <div className="sm:hidden">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-4 -mx-4">
+              <div className="snap-center shrink-0 first:pl-4 last:pr-4">
+                <StatCard 
+                  label="Total Pairs" 
+                  value={stats.totalPairs.toLocaleString()} 
+                  delay={0.7}
+                />
+              </div>
+              <div className="snap-center shrink-0">
+                <StatCard 
+                  label="Active Listings" 
+                  value={stats.activeListings.toString()} 
+                  delay={0.8}
+                />
+              </div>
+              <div className="snap-center shrink-0 last:pr-4">
+                <StatCard 
+                  label="Avg. Savings" 
+                  value={`${stats.avgSavings}%`} 
+                  delay={0.9}
+                  highlight
+                />
+              </div>
+            </div>
+            {/* Scroll Indicator Dots */}
+            <div className="flex justify-center gap-1.5 mt-4">
+              <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+              <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+              <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+            </div>
+          </div>
+
+          {/* Desktop: Grid Layout */}
+          <div className="hidden sm:flex flex-wrap justify-center gap-4 sm:gap-6">
+            <StatCard 
+              label="Total Pairs" 
+              value={stats.totalPairs.toLocaleString()} 
+              delay={0.7}
+            />
+            <StatCard 
+              label="Active Listings" 
+              value={stats.activeListings.toString()} 
+              delay={0.8}
+            />
+            <StatCard 
+              label="Avg. Savings" 
+              value={`${stats.avgSavings}%`} 
+              delay={0.9}
+              highlight
+            />
+          </div>
         </motion.div>
       </div>
     </section>

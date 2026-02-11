@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getBuyerId } from "@/lib/buyer-auth";
+import { StorefrontNav } from "@/components/storefront/StorefrontNav";
 
 export default async function StorefrontLayout({ children }: { children: ReactNode }) {
   const buyerId = await getBuyerId();
@@ -12,38 +13,7 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
           <Link href="/" className="text-xl font-semibold tracking-tight text-slate-900">
             Taylin
           </Link>
-          <nav className="flex items-center gap-6">
-            <Link href="/browse" className="text-sm text-slate-600 hover:text-slate-900">
-              Browse
-            </Link>
-            {buyerId ? (
-              <>
-                <Link href="/account" className="text-sm text-slate-600 hover:text-slate-900">
-                  Account
-                </Link>
-                <form action="/api/buyer/logout" method="post">
-                  <button type="submit" className="text-sm text-slate-600 hover:text-slate-900">
-                    Logout
-                  </button>
-                </form>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className="text-sm text-slate-600 hover:text-slate-900">
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-                >
-                  Register
-                </Link>
-              </>
-            )}
-            <Link href="/admin" className="text-sm text-slate-500 hover:text-slate-700">
-              Admin
-            </Link>
-          </nav>
+          <StorefrontNav buyerId={buyerId} />
         </div>
       </header>
       <main>{children}</main>

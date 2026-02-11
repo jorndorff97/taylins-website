@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { STOREFRONT_CATEGORIES, getActiveCategories } from "@/lib/categories";
-import { ListingCard } from "@/components/storefront/ListingCard";
 import { HeroSection } from "@/components/storefront/HeroSection";
 import { AuthenticitySection } from "@/components/storefront/AuthenticitySection";
 import { PricingComparisonSection } from "@/components/storefront/PricingComparisonSection";
+import { Top10Carousel } from "@/components/storefront/Top10Carousel";
 import { ListingStatus } from "@prisma/client";
 import { getTotalPairs } from "@/lib/inventory";
 
@@ -146,15 +146,7 @@ export default async function HomePage() {
               Most popular wholesale sneakers right now
             </p>
           </div>
-          {listings.length === 0 ? (
-            <p className="text-slate-500">No listings yet. Check back soon.</p>
-          ) : (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-12 md:grid-cols-3 lg:grid-cols-5 lg:gap-x-8">
-              {listings.map((listing, i) => (
-                <ListingCard key={listing.id} listing={listing} rank={i + 1} index={i} />
-              ))}
-            </div>
-          )}
+          <Top10Carousel listings={listings} />
         </div>
       </section>
 
