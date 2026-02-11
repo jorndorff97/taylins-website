@@ -28,9 +28,19 @@ export default async function ListingsPage() {
     flatPricePerPair: listing.flatPricePerPair
       ? Number(listing.flatPricePerPair)
       : null,
+    costPerPair: listing.costPerPair
+      ? Number(listing.costPerPair)
+      : null,
+    basePricePerPair: listing.basePricePerPair
+      ? Number(listing.basePricePerPair)
+      : null,
+    stockXPrice: listing.stockXPrice
+      ? Number(listing.stockXPrice)
+      : null,
     tierPrices: listing.tierPrices.map((tier) => ({
       ...tier,
-      pricePerPair: Number(tier.pricePerPair),
+      pricePerPair: tier.pricePerPair ? Number(tier.pricePerPair) : null,
+      discountPercent: tier.discountPercent ? Number(tier.discountPercent) : null,
     })),
   }));
 
@@ -96,6 +106,7 @@ export default async function ListingsPage() {
                   <TH>MOQ</TH>
                   <TH>Total pairs</TH>
                   <TH>Pricing</TH>
+                  <TH>Margin</TH>
                   <TH>Status</TH>
                   <TH className="text-right">Actions</TH>
                 </TR>
@@ -103,7 +114,7 @@ export default async function ListingsPage() {
               <TBody>
                 {listings.length === 0 && (
                   <TR>
-                    <TD colSpan={6}>
+                    <TD colSpan={7}>
                       <div className="flex items-center justify-between py-6">
                         <div>
                           <p className="text-sm font-medium text-slate-700">
@@ -160,6 +171,20 @@ export default async function ListingsPage() {
                             ? "Flat"
                             : "Tier"}
                         </Badge>
+                      </TD>
+                      <TD>
+                        {listing.costPerPair && listing.flatPricePerPair ? (
+                          <span className="text-xs font-medium text-emerald-700">
+                            ${(Number(listing.flatPricePerPair) - Number(listing.costPerPair)).toFixed(2)}
+                            <span className="text-slate-500"> ({Math.round(((Number(listing.flatPricePerPair) - Number(listing.costPerPair)) / Number(listing.flatPricePerPair)) * 100)}%)</span>
+                          </span>
+                        ) : listing.costPerPair && listing.tierPrices[0]?.pricePerPair ? (
+                          <span className="text-xs font-medium text-emerald-700">
+                            ${(Number(listing.tierPrices[0].pricePerPair) - Number(listing.costPerPair)).toFixed(2)}+
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
                       </TD>
                       <TD>
                         <ListingStatusBadge status={listing.status} />
