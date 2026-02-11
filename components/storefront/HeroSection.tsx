@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { textRotate, backgroundCrossfade } from "@/lib/animations";
+import { textRotate } from "@/lib/animations";
+import { AnimatedGradientBackground } from "./AnimatedGradientBackground";
+import { FloatingElements } from "./FloatingElements";
+import { useParallax } from "@/hooks/useScrollProgress";
 
 interface HeroProduct {
   id: number;
@@ -29,47 +32,28 @@ const ROTATING_TEXTS = [
 
 export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
-  const [currentBgIndex, setCurrentBgIndex] = useState(0);
+  const parallaxY = useParallax(50);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTextIndex((prev) => (prev + 1) % ROTATING_TEXTS.length);
-      setCurrentBgIndex((prev) => (prev + 1) % heroProducts.length);
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [heroProducts.length]);
+  }, []);
 
   const currentText = ROTATING_TEXTS[currentTextIndex];
-  const currentProduct = heroProducts[currentBgIndex] || heroProducts[0];
 
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white">
-      {/* Dynamic Background with Crossfade */}
-      <AnimatePresence mode="wait">
-        {currentProduct && (
-          <motion.div
-            key={currentProduct.id}
-            variants={backgroundCrossfade}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="absolute inset-0"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={currentProduct.imageUrl}
-              alt=""
-              className="h-full w-full object-cover opacity-[0.08] blur-sm"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/60 to-white" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {!currentProduct && (
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-50 to-white" />
-      )}
+      {/* Animated Gradient Background */}
+      <AnimatedGradientBackground parallaxY={parallaxY} />
+      
+      {/* Floating Particles */}
+      <FloatingElements />
+      
+      {/* Gradient overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/60 to-white/80" />
 
       {/* Hero Content */}
       <div className="relative z-10 mx-auto max-w-5xl px-4 text-center">
@@ -123,7 +107,7 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
           </Link>
         </motion.div>
 
-        {/* Glassmorphic Stat Cards - Will be populated in next step */}
+        {/* Glassmorphic Stat Cards */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}

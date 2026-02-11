@@ -145,3 +145,61 @@ export const backgroundCrossfade = {
     }
   }
 };
+
+// Gradient animation variants for Legend-style backgrounds
+export const gradientFloat = {
+  initial: { 
+    x: 0, 
+    y: 0,
+    scale: 1,
+    opacity: 0
+  },
+  animate: { 
+    x: [0, 30, -20, 0],
+    y: [0, -40, 30, 0],
+    scale: [1, 1.2, 0.9, 1],
+    opacity: [0, 1, 1, 0],
+    transition: {
+      duration: 20,
+      repeat: Infinity,
+      ease: "easeInOut" as const
+    }
+  }
+};
+
+export const gradientPulse = {
+  animate: {
+    scale: [1, 1.3, 1],
+    opacity: [0.1, 0.2, 0.1],
+    transition: {
+      duration: 8,
+      repeat: Infinity,
+      ease: "easeInOut" as const
+    }
+  }
+};
+
+export const blurTransition = {
+  initial: { filter: 'blur(0px)' },
+  animate: { 
+    filter: ['blur(0px)', 'blur(40px)', 'blur(0px)'],
+    transition: {
+      duration: 6,
+      repeat: Infinity,
+      ease: "easeInOut" as const
+    }
+  }
+};
+
+export const floatingParticle = {
+  animate: {
+    y: [0, -100],
+    opacity: [0, 0.3, 0],
+    scale: [0.8, 1.2, 0.8],
+    transition: {
+      duration: 15,
+      repeat: Infinity,
+      ease: "easeInOut" as const
+    }
+  }
+};
