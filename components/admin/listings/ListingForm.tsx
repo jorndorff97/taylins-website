@@ -48,11 +48,11 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
   const [imageUrls, setImageUrls] = useState<string[]>(
     initialListing?.images?.sort((a, b) => a.sortOrder - b.sortOrder).map(img => img.url) ?? []
   );
-  const [extractedSKU, setExtractedSKU] = useState<string>(
+  const [productSKU, setProductSKU] = useState<string>(
     initialListing?.productSKU ?? ""
   );
-  const [suggestedTitle, setSuggestedTitle] = useState<string>("");
-  const [suggestedCategory, setSuggestedCategory] = useState<string>("");
+  const [title, setTitle] = useState<string>(initialListing?.title ?? "");
+  const [category, setCategory] = useState<string>(initialListing?.category ?? "");
   const [useManualPrice, setUseManualPrice] = useState<boolean>(false);
   const [manualPrice, setManualPrice] = useState<string>(
     initialListing?.stockXPrice ? String(initialListing.stockXPrice) : ""
@@ -71,27 +71,29 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
     if (url) {
       const slug = extractStockXSlug(url);
       if (slug) {
-        setExtractedSKU(slug);
+        // Auto-generate title from slug (only if title is empty)
+        if (!title) {
+          const suggestedTitle = slug
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          setTitle(suggestedTitle);
+        }
         
-        // Auto-generate title from slug
-        const title = slug
-          .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        setSuggestedTitle(title);
-        
-        // Auto-suggest category based on keywords
-        const lowerUrl = url.toLowerCase();
-        if (lowerUrl.includes('jordan') || lowerUrl.includes('nike') || lowerUrl.includes('adidas') || lowerUrl.includes('yeezy')) {
-          if (lowerUrl.includes('slide') || lowerUrl.includes('mule')) {
-            setSuggestedCategory('Slides & Mules');
-          } else if (lowerUrl.includes('boot')) {
-            setSuggestedCategory('Boots');
+        // Auto-suggest category based on keywords (only if category is empty)
+        if (!category) {
+          const lowerUrl = url.toLowerCase();
+          if (lowerUrl.includes('jordan') || lowerUrl.includes('nike') || lowerUrl.includes('adidas') || lowerUrl.includes('yeezy')) {
+            if (lowerUrl.includes('slide') || lowerUrl.includes('mule')) {
+              setCategory('Slides & Mules');
+            } else if (lowerUrl.includes('boot')) {
+              setCategory('Boots');
+            } else {
+              setCategory('Sneakers');
+            }
           } else {
-            setSuggestedCategory('Sneakers');
+            setCategory('Sneakers'); // Default
           }
-        } else {
-          setSuggestedCategory('Sneakers'); // Default
         }
       }
     }
@@ -108,7 +110,7 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
           <div>
             <h2 className="text-sm font-medium text-slate-800">StockX Integration (Optional)</h2>
             <p className="text-xs text-slate-500">
-              Paste a StockX product URL to auto-suggest title/category and enable price comparison.
+              Add StockX link for reference and style code for automatic price comparison.
             </p>
           </div>
           <div className="space-y-3">
@@ -117,7 +119,7 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               <Input
                 name="stockXLink"
                 defaultValue={initialListing?.stockXLink ?? ""}
-                placeholder="https://stockx.com/nike-zoom-vomero-5"
+                placeholder="https://stockx.com/air-jordan-1-retro-low-og-chicago-2025"
                 onChange={handleStockXUrlChange}
               />
               {suggestedTitle && (
@@ -125,6 +127,21 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
                   ✓ Suggested title: &quot;{suggestedTitle}&quot; • Category: &quot;{suggestedCategory}&quot;
                 </p>
               )}
+            </div>
+            
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-700">
+                Product Style Code
+              </label>
+              <Input
+                name="productSKU"
+                value={extractedSKU}
+                onChange={(e) => setExtractedSKU(e.target.value)}
+                placeholder="HQ6448, CW2288-111, GZ5541"
+              />
+              <p className="text-[10px] text-slate-500">
+                Nike/Jordan style code from the box or StockX page. Used for automatic price comparison.
+              </p>
             </div>
             
             {/* Manual Price Override Option */}
@@ -158,9 +175,6 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               </div>
             )}
           </div>
-          
-          {/* Hidden field for the extracted SKU */}
-          <input type="hidden" name="productSKU" value={extractedSKU} />
         </div>
       </Card>
 
@@ -180,9 +194,8 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               </label>
               <Input
                 name="title"
-                defaultValue={initialListing?.title ?? ""}
-                value={suggestedTitle || undefined}
-                onChange={(e) => setSuggestedTitle(e.target.value)}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 required
                 placeholder="Foam runners – mixed size run"
               />
@@ -193,9 +206,8 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               </label>
               <Input
                 name="category"
-                defaultValue={initialListing?.category ?? ""}
-                value={suggestedCategory || undefined}
-                onChange={(e) => setSuggestedCategory(e.target.value)}
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
                 required
                 placeholder="Slides & Mules"
               />
