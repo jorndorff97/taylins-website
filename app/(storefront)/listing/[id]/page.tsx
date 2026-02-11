@@ -4,11 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { isSoldOut } from "@/lib/inventory";
 import { InventoryMode, PricingMode } from "@prisma/client";
-import { ListingActions } from "@/components/storefront/ListingActions";
+import { ProductInteractive } from "@/components/storefront/ProductInteractive";
 import { ImageGallery } from "@/components/storefront/ImageGallery";
 import { PriceCard } from "@/components/storefront/PriceCard";
 import { VolumePricing } from "@/components/storefront/VolumePricing";
-import { SavingsGauge } from "@/components/storefront/SavingsGauge";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -56,17 +55,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
           {/* Left column: Images */}
           <div>
             <ImageGallery images={listing.images} title={listing.title} />
-            
-            {/* Static StockX comparison - Desktop only */}
-            {listing.stockXPrice && !soldOut && startingPricePerPair && (
-              <div className="mt-4 hidden md:block">
-                <SavingsGauge
-                  yourPrice={startingPricePerPair}
-                  stockXPrice={Number(listing.stockXPrice)}
-                  totalPairs={1}
-                />
-              </div>
-            )}
           </div>
 
           {/* Right column: Product info */}
@@ -105,8 +93,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </p>
             )}
 
-            {/* Size/Quantity selection and actions */}
-            {!soldOut && <ListingActions listing={listing} />}
+            {/* Size/Quantity selection and actions with desktop StockX sync */}
+            {!soldOut && startingPricePerPair && (
+              <ProductInteractive 
+                listing={listing}
+                startingPricePerPair={startingPricePerPair}
+              />
+            )}
 
             {/* Volume Pricing */}
             {listing.pricingMode === PricingMode.TIER && listing.tierPrices.length > 0 && (

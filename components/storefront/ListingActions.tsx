@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { Listing, ListingSize, ListingTierPrice } from "@prisma/client";
 import { InventoryMode } from "@prisma/client";
@@ -15,9 +15,11 @@ interface ListingActionsProps {
     sizes: ListingSize[];
     tierPrices: ListingTierPrice[];
   };
+  onQuantityChange?: (qty: number) => void;
+  onPriceChange?: (price: number | null) => void;
 }
 
-export function ListingActions({ listing }: ListingActionsProps) {
+export function ListingActions({ listing, onQuantityChange, onPriceChange }: ListingActionsProps) {
   const [sizeQuantities, setSizeQuantities] = useState<Record<number, number>>({});
   const [mixedQty, setMixedQty] = useState(0);
 
@@ -90,6 +92,12 @@ export function ListingActions({ listing }: ListingActionsProps) {
             return tier ? Number(tier.pricePerPair) : null;
           })()
         : null;
+
+  // Notify parent of quantity and price changes for desktop sync
+  useEffect(() => {
+    onQuantityChange?.(totalPairs);
+    onPriceChange?.(pricePerPair);
+  }, [totalPairs, pricePerPair, onQuantityChange, onPriceChange]);
 
   return (
     <div className="space-y-4 md:space-y-6">
