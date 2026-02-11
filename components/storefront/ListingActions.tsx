@@ -143,9 +143,9 @@ export function ListingActions({ listing, onQuantityChange, onPriceChange }: Lis
         </div>
       )}
 
-      {/* Live Price Summary */}
+      {/* Live Price Summary - Desktop only */}
       {totalPairs > 0 && (
-        <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 md:p-5">
+        <div className="hidden rounded-xl border-2 border-slate-200 bg-slate-50 p-4 md:block md:p-5">
           <div className="flex items-baseline justify-between">
             <div>
               {pricePerPair && (

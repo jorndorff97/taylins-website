@@ -17,15 +17,18 @@ export function ProductInteractive({ listing, startingPricePerPair }: ProductInt
   const [totalPairs, setTotalPairs] = useState(0);
   const [pricePerPair, setPricePerPair] = useState<number | null>(startingPricePerPair);
 
+  // Desktop display - show even at 0, use MOQ as default
+  const displayPairs = totalPairs > 0 ? totalPairs : listing.moq;
+
   return (
     <>
-      {/* Desktop-only SavingsGauge - positioned below image via parent layout */}
-      {listing.stockXPrice && totalPairs > 0 && pricePerPair && (
+      {/* Desktop-only SavingsGauge - shows at quantity=0 using MOQ */}
+      {listing.stockXPrice && pricePerPair && (
         <div className="fixed bottom-4 left-4 z-10 hidden w-[calc(50%-2rem)] max-w-md md:block lg:left-8">
           <SavingsGauge
             yourPrice={pricePerPair}
             stockXPrice={Number(listing.stockXPrice)}
-            totalPairs={totalPairs}
+            totalPairs={displayPairs}
           />
         </div>
       )}
