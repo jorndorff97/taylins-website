@@ -91,7 +91,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {!soldOut && <ListingActions listing={listing} />}
 
             {/* Volume Pricing */}
-            {listing.pricingMode === PricingMode.TIERED && listing.tierPrices.length > 0 && (
+            {listing.pricingMode === PricingMode.TIER && listing.tierPrices.length > 0 && (
               <VolumePricing
                 tierPrices={listing.tierPrices}
                 currentQty={0}
