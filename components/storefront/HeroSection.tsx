@@ -62,7 +62,7 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
         >
-          <h1 className="text-5xl font-light tracking-tighter text-slate-900 sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
+          <h1 className="text-4xl font-light tracking-tight leading-tight text-slate-900 sm:text-5xl sm:tracking-tighter md:text-6xl lg:text-7xl xl:text-8xl">
             Wholesale sneakers.
             <br />
             {/* Rotating Text */}
@@ -88,7 +88,7 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
-          className="mt-6 text-lg text-slate-500 sm:mt-8 sm:text-xl md:text-2xl"
+          className="mt-6 text-base text-slate-500 leading-relaxed sm:mt-8 sm:text-lg md:text-xl lg:text-2xl px-2 sm:px-0 max-w-2xl mx-auto"
         >
           Premium wholesale marketplace built for retailers who demand quality and value.
         </motion.p>
@@ -107,66 +107,29 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
           </Link>
         </motion.div>
 
-        {/* Glassmorphic Stat Cards */}
+        {/* Glassmorphic Stat Cards - Desktop Only */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          className="mt-16 sm:mt-20"
+          className="mt-16 hidden sm:flex flex-wrap justify-center gap-4 sm:mt-20 sm:gap-6"
         >
-          {/* Mobile: Horizontal Scroll Carousel */}
-          <div className="sm:hidden">
-            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-4 -mx-4">
-              <div className="snap-center shrink-0 first:pl-4 last:pr-4">
-                <StatCard 
-                  label="Total Pairs" 
-                  value={stats.totalPairs.toLocaleString()} 
-                  delay={0.7}
-                />
-              </div>
-              <div className="snap-center shrink-0">
-                <StatCard 
-                  label="Active Listings" 
-                  value={stats.activeListings.toString()} 
-                  delay={0.8}
-                />
-              </div>
-              <div className="snap-center shrink-0 last:pr-4">
-                <StatCard 
-                  label="Avg. Savings" 
-                  value={`${stats.avgSavings}%`} 
-                  delay={0.9}
-                  highlight
-                />
-              </div>
-            </div>
-            {/* Scroll Indicator Dots */}
-            <div className="flex justify-center gap-1.5 mt-4">
-              <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-              <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-              <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-            </div>
-          </div>
-
-          {/* Desktop: Grid Layout */}
-          <div className="hidden sm:flex flex-wrap justify-center gap-4 sm:gap-6">
-            <StatCard 
-              label="Total Pairs" 
-              value={stats.totalPairs.toLocaleString()} 
-              delay={0.7}
-            />
-            <StatCard 
-              label="Active Listings" 
-              value={stats.activeListings.toString()} 
-              delay={0.8}
-            />
-            <StatCard 
-              label="Avg. Savings" 
-              value={`${stats.avgSavings}%`} 
-              delay={0.9}
-              highlight
-            />
-          </div>
+          <StatCard 
+            label="Total Pairs" 
+            value={stats.totalPairs.toLocaleString()} 
+            delay={0.7}
+          />
+          <StatCard 
+            label="Active Listings" 
+            value={stats.activeListings.toString()} 
+            delay={0.8}
+          />
+          <StatCard 
+            label="Avg. Savings" 
+            value={`${stats.avgSavings}%`} 
+            delay={0.9}
+            highlight
+          />
         </motion.div>
       </div>
     </section>
