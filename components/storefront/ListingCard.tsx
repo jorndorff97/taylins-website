@@ -38,20 +38,20 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
           delay: index * 0.08,
           ease: [0.25, 0.1, 0.25, 1]
         }}
-        className="will-animate"
+        className="will-animate relative overflow-visible"
       >
         <Link
           href={`/listing/${listing.id}`}
-          className="group block relative"
+          className="group block relative overflow-visible"
         >
           {/* Zellerfeld-style rank number - massive and subtle, positioned behind card */}
           {rank != null && (
-            <div className="absolute -left-8 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/4 z-0 pointer-events-none">
               <motion.span 
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: index * 0.08 + 0.2, duration: 0.5 }}
-                className="text-[180px] sm:text-[200px] lg:text-[220px] font-black leading-none text-neutral-300/25 select-none"
+                className="text-[180px] sm:text-[200px] lg:text-[220px] font-black leading-none text-neutral-300/30 select-none"
                 style={{ 
                   fontFamily: 'system-ui, -apple-system, sans-serif'
                 }}
