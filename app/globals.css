@@ -23,6 +23,23 @@ main {
   @apply transition-colors duration-200;
 }
 
+/* Hide scrollbar for image gallery */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* iOS safe area support */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
