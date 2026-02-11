@@ -56,14 +56,32 @@ export async function GET(req: NextRequest) {
     );
 
     if (!response.ok) {
+      console.error(`RapidAPI request failed: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('RapidAPI error response:', errorText);
       throw new Error(`RapidAPI request failed: ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('RapidAPI response data:', JSON.stringify(data, null, 2));
     
-    // Parse the price from response (adjust based on actual API response)
-    // Common fields: lowestAsk, retailPrice, price
-    const price = data.lowestAsk || data.price || data.retailPrice || null;
+    // Parse the price from response - try multiple possible structures
+    let price = null;
+    
+    // Try direct properties
+    if (data.lowestAsk) price = data.lowestAsk;
+    else if (data.price) price = data.price;
+    else if (data.retailPrice) price = data.retailPrice;
+    // Try nested structures
+    else if (data.Product?.lowestAsk) price = data.Product.lowestAsk;
+    else if (data.Product?.price) price = data.Product.price;
+    else if (data.sneaker?.lowestAsk) price = data.sneaker.lowestAsk;
+    else if (data.sneaker?.price) price = data.sneaker.price;
+    // Try market data
+    else if (data.market?.lowestAsk) price = data.market.lowestAsk;
+    else if (data.market?.lastSale) price = data.market.lastSale;
+    
+    console.log('Extracted price:', price);
 
     if (price) {
       // Update cache in database

@@ -11,20 +11,26 @@ interface StockXPriceComparisonProps {
 export function StockXPriceComparison({ listingId, yourPrice }: StockXPriceComparisonProps) {
   const [stockXPrice, setStockXPrice] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/stockx-price?listingId=${listingId}`)
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch");
+        if (!res.ok) {
+          return res.json().then(data => {
+            throw new Error(data.error || "Failed to fetch");
+          });
+        }
         return res.json();
       })
       .then((data) => {
+        console.log('StockX price data:', data);
         setStockXPrice(data.price);
         setLoading(false);
       })
-      .catch(() => {
-        setError(true);
+      .catch((err) => {
+        console.error('StockX price error:', err);
+        setError(err.message);
         setLoading(false);
       });
   }, [listingId]);
@@ -40,7 +46,13 @@ export function StockXPriceComparison({ listingId, yourPrice }: StockXPriceCompa
     );
   }
 
-  if (error || !stockXPrice) {
+  // Show error in development/console
+  if (error) {
+    console.warn('StockX price comparison unavailable:', error);
+    return null; // Don't show anything to users
+  }
+
+  if (!stockXPrice) {
     return null; // Don't show anything if price unavailable
   }
 

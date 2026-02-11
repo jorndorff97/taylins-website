@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { Listing, ListingSize, ListingTierPrice, ListingImage } from "@prisma/client";
 import { InventoryMode, PricingMode } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ const US_MEN_SIZES = [
 ];
 
 export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps) {
+  const [isPending, startTransition] = useTransition();
   const [inventoryMode, setInventoryMode] = useState<InventoryMode>(
     initialListing?.inventoryMode ?? InventoryMode.SIZE_RUN,
   );
@@ -71,30 +72,33 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
     if (url) {
       const slug = extractStockXSlug(url);
       if (slug) {
-        // Auto-generate title from slug (only if title is empty)
-        if (!title) {
-          const suggestedTitle = slug
-            .split('-')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-          setTitle(suggestedTitle);
-        }
-        
-        // Auto-suggest category based on keywords (only if category is empty)
-        if (!category) {
-          const lowerUrl = url.toLowerCase();
-          if (lowerUrl.includes('jordan') || lowerUrl.includes('nike') || lowerUrl.includes('adidas') || lowerUrl.includes('yeezy')) {
-            if (lowerUrl.includes('slide') || lowerUrl.includes('mule')) {
-              setCategory('Slides & Mules');
-            } else if (lowerUrl.includes('boot')) {
-              setCategory('Boots');
-            } else {
-              setCategory('Sneakers');
-            }
-          } else {
-            setCategory('Sneakers'); // Default
+        // Use transition to prevent blocking form submission
+        startTransition(() => {
+          // Auto-generate title from slug (only if title is empty)
+          if (!title) {
+            const suggestedTitle = slug
+              .split('-')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+            setTitle(suggestedTitle);
           }
-        }
+          
+          // Auto-suggest category based on keywords (only if category is empty)
+          if (!category) {
+            const lowerUrl = url.toLowerCase();
+            if (lowerUrl.includes('jordan') || lowerUrl.includes('nike') || lowerUrl.includes('adidas') || lowerUrl.includes('yeezy')) {
+              if (lowerUrl.includes('slide') || lowerUrl.includes('mule')) {
+                setCategory('Slides & Mules');
+              } else if (lowerUrl.includes('boot')) {
+                setCategory('Boots');
+              } else {
+                setCategory('Sneakers');
+              }
+            } else {
+              setCategory('Sneakers'); // Default
+            }
+          }
+        });
       }
     }
   };
