@@ -45,9 +45,6 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
   const [pricingMode, setPricingMode] = useState<PricingMode>(
     initialListing?.pricingMode ?? PricingMode.FLAT,
   );
-  const [instantBuy, setInstantBuy] = useState<boolean>(
-    initialListing?.instantBuy ?? false,
-  );
   const [imageUrls, setImageUrls] = useState<string[]>(
     initialListing?.images?.sort((a, b) => a.sortOrder - b.sortOrder).map(img => img.url) ?? []
   );
@@ -354,70 +351,47 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
         </div>
       </Card>
 
-      {/* Order Mode & Contextual Info */}
+      {/* Additional Information */}
       <Card>
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-sm font-medium text-slate-800">Order mode</h2>
-              <p className="text-xs text-slate-500">
-                Instant buy: checkout immediately. Request: submit request, negotiate, then pay.
-              </p>
-            </div>
-            <div className="flex gap-1 rounded-full bg-slate-100 p-1 text-xs">
-              <button
-                type="button"
-                onClick={() => setInstantBuy(false)}
-                className={`flex-1 rounded-full px-3 py-1 ${
-                  !instantBuy ? "bg-card text-slate-900 shadow-sm" : "text-slate-600"
-                }`}
-              >
-                Request
-              </button>
-              <button
-                type="button"
-                onClick={() => setInstantBuy(true)}
-                className={`flex-1 rounded-full px-3 py-1 ${
-                  instantBuy ? "bg-card text-slate-900 shadow-sm" : "text-slate-600"
-                }`}
-              >
-                Instant buy
-              </button>
-            </div>
+          <div>
+            <h2 className="text-sm font-medium text-slate-800">Additional Information (Optional)</h2>
+            <p className="text-xs text-slate-500">
+              Add seller notes and social links for buyers.
+            </p>
           </div>
-          <input type="hidden" name="instantBuy" value={instantBuy ? "true" : "false"} />
-
-          <div className="border-t border-slate-200 pt-4">
-            <h3 className="text-xs font-medium text-slate-700 mb-3">Additional links (optional)</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-slate-600">Seller notes</label>
-                <Input
-                  name="sellerNotes"
-                  defaultValue={initialListing?.sellerNotes ?? ""}
-                  placeholder="Condition, shipment, resale advice..."
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-slate-600">Discord</label>
-                <Input
-                  name="discordLink"
-                  defaultValue={initialListing?.discordLink ?? ""}
-                  placeholder="https://discord.gg/..."
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-slate-600">Instagram</label>
-                <Input
-                  name="instagramLink"
-                  defaultValue={initialListing?.instagramLink ?? ""}
-                  placeholder="https://instagram.com/..."
-                />
-              </div>
+          
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium text-slate-600">Seller notes</label>
+              <Input
+                name="sellerNotes"
+                defaultValue={initialListing?.sellerNotes ?? ""}
+                placeholder="Condition, shipment, resale advice..."
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium text-slate-600">Discord</label>
+              <Input
+                name="discordLink"
+                defaultValue={initialListing?.discordLink ?? ""}
+                placeholder="https://discord.gg/..."
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium text-slate-600">Instagram</label>
+              <Input
+                name="instagramLink"
+                defaultValue={initialListing?.instagramLink ?? ""}
+                placeholder="https://instagram.com/..."
+              />
             </div>
           </div>
         </div>
       </Card>
+      
+      {/* Hidden field - all listings support both instant buy and request */}
+      <input type="hidden" name="instantBuy" value="true" />
 
       {/* Actions */}
       <div className="flex items-center justify-between gap-3">
