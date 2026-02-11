@@ -44,15 +44,17 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
           href={`/listing/${listing.id}`}
           className="group block relative"
         >
-          {/* Smaller, simpler rank number */}
+          {/* Zellerfeld-style rank number - massive and subtle, positioned behind card */}
           {rank != null && (
-            <div className="absolute -left-1 -top-2 lg:-left-2 lg:-top-3 z-20 pointer-events-none">
+            <div className="absolute -left-8 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
               <motion.span 
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: index * 0.08 + 0.2, duration: 0.5 }}
-                className="text-[48px] sm:text-[56px] lg:text-[64px] font-black leading-none text-neutral-300/60 select-none"
-                style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+                className="text-[180px] sm:text-[200px] lg:text-[220px] font-black leading-none text-neutral-300/25 select-none"
+                style={{ 
+                  fontFamily: 'system-ui, -apple-system, sans-serif'
+                }}
               >
                 {rank}
               </motion.span>
@@ -61,7 +63,7 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
 
           {/* Product Image Container - Neutral */}
           <motion.div 
-            className="relative aspect-square overflow-hidden rounded-2xl bg-neutral-100 lg:rounded-3xl"
+            className="relative aspect-square overflow-hidden rounded-2xl bg-neutral-100 lg:rounded-3xl z-10"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
           >
@@ -106,20 +108,14 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
               {listing.title}
             </h3>
             
-            {/* Price & MOQ */}
-            <div className="flex items-center gap-2.5 pt-0.5">
+            {/* Price Only - Zellerfeld style */}
+            <div className="pt-0.5">
               {startingPrice != null && (
                 <span className="text-lg lg:text-xl font-bold text-neutral-900">
                   ${startingPrice.toLocaleString()}
                   {listing.pricingMode === PricingMode.TIER && "+"}
                 </span>
               )}
-              <Badge 
-                variant="default" 
-                className="rounded-full bg-neutral-200 text-[9px] font-semibold uppercase tracking-wide text-neutral-700 px-2.5 py-0.5"
-              >
-                MOQ {listing.moq}
-              </Badge>
             </div>
           </div>
         </Link>
