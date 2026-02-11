@@ -13,7 +13,6 @@ export default function NewListingPage() {
     const category = String(formData.get("category") ?? "");
     const moq = Number(formData.get("moq") ?? 0);
     const maxOrderQty = formData.get("maxOrderQty") ? Number(formData.get("maxOrderQty")) : null;
-    const costPerPair = formData.get("costPerPair") ? Number(formData.get("costPerPair")) : null;
     const basePricePerPair = formData.get("basePricePerPair") ? Number(formData.get("basePricePerPair")) : null;
     const tierPricingType = formData.get("tierPricingType")?.toString() || "FIXED_PRICE";
     const inventoryMode = (formData.get("inventoryMode") ??
@@ -52,7 +51,6 @@ export default function NewListingPage() {
           category,
           moq,
           maxOrderQty,
-          costPerPair,
           basePricePerPair,
           inventoryMode,
           pricingMode,

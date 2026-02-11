@@ -49,9 +49,6 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
   const [tierPricingType, setTierPricingType] = useState<"FIXED_PRICE" | "PERCENTAGE_OFF">(
     "FIXED_PRICE"  // Default to fixed price for now
   );
-  const [costPerPair, setCostPerPair] = useState(
-    initialListing?.costPerPair?.toString() ?? ""
-  );
   const [basePricePerPair, setBasePricePerPair] = useState(
     initialListing?.basePricePerPair?.toString() ?? ""
   );
@@ -351,59 +348,25 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
           {pricingMode === PricingMode.TIER && (
             <div className="space-y-3 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
               <h3 className="text-xs font-semibold text-slate-700">Pricing Foundation</h3>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-slate-700">
-                    Cost per pair
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">$</span>
-                    <Input
-                      name="costPerPair"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={costPerPair}
-                      onChange={(e) => setCostPerPair(e.target.value)}
-                      className="pl-6"
-                      placeholder="85.00"
-                    />
-                  </div>
-                  <p className="text-[10px] text-slate-500">What you paid supplier</p>
+              <div className="w-48 space-y-1.5">
+                <label className="text-[11px] font-medium text-slate-700">
+                  Base wholesale price
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">$</span>
+                  <Input
+                    name="basePricePerPair"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={basePricePerPair}
+                    onChange={(e) => setBasePricePerPair(e.target.value)}
+                    className="pl-6"
+                    placeholder="120.00"
+                    required={tierPricingType === "PERCENTAGE_OFF"}
+                  />
                 </div>
-                
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-slate-700">
-                    Base wholesale price
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">$</span>
-                    <Input
-                      name="basePricePerPair"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={basePricePerPair}
-                      onChange={(e) => setBasePricePerPair(e.target.value)}
-                      className="pl-6"
-                      placeholder="120.00"
-                      required={tierPricingType === "PERCENTAGE_OFF"}
-                    />
-                  </div>
-                  <p className="text-[10px] text-slate-500">Reference for discounts</p>
-                </div>
-                
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-slate-700">
-                    Calculated markup
-                  </label>
-                  <div className="flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-emerald-700">
-                    {costPerPair && basePricePerPair ? 
-                      `${Math.round(((parseFloat(basePricePerPair) - parseFloat(costPerPair)) / parseFloat(costPerPair)) * 100)}%` 
-                      : "—"}
-                  </div>
-                  <p className="text-[10px] text-slate-500">Auto-calculated</p>
-                </div>
+                <p className="text-[10px] text-slate-500">Reference price for tier discounts</p>
               </div>
             </div>
           )}
@@ -486,8 +449,7 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               <TierPricingTable tiers={initialListing?.tierPrices ?? []} /> :
               <PercentageTierTable 
                 tiers={initialListing?.tierPrices ?? []} 
-                basePricePerPair={basePricePerPair} 
-                costPerPair={costPerPair} 
+                basePricePerPair={basePricePerPair}
               />
           )}
         </div>
@@ -680,36 +642,29 @@ function TierPricingTable({ tiers }: { tiers: ListingTierPrice[] }) {
 
 function PercentageTierTable({ 
   tiers, 
-  basePricePerPair, 
-  costPerPair 
+  basePricePerPair
 }: { 
   tiers: ListingTierPrice[], 
-  basePricePerPair: string, 
-  costPerPair: string 
+  basePricePerPair: string
 }) {
   const rowCount = Math.max(tiers.length, 4);
   const rows = Array.from({ length: rowCount }, (_, i) => tiers[i]);
   const basePrice = parseFloat(basePricePerPair) || 0;
-  const cost = parseFloat(costPerPair) || 0;
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-5 gap-2 text-[11px] font-medium text-slate-600">
+      <div className="grid grid-cols-3 gap-2 text-[11px] font-medium text-slate-600">
         <div>Min qty</div>
         <div>Discount %</div>
         <div>Price/pair</div>
-        <div>Margin</div>
-        <div>Margin %</div>
       </div>
       <div className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
         {rows.map((tier, index) => {
           const discount = parseFloat(tier?.discountPercent?.toString() || "0");
           const calculatedPrice = basePrice * (1 - discount / 100);
-          const margin = cost > 0 ? calculatedPrice - cost : 0;
-          const marginPercent = calculatedPrice > 0 ? (margin / calculatedPrice) * 100 : 0;
 
           return (
-            <div key={index} className="grid grid-cols-5 gap-2">
+            <div key={index} className="grid grid-cols-3 gap-2">
               <Input
                 name={`tiers[${index}].minQty`}
                 type="number"
@@ -733,12 +688,6 @@ function PercentageTierTable({
               </div>
               <div className="flex items-center text-xs font-medium text-slate-700">
                 ${calculatedPrice.toFixed(2)}
-              </div>
-              <div className={`flex items-center text-xs font-medium ${margin > 0 ? 'text-emerald-700' : 'text-slate-400'}`}>
-                ${margin.toFixed(2)}
-              </div>
-              <div className={`flex items-center text-xs font-medium ${marginPercent > 0 ? 'text-emerald-700' : 'text-slate-400'}`}>
-                {marginPercent.toFixed(0)}%
               </div>
               <input type="hidden" name={`tiers[${index}].pricingType`} value="PERCENTAGE_OFF" />
             </div>

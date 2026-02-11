@@ -6,7 +6,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { ListingForm } from "@/components/admin/listings/ListingForm";
 import { DeleteListingButton } from "@/components/admin/listings/DeleteListingButton";
 import { Button } from "@/components/ui/button";
-import { InventoryMode, ListingStatus, PricingMode } from "@prisma/client";
+import { InventoryMode, ListingStatus, PricingMode, TierPricingType } from "@prisma/client";
 
 interface EditListingPageProps {
   params: Promise<{ id: string }>;
@@ -34,6 +34,9 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     const title = String(formData.get("title") ?? "");
     const category = String(formData.get("category") ?? "");
     const moq = Number(formData.get("moq") ?? 0);
+    const maxOrderQty = formData.get("maxOrderQty") ? Number(formData.get("maxOrderQty")) : null;
+    const basePricePerPair = formData.get("basePricePerPair") ? Number(formData.get("basePricePerPair")) : null;
+    const tierPricingType = formData.get("tierPricingType")?.toString() || "FIXED_PRICE";
     const intent = String(formData.get("intent") ?? "draft");
     const inventoryMode = (formData.get("inventoryMode") ??
       InventoryMode.SIZE_RUN) as InventoryMode;
@@ -70,6 +73,8 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
           title,
           category,
           moq,
+          maxOrderQty,
+          basePricePerPair,
           status,
           inventoryMode,
           pricingMode,
@@ -138,19 +143,51 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
           },
         });
       } else {
-        const tiers: { minQty: number; pricePerPair: number }[] = [];
+        // Handle both fixed price and percentage-based tier pricing
+        const tiers: Array<{
+          minQty: number;
+          pricePerPair?: number;
+          discountPercent?: number;
+          pricingType: "FIXED_PRICE" | "PERCENTAGE_OFF";
+        }> = [];
+        
         for (let i = 0; i < 8; i++) {
           const minQtyRaw = formData.get(`tiers[${i}].minQty`);
-          const priceRaw = formData.get(`tiers[${i}].pricePerPair`);
-          if (!minQtyRaw || !priceRaw) continue;
+          if (!minQtyRaw) continue;
           const minQty = Number(minQtyRaw);
-          const pricePerPair = Number(priceRaw);
-          if (!minQty || !pricePerPair) continue;
-          tiers.push({ minQty, pricePerPair });
+          
+          if (tierPricingType === "PERCENTAGE_OFF") {
+            const discountRaw = formData.get(`tiers[${i}].discountPercent`);
+            if (!discountRaw) continue;
+            const discountPercent = Number(discountRaw);
+            if (!minQty || discountPercent === undefined) continue;
+            tiers.push({ 
+              minQty, 
+              discountPercent, 
+              pricingType: "PERCENTAGE_OFF" as const
+            });
+          } else {
+            const priceRaw = formData.get(`tiers[${i}].pricePerPair`);
+            if (!priceRaw) continue;
+            const pricePerPair = Number(priceRaw);
+            if (!minQty || !pricePerPair) continue;
+            tiers.push({ 
+              minQty, 
+              pricePerPair, 
+              pricingType: "FIXED_PRICE" as const
+            });
+          }
         }
+        
         if (tiers.length) {
           await tx.listingTierPrice.createMany({
-            data: tiers.map((tier) => ({ listingId: id, ...tier })),
+            data: tiers.map((tier) => ({ 
+              listingId: id, 
+              minQty: tier.minQty,
+              pricePerPair: tier.pricePerPair ?? null,
+              discountPercent: tier.discountPercent ?? null,
+              pricingType: tier.pricingType
+            })),
           });
         }
       }
