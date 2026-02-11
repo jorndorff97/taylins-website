@@ -10,6 +10,7 @@ export default function NewListingPage() {
     "use server";
 
     const title = String(formData.get("title") ?? "");
+    const brand = String(formData.get("brand") ?? "").trim() || null;
     const category = String(formData.get("category") ?? "");
     const moq = Number(formData.get("moq") ?? 0);
     const maxOrderQty = formData.get("maxOrderQty") ? Number(formData.get("maxOrderQty")) : null;
@@ -48,6 +49,7 @@ export default function NewListingPage() {
       const created = await tx.listing.create({
         data: {
           title,
+          brand,
           category,
           moq,
           maxOrderQty,

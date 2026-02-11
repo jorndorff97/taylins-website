@@ -32,6 +32,7 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     "use server";
 
     const title = String(formData.get("title") ?? "");
+    const brand = String(formData.get("brand") ?? "").trim() || null;
     const category = String(formData.get("category") ?? "");
     const moq = Number(formData.get("moq") ?? 0);
     const maxOrderQty = formData.get("maxOrderQty") ? Number(formData.get("maxOrderQty")) : null;
@@ -71,6 +72,7 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
         where: { id },
         data: {
           title,
+          brand,
           category,
           moq,
           maxOrderQty,

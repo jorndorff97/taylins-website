@@ -135,24 +135,21 @@ export default async function HomePage() {
       {/* Hero Section with Rotating Text */}
       <HeroSection heroProducts={heroProducts} stats={stats} />
 
-      {/* Trending Listings Grid - Moved up */}
-      <section className="border-t border-slate-100 bg-slate-50/30 py-16 sm:py-20">
+      {/* Trending Listings Grid - Zellerfeld "Top 10" Style */}
+      <section className="border-t border-slate-100 bg-white py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex items-end justify-between">
-            <h2 className="text-2xl font-light tracking-tight text-slate-900 sm:text-3xl">
-              Trending
+          <div className="mb-12 sm:mb-16">
+            <h2 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+              Top 10
             </h2>
-            <Link
-              href="/browse"
-              className="text-xs font-medium text-hero-accent hover:underline sm:text-sm"
-            >
-              See all
-            </Link>
+            <p className="mt-3 text-base text-slate-500 sm:text-lg">
+              Most popular wholesale sneakers right now
+            </p>
           </div>
           {listings.length === 0 ? (
-            <p className="mt-8 text-slate-500 sm:mt-12">No listings yet. Check back soon.</p>
+            <p className="text-slate-500">No listings yet. Check back soon.</p>
           ) : (
-            <div className="mt-8 grid grid-cols-2 gap-6 sm:mt-12 sm:grid-cols-3 sm:gap-8 md:grid-cols-4 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-12 md:grid-cols-3 lg:grid-cols-5 lg:gap-x-8">
               {listings.map((listing, i) => (
                 <ListingCard key={listing.id} listing={listing} rank={i + 1} index={i} />
               ))}

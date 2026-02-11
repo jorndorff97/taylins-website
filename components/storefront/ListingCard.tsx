@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { isSoldOut } from "@/lib/inventory";
 import { getStartingPricePerPair } from "@/lib/pricing";
@@ -20,7 +19,6 @@ interface ListingCardProps {
 }
 
 export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const primaryImage = listing.images[0]?.url;
   const soldOut = isSoldOut(listing);
   const startingPrice = getStartingPricePerPair({
@@ -30,32 +28,46 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ 
-        duration: 0.5, 
-        delay: index * 0.1,
-        ease: [0.4, 0, 0.2, 1]
+        duration: 0.6, 
+        delay: index * 0.08,
+        ease: [0.25, 0.1, 0.25, 1]
       }}
-      whileHover={{ y: -8, scale: 1.02 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
       className="will-animate"
     >
       <Link
         href={`/listing/${listing.id}`}
-        className="group block"
+        className="group block relative"
       >
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-slate-100 shadow-lg group-hover:shadow-2xl transition-shadow duration-300">
-          {rank != null && (
-            <span className="absolute left-4 top-4 text-8xl font-bold leading-none text-white/40 z-10">
+        {/* Large Rank Number - Zellerfeld Style */}
+        {rank != null && (
+          <div className="absolute -left-2 -top-3 z-20 pointer-events-none">
+            <motion.span 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: index * 0.08 + 0.2, duration: 0.5 }}
+              className="text-[120px] sm:text-[140px] font-black leading-none text-slate-900/[0.03] select-none"
+              style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+            >
               {rank}
-            </span>
-          )}
+            </motion.span>
+          </div>
+        )}
+
+        {/* Product Image Container */}
+        <motion.div 
+          className="relative aspect-square overflow-hidden rounded-3xl bg-gradient-to-br from-slate-50 to-slate-100"
+          whileHover={{ scale: 1.02 }}
+          transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+        >
           {soldOut && (
-            <span className="absolute left-4 top-4 rounded-md bg-slate-900 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-white z-10">
-              Sold Out
-            </span>
+            <div className="absolute left-3 top-3 z-10 rounded-full bg-slate-900/90 backdrop-blur-sm px-3 py-1.5">
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-white">
+                Sold Out
+              </span>
+            </div>
           )}
           
           {primaryImage ? (
@@ -64,74 +76,49 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
               <img
                 src={primaryImage}
                 alt={listing.title}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="h-full w-full object-cover transition-all duration-700 group-hover:scale-105"
               />
               
-              {/* Glassmorphic Overlay on Hover */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: isHovered ? 1 : 0 }}
-                transition={{ duration: 0.3 }}
-                className="absolute inset-0 glass-card-dark flex items-center justify-center"
-              >
-                <div className="text-center space-y-3 p-6">
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: isHovered ? 0 : 20, opacity: isHovered ? 1 : 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="text-white"
-                  >
-                    <div className="text-sm font-medium text-white/80 mb-1">
-                      Starting at
-                    </div>
-                    {startingPrice != null && (
-                      <div className="text-3xl font-bold">
-                        ${startingPrice.toLocaleString()}
-                        {listing.pricingMode === PricingMode.TIER && "+"}
-                      </div>
-                    )}
-                  </motion.div>
-                  
-                  <motion.button
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: isHovered ? 0 : 20, opacity: isHovered ? 1 : 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-medium text-slate-900 hover:bg-white/90 transition-colors"
-                  >
-                    Quick View
-                    <span aria-hidden>→</span>
-                  </motion.button>
-                </div>
-              </motion.div>
+              {/* Subtle gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </>
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-slate-300">
+            <div className="flex h-full w-full items-center justify-center text-slate-300 text-sm">
               No image
             </div>
           )}
-        </div>
+        </motion.div>
         
-        <motion.div 
-          className="mt-4 space-y-1.5 px-1"
-          animate={{ opacity: isHovered ? 0.7 : 1 }}
-          transition={{ duration: 0.2 }}
-        >
-          <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
-            By {listing.category}
-          </p>
-          <p className="text-base font-medium text-slate-900">{listing.title}</p>
-          <div className="flex items-center gap-3 pt-1">
-            <Badge variant="default" className="rounded-md bg-slate-900 text-[9px] uppercase tracking-wide text-white">
-              MOQ {listing.moq}
-            </Badge>
+        {/* Product Info - Clean & Minimal */}
+        <div className="mt-4 space-y-2">
+          {/* Brand Name - Replaces "By Category" */}
+          {listing.brand && (
+            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">
+              {listing.brand}
+            </p>
+          )}
+          
+          {/* Product Title */}
+          <h3 className="text-base font-semibold text-slate-900 leading-snug group-hover:text-slate-700 transition-colors line-clamp-2">
+            {listing.title}
+          </h3>
+          
+          {/* Price & MOQ */}
+          <div className="flex items-center gap-2.5 pt-0.5">
             {startingPrice != null && (
-              <span className="text-lg font-semibold text-slate-900">
+              <span className="text-lg font-bold text-slate-900">
                 ${startingPrice.toLocaleString()}
                 {listing.pricingMode === PricingMode.TIER && "+"}
               </span>
             )}
+            <Badge 
+              variant="default" 
+              className="rounded-full bg-slate-100 text-[9px] font-semibold uppercase tracking-wide text-slate-600 px-2.5 py-0.5"
+            >
+              MOQ {listing.moq}
+            </Badge>
           </div>
-        </motion.div>
+        </div>
       </Link>
     </motion.div>
   );

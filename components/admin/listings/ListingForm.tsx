@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ImageUploader } from "./ImageUploader";
-import { extractStockXSlug } from "@/lib/stockx";
+import { extractStockXSlug, extractBrandFromSlug } from "@/lib/stockx";
 
 type ListingFormListing = Listing & {
   sizes?: ListingSize[];
@@ -59,6 +59,7 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
     initialListing?.productSKU ?? ""
   );
   const [title, setTitle] = useState<string>(initialListing?.title ?? "");
+  const [brand, setBrand] = useState<string>(initialListing?.brand ?? "");
   const [category, setCategory] = useState<string>(initialListing?.category ?? "");
   const [useManualPrice, setUseManualPrice] = useState<boolean>(false);
   const [manualPrice, setManualPrice] = useState<string>(
@@ -87,6 +88,14 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               .map(word => word.charAt(0).toUpperCase() + word.slice(1))
               .join(' ');
             setTitle(suggestedTitle);
+          }
+          
+          // Auto-suggest brand from slug (only if brand is empty)
+          if (!brand) {
+            const suggestedBrand = extractBrandFromSlug(slug);
+            if (suggestedBrand) {
+              setBrand(suggestedBrand);
+            }
           }
           
           // Auto-suggest category based on keywords (only if category is empty)
@@ -132,9 +141,9 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
                 placeholder="https://stockx.com/air-jordan-1-retro-low-og-chicago-2025"
                 onChange={handleStockXUrlChange}
               />
-              {title && category && (
+              {title && brand && category && (
                 <p className="text-xs text-emerald-600">
-                  ✓ Suggested title: &quot;{title}&quot; • Category: &quot;{category}&quot;
+                  ✓ Suggested title: &quot;{title}&quot; • Brand: &quot;{brand}&quot; • Category: &quot;{category}&quot;
                 </p>
               )}
             </div>
@@ -212,16 +221,27 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-700">
-                Category
+                Brand
               </label>
               <Input
-                name="category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                required
-                placeholder="Slides & Mules"
+                name="brand"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                placeholder="Nike, Adidas, Jordan, etc."
               />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-700">
+              Category
+            </label>
+            <Input
+              name="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+              placeholder="Slides & Mules"
+            />
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-slate-700">

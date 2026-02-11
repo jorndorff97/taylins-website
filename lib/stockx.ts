@@ -28,6 +28,46 @@ export function extractStockXSlug(url: string): string | null {
 }
 
 /**
+ * Extract brand from StockX slug
+ * Examples:
+ * - "air-jordan-1-high-heritage" -> "Jordan"
+ * - "nike-dunk-low-panda" -> "Nike"
+ * - "adidas-yeezy-boost-350" -> "Adidas"
+ * - "new-balance-990v4" -> "New Balance"
+ */
+export function extractBrandFromSlug(slug: string): string | null {
+  if (!slug) return null;
+
+  const lowerSlug = slug.toLowerCase();
+
+  // Brand patterns to match (order matters - check specific patterns first)
+  const brandPatterns = [
+    { pattern: /^air-jordan|jordan/i, name: 'Jordan' },
+    { pattern: /^nike/i, name: 'Nike' },
+    { pattern: /^adidas-yeezy|yeezy/i, name: 'Yeezy' },
+    { pattern: /^adidas/i, name: 'Adidas' },
+    { pattern: /^new-balance/i, name: 'New Balance' },
+    { pattern: /^puma/i, name: 'Puma' },
+    { pattern: /^reebok/i, name: 'Reebok' },
+    { pattern: /^converse/i, name: 'Converse' },
+    { pattern: /^vans/i, name: 'Vans' },
+    { pattern: /^asics/i, name: 'Asics' },
+    { pattern: /^salomon/i, name: 'Salomon' },
+    { pattern: /^hoka/i, name: 'Hoka' },
+    { pattern: /^on-running|on-/i, name: 'On' },
+    { pattern: /^under-armour/i, name: 'Under Armour' },
+  ];
+
+  for (const { pattern, name } of brandPatterns) {
+    if (pattern.test(lowerSlug)) {
+      return name;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Format price for display
  */
 export function formatPrice(price: number | null): string {

@@ -19,6 +19,7 @@ model AdminUser {
 model Listing {
   id             Int               @id @default(autoincrement())
   title          String
+  brand          String?           // Brand name (Nike, Adidas, Jordan, etc.)
   category       String
   status         ListingStatus     @default(DRAFT)
   moq            Int
