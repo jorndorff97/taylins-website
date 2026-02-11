@@ -46,6 +46,15 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
   const [pricingMode, setPricingMode] = useState<PricingMode>(
     initialListing?.pricingMode ?? PricingMode.FLAT,
   );
+  const [tierPricingType, setTierPricingType] = useState<"FIXED_PRICE" | "PERCENTAGE_OFF">(
+    "FIXED_PRICE"  // Default to fixed price for now
+  );
+  const [costPerPair, setCostPerPair] = useState(
+    initialListing?.costPerPair?.toString() ?? ""
+  );
+  const [basePricePerPair, setBasePricePerPair] = useState(
+    initialListing?.basePricePerPair?.toString() ?? ""
+  );
   const [imageUrls, setImageUrls] = useState<string[]>(
     initialListing?.images?.sort((a, b) => a.sortOrder - b.sortOrder).map(img => img.url) ?? []
   );
@@ -242,24 +251,42 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
         </div>
       </Card>
 
-      {/* MOQ */}
+      {/* Order Limits */}
       <Card>
         <div className="space-y-4">
           <div>
-            <h2 className="text-sm font-medium text-slate-800">Minimum order quantity</h2>
+            <h2 className="text-sm font-medium text-slate-800">Order Limits</h2>
             <p className="text-xs text-slate-500">
-              Buyers can&apos;t submit orders below this total pairs count.
+              Set minimum and optionally maximum pairs per order.
             </p>
           </div>
-          <div className="w-32 space-y-1.5">
-            <label className="text-xs font-medium text-slate-700">MOQ</label>
-            <Input
-              name="moq"
-              type="number"
-              min={1}
-              defaultValue={initialListing?.moq ?? 1}
-              required
-            />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-700">
+                Minimum order (MOQ)
+              </label>
+              <Input
+                name="moq"
+                type="number"
+                min={1}
+                defaultValue={initialListing?.moq ?? 1}
+                required
+              />
+              <p className="text-[10px] text-slate-500">Buyers must order at least this many</p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-700">
+                Maximum per order
+              </label>
+              <Input
+                name="maxOrderQty"
+                type="number"
+                min={1}
+                defaultValue={initialListing?.maxOrderQty ?? ""}
+                placeholder="Optional"
+              />
+              <p className="text-[10px] text-slate-500">Leave empty for no limit</p>
+            </div>
           </div>
         </div>
       </Card>
@@ -313,40 +340,133 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
       {/* Pricing */}
       <Card>
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-sm font-medium text-slate-800">Pricing</h2>
-              <p className="text-xs text-slate-500">
-                Flat price per pair or decreasing tier pricing.
-              </p>
+          <div>
+            <h2 className="text-sm font-medium text-slate-800">Pricing</h2>
+            <p className="text-xs text-slate-500">
+              Set flat or tiered pricing. Tiered pricing encourages bulk orders.
+            </p>
+          </div>
+
+          {/* Pricing Foundation (for tiered pricing) */}
+          {pricingMode === PricingMode.TIER && (
+            <div className="space-y-3 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+              <h3 className="text-xs font-semibold text-slate-700">Pricing Foundation</h3>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-medium text-slate-700">
+                    Cost per pair
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">$</span>
+                    <Input
+                      name="costPerPair"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={costPerPair}
+                      onChange={(e) => setCostPerPair(e.target.value)}
+                      className="pl-6"
+                      placeholder="85.00"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-500">What you paid supplier</p>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-medium text-slate-700">
+                    Base wholesale price
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">$</span>
+                    <Input
+                      name="basePricePerPair"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={basePricePerPair}
+                      onChange={(e) => setBasePricePerPair(e.target.value)}
+                      className="pl-6"
+                      placeholder="120.00"
+                      required={tierPricingType === "PERCENTAGE_OFF"}
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-500">Reference for discounts</p>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-medium text-slate-700">
+                    Calculated markup
+                  </label>
+                  <div className="flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-emerald-700">
+                    {costPerPair && basePricePerPair ? 
+                      `${Math.round(((parseFloat(basePricePerPair) - parseFloat(costPerPair)) / parseFloat(costPerPair)) * 100)}%` 
+                      : "—"}
+                  </div>
+                  <p className="text-[10px] text-slate-500">Auto-calculated</p>
+                </div>
+              </div>
             </div>
-            <div className="flex gap-1 rounded-full bg-slate-100 p-1 text-xs">
-              <button
-                type="button"
-                onClick={() => setPricingMode(PricingMode.FLAT)}
-                className={`flex-1 rounded-full px-3 py-1 ${
-                  pricingMode === PricingMode.FLAT
-                    ? "bg-card text-slate-900 shadow-sm"
-                    : "text-slate-600"
-                }`}
-              >
-                Flat
-              </button>
-              <button
-                type="button"
-                onClick={() => setPricingMode(PricingMode.TIER)}
-                className={`flex-1 rounded-full px-3 py-1 ${
-                  pricingMode === PricingMode.TIER
-                    ? "bg-card text-slate-900 shadow-sm"
-                    : "text-slate-600"
-                }`}
-              >
-                Tiered
-              </button>
-            </div>
+          )}
+
+          {/* Pricing Mode Toggle */}
+          <div className="flex gap-1 rounded-full bg-slate-100 p-1 text-xs">
+            <button
+              type="button"
+              onClick={() => setPricingMode(PricingMode.FLAT)}
+              className={`flex-1 rounded-full px-3 py-1 ${
+                pricingMode === PricingMode.FLAT
+                  ? "bg-card text-slate-900 shadow-sm"
+                  : "text-slate-600"
+              }`}
+            >
+              Flat
+            </button>
+            <button
+              type="button"
+              onClick={() => setPricingMode(PricingMode.TIER)}
+              className={`flex-1 rounded-full px-3 py-1 ${
+                pricingMode === PricingMode.TIER
+                  ? "bg-card text-slate-900 shadow-sm"
+                  : "text-slate-600"
+              }`}
+            >
+              Tiered
+            </button>
           </div>
 
           <input type="hidden" name="pricingMode" value={pricingMode} />
+
+          {/* Tier Pricing Type Toggle (new) */}
+          {pricingMode === PricingMode.TIER && (
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-slate-700">Discount Structure</label>
+              <div className="flex gap-1 rounded-full bg-slate-100 p-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setTierPricingType("FIXED_PRICE")}
+                  className={`flex-1 rounded-full px-3 py-1 ${
+                    tierPricingType === "FIXED_PRICE"
+                      ? "bg-card text-slate-900 shadow-sm"
+                      : "text-slate-600"
+                  }`}
+                >
+                  Fixed price per tier
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTierPricingType("PERCENTAGE_OFF")}
+                  className={`flex-1 rounded-full px-3 py-1 ${
+                    tierPricingType === "PERCENTAGE_OFF"
+                      ? "bg-card text-slate-900 shadow-sm"
+                      : "text-slate-600"
+                  }`}
+                >
+                  Percentage off base
+                </button>
+              </div>
+              <input type="hidden" name="tierPricingType" value={tierPricingType} />
+            </div>
+          )}
 
           {pricingMode === PricingMode.FLAT ? (
             <div className="w-40 space-y-1.5">
@@ -362,7 +482,13 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               />
             </div>
           ) : (
-            <TierPricingTable tiers={initialListing?.tierPrices ?? []} />
+            tierPricingType === "FIXED_PRICE" ? 
+              <TierPricingTable tiers={initialListing?.tierPrices ?? []} /> :
+              <PercentageTierTable 
+                tiers={initialListing?.tierPrices ?? []} 
+                basePricePerPair={basePricePerPair} 
+                costPerPair={costPerPair} 
+              />
           )}
         </div>
       </Card>
@@ -547,6 +673,80 @@ function TierPricingTable({ tiers }: { tiers: ListingTierPrice[] }) {
       </div>
       <p className="text-[11px] text-slate-500">
         The best tier where order quantity ≥ min qty will be applied.
+      </p>
+    </div>
+  );
+}
+
+function PercentageTierTable({ 
+  tiers, 
+  basePricePerPair, 
+  costPerPair 
+}: { 
+  tiers: ListingTierPrice[], 
+  basePricePerPair: string, 
+  costPerPair: string 
+}) {
+  const rowCount = Math.max(tiers.length, 4);
+  const rows = Array.from({ length: rowCount }, (_, i) => tiers[i]);
+  const basePrice = parseFloat(basePricePerPair) || 0;
+  const cost = parseFloat(costPerPair) || 0;
+
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-5 gap-2 text-[11px] font-medium text-slate-600">
+        <div>Min qty</div>
+        <div>Discount %</div>
+        <div>Price/pair</div>
+        <div>Margin</div>
+        <div>Margin %</div>
+      </div>
+      <div className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+        {rows.map((tier, index) => {
+          const discount = parseFloat(tier?.discountPercent?.toString() || "0");
+          const calculatedPrice = basePrice * (1 - discount / 100);
+          const margin = cost > 0 ? calculatedPrice - cost : 0;
+          const marginPercent = calculatedPrice > 0 ? (margin / calculatedPrice) * 100 : 0;
+
+          return (
+            <div key={index} className="grid grid-cols-5 gap-2">
+              <Input
+                name={`tiers[${index}].minQty`}
+                type="number"
+                min={1}
+                defaultValue={tier?.minQty ?? ""}
+                placeholder="5"
+                className="h-9 text-xs"
+              />
+              <div className="relative">
+                <Input
+                  name={`tiers[${index}].discountPercent`}
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  defaultValue={tier?.discountPercent?.toString() ?? ""}
+                  placeholder="10"
+                  className="h-9 pr-6 text-xs"
+                />
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">%</span>
+              </div>
+              <div className="flex items-center text-xs font-medium text-slate-700">
+                ${calculatedPrice.toFixed(2)}
+              </div>
+              <div className={`flex items-center text-xs font-medium ${margin > 0 ? 'text-emerald-700' : 'text-slate-400'}`}>
+                ${margin.toFixed(2)}
+              </div>
+              <div className={`flex items-center text-xs font-medium ${marginPercent > 0 ? 'text-emerald-700' : 'text-slate-400'}`}>
+                {marginPercent.toFixed(0)}%
+              </div>
+              <input type="hidden" name={`tiers[${index}].pricingType`} value="PERCENTAGE_OFF" />
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-[11px] text-slate-500">
+        Discounts calculated from base price. Best tier for order quantity will be applied.
       </p>
     </div>
   );

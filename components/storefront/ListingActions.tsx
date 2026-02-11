@@ -117,6 +117,7 @@ export function ListingActions({ listing, onQuantityChange, onPriceChange }: Lis
             <QuantityStepper
               value={mixedQty}
               max={listing.totalPairs ?? 0}
+              maxOrderQty={listing.maxOrderQty ?? undefined}
               onChange={setMixedQty}
             />
           )}

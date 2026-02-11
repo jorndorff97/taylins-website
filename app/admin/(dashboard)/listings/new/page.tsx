@@ -12,6 +12,10 @@ export default function NewListingPage() {
     const title = String(formData.get("title") ?? "");
     const category = String(formData.get("category") ?? "");
     const moq = Number(formData.get("moq") ?? 0);
+    const maxOrderQty = formData.get("maxOrderQty") ? Number(formData.get("maxOrderQty")) : null;
+    const costPerPair = formData.get("costPerPair") ? Number(formData.get("costPerPair")) : null;
+    const basePricePerPair = formData.get("basePricePerPair") ? Number(formData.get("basePricePerPair")) : null;
+    const tierPricingType = formData.get("tierPricingType")?.toString() || "FIXED_PRICE";
     const inventoryMode = (formData.get("inventoryMode") ??
       InventoryMode.SIZE_RUN) as InventoryMode;
     const pricingMode = (formData.get("pricingMode") ??
@@ -47,6 +51,9 @@ export default function NewListingPage() {
           title,
           category,
           moq,
+          maxOrderQty,
+          costPerPair,
+          basePricePerPair,
           inventoryMode,
           pricingMode,
           status,
@@ -112,15 +119,29 @@ export default function NewListingPage() {
 
       // Tiers
       if (pricingMode === PricingMode.TIER) {
-        const tiers: { minQty: number; pricePerPair: number }[] = [];
+        const tiers: Array<{ minQty: number; pricePerPair?: number; discountPercent?: number; pricingType: string }> = [];
+        
         for (let i = 0; i < 8; i++) {
           const minQtyRaw = formData.get(`tiers[${i}].minQty`);
-          const priceRaw = formData.get(`tiers[${i}].pricePerPair`);
-          if (!minQtyRaw || !priceRaw) continue;
+          if (!minQtyRaw) continue;
           const minQty = Number(minQtyRaw);
-          const pricePerPair = Number(priceRaw);
-          if (!minQty || !pricePerPair) continue;
-          tiers.push({ minQty, pricePerPair });
+          if (!minQty) continue;
+
+          if (tierPricingType === "PERCENTAGE_OFF") {
+            const discountRaw = formData.get(`tiers[${i}].discountPercent`);
+            if (discountRaw) {
+              const discountPercent = Number(discountRaw);
+              tiers.push({ minQty, discountPercent, pricingType: "PERCENTAGE_OFF" });
+            }
+          } else {
+            const priceRaw = formData.get(`tiers[${i}].pricePerPair`);
+            if (priceRaw) {
+              const pricePerPair = Number(priceRaw);
+              if (pricePerPair) {
+                tiers.push({ minQty, pricePerPair, pricingType: "FIXED_PRICE" });
+              }
+            }
+          }
         }
 
         if (tiers.length) {

@@ -22,6 +22,12 @@ model Listing {
   category       String
   status         ListingStatus     @default(DRAFT)
   moq            Int
+  
+  // Phase 1: New pricing fields
+  costPerPair      Decimal?        // What admin paid supplier
+  basePricePerPair Decimal?        // Reference wholesale price
+  maxOrderQty      Int?            // Maximum pairs per order (null = unlimited)
+  
   inventoryMode  InventoryMode     @default(SIZE_RUN)
   pricingMode    PricingMode       @default(FLAT)
   flatPricePerPair Decimal?
@@ -131,9 +137,11 @@ model ListingSize {
 }
 
 model ListingTierPrice {
-  id           Int     @id @default(autoincrement())
-  minQty       Int
-  pricePerPair Decimal
+  id              Int              @id @default(autoincrement())
+  minQty          Int
+  pricePerPair    Decimal?         // Used for FIXED_PRICE mode
+  discountPercent Decimal?         // Used for PERCENTAGE_OFF mode (0-100)
+  pricingType     TierPricingType  @default(FIXED_PRICE)
 
   listingId Int
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
@@ -154,4 +162,9 @@ enum InventoryMode {
 enum PricingMode {
   FLAT
   TIER
+}
+
+enum TierPricingType {
+  FIXED_PRICE      // Current: manually set price per tier
+  PERCENTAGE_OFF   // New: percentage discount off base price
 }

@@ -3,13 +3,17 @@
 interface QuantityStepperProps {
   value: number;
   max: number;
+  maxOrderQty?: number; // New: maximum per order limit
   min?: number;
   onChange: (value: number) => void;
 }
 
-export function QuantityStepper({ value, max, min = 0, onChange }: QuantityStepperProps) {
+export function QuantityStepper({ value, max, maxOrderQty, min = 0, onChange }: QuantityStepperProps) {
+  // Calculate effective maximum (consider both inventory and order limit)
+  const effectiveMax = maxOrderQty ? Math.min(max, maxOrderQty) : max;
+
   const handleIncrement = () => {
-    if (value < max) {
+    if (value < effectiveMax) {
       onChange(value + 1);
     }
   };
@@ -22,7 +26,7 @@ export function QuantityStepper({ value, max, min = 0, onChange }: QuantityStepp
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseInt(e.target.value) || 0;
-    if (newValue >= min && newValue <= max) {
+    if (newValue >= min && newValue <= effectiveMax) {
       onChange(newValue);
     }
   };
@@ -47,14 +51,14 @@ export function QuantityStepper({ value, max, min = 0, onChange }: QuantityStepp
           value={value}
           onChange={handleInputChange}
           min={min}
-          max={max}
+          max={effectiveMax}
           className="h-10 w-16 rounded-lg border border-slate-300 bg-white text-center text-base font-medium text-slate-900 focus:border-hero-accent focus:outline-none focus:ring-2 focus:ring-hero-accent/20"
         />
 
         <button
           type="button"
           onClick={handleIncrement}
-          disabled={value >= max}
+          disabled={value >= effectiveMax}
           className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-slate-300 bg-white text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-50 disabled:border-slate-200 disabled:text-slate-300 disabled:hover:bg-white"
           aria-label="Increase quantity"
         >
@@ -64,9 +68,15 @@ export function QuantityStepper({ value, max, min = 0, onChange }: QuantityStepp
         </button>
       </div>
       
-      <p className="text-xs text-slate-500">
-        {max > 0 ? `${max} available` : "Out of stock"}
-      </p>
+      <div className="text-xs">
+        {maxOrderQty && value >= maxOrderQty ? (
+          <p className="text-amber-700">Max {maxOrderQty} per order</p>
+        ) : (
+          <p className="text-slate-500">
+            {effectiveMax > 0 ? `${effectiveMax} available` : "Out of stock"}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
