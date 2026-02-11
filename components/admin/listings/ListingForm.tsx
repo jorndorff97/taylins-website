@@ -122,9 +122,9 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
                 placeholder="https://stockx.com/air-jordan-1-retro-low-og-chicago-2025"
                 onChange={handleStockXUrlChange}
               />
-              {suggestedTitle && (
+              {title && category && (
                 <p className="text-xs text-emerald-600">
-                  ✓ Suggested title: &quot;{suggestedTitle}&quot; • Category: &quot;{suggestedCategory}&quot;
+                  ✓ Suggested title: &quot;{title}&quot; • Category: &quot;{category}&quot;
                 </p>
               )}
             </div>
@@ -135,8 +135,8 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               </label>
               <Input
                 name="productSKU"
-                value={extractedSKU}
-                onChange={(e) => setExtractedSKU(e.target.value)}
+                value={productSKU}
+                onChange={(e) => setProductSKU(e.target.value)}
                 placeholder="HQ6448, CW2288-111, GZ5541"
               />
               <p className="text-[10px] text-slate-500">
