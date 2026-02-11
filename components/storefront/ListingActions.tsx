@@ -6,6 +6,7 @@ import type { Listing, ListingSize, ListingTierPrice } from "@prisma/client";
 import { InventoryMode } from "@prisma/client";
 import { SizeSelector } from "./SizeSelector";
 import { QuantityStepper } from "./QuantityStepper";
+import { SavingsGauge } from "./SavingsGauge";
 import { calculateOrderPrice, getApplicableTier } from "@/lib/pricing";
 import { PricingMode } from "@prisma/client";
 
@@ -114,12 +115,42 @@ export function ListingActions({ listing }: ListingActionsProps) {
         </div>
       </div>
 
+      {/* StockX Savings Gauge */}
+      {totalPairs > 0 && listing.stockXPrice && pricePerPair && (
+        <SavingsGauge
+          yourPrice={pricePerPair}
+          stockXPrice={Number(listing.stockXPrice)}
+          totalPairs={totalPairs}
+        />
+      )}
+
       {/* MOQ Warning */}
       {totalPairs > 0 && !moqMet && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
           <p className="text-sm font-medium text-amber-900">
             Add {listing.moq - totalPairs} more {listing.moq - totalPairs === 1 ? "pair" : "pairs"} to meet minimum order
           </p>
+        </div>
+      )}
+
+      {/* Live Price Summary */}
+      {totalPairs > 0 && (
+        <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 md:p-5">
+          <div className="flex items-baseline justify-between">
+            <div>
+              {pricePerPair && (
+                <p className="text-sm text-slate-600">
+                  ${pricePerPair.toLocaleString()} per pair
+                </p>
+              )}
+              <p className="text-2xl font-bold text-slate-900">
+                ${totalAmount?.toLocaleString() ?? 0}
+              </p>
+              <p className="text-sm text-slate-600">
+                {totalPairs} {totalPairs === 1 ? "pair" : "pairs"}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -158,38 +189,6 @@ export function ListingActions({ listing }: ListingActionsProps) {
           </p>
         )}
       </div>
-
-      {/* Live Price Summary */}
-      {totalPairs > 0 && (
-        <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 md:p-5">
-          <div className="flex items-baseline justify-between">
-            <div>
-              {pricePerPair && (
-                <p className="text-sm text-slate-600">
-                  ${pricePerPair.toLocaleString()} per pair
-                </p>
-              )}
-              <p className="text-2xl font-bold text-slate-900">
-                ${totalAmount?.toLocaleString() ?? 0}
-              </p>
-              <p className="text-sm text-slate-600">
-                {totalPairs} {totalPairs === 1 ? "pair" : "pairs"}
-              </p>
-            </div>
-            {listing.stockXPrice && pricePerPair && Number(listing.stockXPrice) > pricePerPair && (
-              <div className="text-right">
-                <p className="text-xs text-slate-500">vs StockX</p>
-                <p className="text-lg font-bold text-emerald-700">
-                  Save ${Math.round((Number(listing.stockXPrice) - pricePerPair) * totalPairs).toLocaleString()}
-                </p>
-                <p className="text-xs text-slate-600">
-                  (${Math.round(Number(listing.stockXPrice) - pricePerPair)} per pair)
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -65,7 +65,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             {/* Price Card with integrated StockX */}
             <PriceCard
-              listingId={listing.id}
               pricingMode={listing.pricingMode}
               flatPricePerPair={listing.flatPricePerPair ? Number(listing.flatPricePerPair) : null}
               tierPrices={listing.tierPrices.map(t => ({
@@ -73,7 +72,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 pricePerPair: Number(t.pricePerPair)
               }))}
               moq={listing.moq}
-              productSKU={listing.productSKU}
             />
 
             {/* Stock indicator */}
