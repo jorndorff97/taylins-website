@@ -96,40 +96,46 @@ export default async function HomePage() {
     avgSavings,
   };
 
+  // Get listings with StockX prices for pricing comparison section
+  const stockXListings = await prisma.listing.findMany({
+    where: {
+      status: ListingStatus.ACTIVE,
+      stockXPrice: { not: null },
+      flatPricePerPair: { not: null }
+    },
+    include: {
+      images: { orderBy: { sortOrder: "asc" } }
+    },
+    take: 10,
+  });
+
+  // Calculate savings and sort by best savings
+  const pricingData = stockXListings
+    .map(listing => {
+      const stockXPrice = Number(listing.stockXPrice);
+      const ourPrice = Number(listing.flatPricePerPair);
+      const savings = stockXPrice - ourPrice;
+      const savingsPercent = (savings / stockXPrice) * 100;
+      
+      return {
+        id: listing.id,
+        product: listing.title,
+        stockXPrice,
+        ourPrice,
+        savings,
+        savingsPercent,
+        imageUrl: listing.images[0]?.url
+      };
+    })
+    .sort((a, b) => b.savingsPercent - a.savingsPercent)
+    .slice(0, 3);
+
   return (
     <>
       {/* Hero Section with Rotating Text */}
       <HeroSection heroProducts={heroProducts} stats={stats} />
 
-      {/* Browse by Categories */}
-      <section className="border-t border-slate-100 bg-white py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <h2 className="text-center text-2xl font-light tracking-tight text-slate-900 sm:text-3xl">
-            Browse by Categories
-          </h2>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:mt-10 sm:gap-8">
-            {STOREFRONT_CATEGORIES.filter((cat) => 
-              activeCategoryLabels.includes(cat.label)
-            ).map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/browse?category=${cat.slug}`}
-                className="text-sm font-medium text-slate-600 transition hover:text-slate-900 hover:underline sm:text-base"
-              >
-                {cat.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Authenticity Section */}
-      <AuthenticitySection />
-
-      {/* StockX Pricing Comparison */}
-      <PricingComparisonSection />
-
-      {/* Trending Listings Grid */}
+      {/* Trending Listings Grid - Moved up */}
       <section className="border-t border-slate-100 bg-slate-50/30 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex items-end justify-between">
@@ -154,6 +160,38 @@ export default async function HomePage() {
           )}
         </div>
       </section>
+
+      {/* Authenticity Section */}
+      <AuthenticitySection />
+
+      {/* StockX Pricing Comparison - Only show if there are listings with StockX prices */}
+      {pricingData.length > 0 && (
+        <PricingComparisonSection products={pricingData} />
+      )}
+
+      {/* Browse by Categories - Only show if there's more than 1 category */}
+      {activeCategoryLabels.length > 1 && (
+        <section className="border-t border-slate-100 bg-white py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <h2 className="text-center text-2xl font-light tracking-tight text-slate-900 sm:text-3xl">
+              Browse by Categories
+            </h2>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:mt-10 sm:gap-8">
+              {STOREFRONT_CATEGORIES.filter((cat) => 
+                activeCategoryLabels.includes(cat.label)
+              ).map((cat) => (
+                <Link
+                  key={cat.slug}
+                  href={`/browse?category=${cat.slug}`}
+                  className="text-sm font-medium text-slate-600 transition hover:text-slate-900 hover:underline sm:text-base"
+                >
+                  {cat.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </>
   );
 }

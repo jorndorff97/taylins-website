@@ -5,34 +5,43 @@ import { useRef, useState, useEffect } from "react";
 import { fadeInUp } from "@/lib/animations";
 
 interface PricingData {
+  id: number;
   product: string;
   stockXPrice: number;
   ourPrice: number;
+  savings: number;
+  savingsPercent: number;
+  imageUrl?: string;
 }
 
-const EXAMPLE_PRODUCTS: PricingData[] = [
-  { product: "Jordan 1 Retro High Chicago", stockXPrice: 450, ourPrice: 380 },
-  { product: "Nike Dunk Low Panda", stockXPrice: 285, ourPrice: 215 },
-  { product: "Yeezy Boost 350 V2", stockXPrice: 320, ourPrice: 265 },
-];
+interface PricingComparisonSectionProps {
+  products: PricingData[];
+}
 
-export function PricingComparisonSection() {
+export function PricingComparisonSection({ products }: PricingComparisonSectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [selectedProduct, setSelectedProduct] = useState(0);
   const [counter, setCounter] = useState(0);
 
-  const currentProduct = EXAMPLE_PRODUCTS[selectedProduct];
-  const savings = currentProduct.stockXPrice - currentProduct.ourPrice;
-  const savingsPercent = Math.round((savings / currentProduct.stockXPrice) * 100);
+  // Don't render if no products
+  if (!products || products.length === 0) {
+    return null;
+  }
+
+  const currentProduct = products[selectedProduct];
+  const savings = currentProduct.savings;
+  const savingsPercent = Math.round(currentProduct.savingsPercent);
 
   // Auto-rotate products
   useEffect(() => {
+    if (products.length <= 1) return;
+    
     const interval = setInterval(() => {
-      setSelectedProduct((prev) => (prev + 1) % EXAMPLE_PRODUCTS.length);
+      setSelectedProduct((prev) => (prev + 1) % products.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [products.length]);
 
   // Animated counter
   useEffect(() => {
@@ -108,20 +117,22 @@ export function PricingComparisonSection() {
           >
             <div className="glass-card rounded-3xl p-8 shadow-2xl border-2 border-white/20">
               {/* Product Selector Dots */}
-              <div className="flex justify-center gap-2 mb-6">
-                {EXAMPLE_PRODUCTS.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedProduct(index)}
-                    className={`h-2 rounded-full transition-all ${
-                      index === selectedProduct 
-                        ? "w-8 bg-hero-accent" 
-                        : "w-2 bg-slate-300 hover:bg-slate-400"
-                    }`}
-                    aria-label={`Select product ${index + 1}`}
-                  />
-                ))}
-              </div>
+              {products.length > 1 && (
+                <div className="flex justify-center gap-2 mb-6">
+                  {products.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedProduct(index)}
+                      className={`h-2 rounded-full transition-all ${
+                        index === selectedProduct 
+                          ? "w-8 bg-hero-accent" 
+                          : "w-2 bg-slate-300 hover:bg-slate-400"
+                      }`}
+                      aria-label={`Select product ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Product Name */}
               <motion.h3
@@ -184,18 +195,6 @@ export function PricingComparisonSection() {
                     ({savingsPercent}% off)
                   </span>
                 </div>
-                
-                {/* Sparkle Effect */}
-                <motion.div
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.5, 1, 0.5],
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute -top-2 -right-2 text-3xl"
-                >
-                  ✨
-                </motion.div>
               </motion.div>
 
               {/* CTA */}

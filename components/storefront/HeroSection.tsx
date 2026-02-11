@@ -21,10 +21,10 @@ interface HeroSectionProps {
 }
 
 const ROTATING_TEXTS = [
-  { text: "Premium wholesale.", color: "text-slate-900" },
-  { text: "Bulk pricing.", color: "text-hero-accent" },
-  { text: "Authentic pairs.", color: "text-hero-secondary" },
-  { text: "Direct access.", color: "text-slate-900" },
+  { text: "Bulk savings.", color: "text-hero-accent" },
+  { text: "Direct sourcing.", color: "text-hero-secondary" },
+  { text: "Verified authentic.", color: "text-slate-900" },
+  { text: "Volume pricing.", color: "text-hero-accent" },
 ];
 
 export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
@@ -79,7 +79,7 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
           transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
         >
           <h1 className="text-5xl font-light tracking-tighter text-slate-900 sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
-            Own your future.
+            Wholesale sneakers.
             <br />
             {/* Rotating Text */}
             <div className="relative inline-block h-[1.2em] overflow-hidden">
@@ -106,7 +106,7 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
           transition={{ duration: 0.8, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
           className="mt-6 text-lg text-slate-500 sm:mt-8 sm:text-xl md:text-2xl"
         >
-          Premium sneakers at wholesale prices. Built for retailers who demand the best.
+          Premium wholesale marketplace built for retailers who demand quality and value.
         </motion.p>
 
         <motion.div

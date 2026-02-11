@@ -6,17 +6,17 @@ import { fadeInUp, slideInLeft, slideInRight } from "@/lib/animations";
 
 const benefits = [
   {
-    icon: "✓",
+    icon: "CHECK",
     title: "Every pair verified",
     description: "Rigorous authentication process for all products"
   },
   {
-    icon: "🔒",
+    icon: "LOCK",
     title: "Direct from trusted sources",
     description: "Partnerships with verified wholesalers only"
   },
   {
-    icon: "⭐",
+    icon: "STAR",
     title: "Quality guaranteed",
     description: "100% satisfaction or full refund policy"
   }
@@ -50,9 +50,14 @@ export function AuthenticitySection() {
               {/* Placeholder for sneaker image with verification badges */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative">
-                  {/* Large Sneaker Icon/Image Placeholder */}
-                  <div className="h-64 w-64 rounded-2xl bg-white/80 backdrop-blur-sm flex items-center justify-center text-8xl">
-                    👟
+                  {/* Large Sneaker Image */}
+                  <div className="h-64 w-64 rounded-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400" 
+                      alt="Premium sneaker" 
+                      className="h-full w-full object-contain p-4"
+                    />
                   </div>
                   
                   {/* Floating Verification Badges */}
@@ -63,7 +68,7 @@ export function AuthenticitySection() {
                     className="absolute -top-4 -right-4 glass-card rounded-2xl px-4 py-2 shadow-lg"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">✓</span>
+                      <span className="text-xl font-bold text-emerald-600">✓</span>
                       <span className="text-sm font-semibold text-emerald-600">Verified</span>
                     </div>
                   </motion.div>
@@ -75,7 +80,7 @@ export function AuthenticitySection() {
                     className="absolute -bottom-4 -left-4 glass-card rounded-2xl px-4 py-2 shadow-lg"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">🔒</span>
+                      <span className="text-xl font-bold text-slate-700">◆</span>
                       <span className="text-sm font-semibold text-slate-700">Authentic</span>
                     </div>
                   </motion.div>
@@ -87,7 +92,7 @@ export function AuthenticitySection() {
                     className="absolute top-1/2 -right-6 glass-card rounded-2xl px-4 py-2 shadow-lg"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">⭐</span>
+                      <span className="text-xl font-bold text-hero-accent">★</span>
                       <span className="text-sm font-semibold text-hero-accent">Premium</span>
                     </div>
                   </motion.div>
@@ -149,8 +154,10 @@ export function AuthenticitySection() {
                   transition={{ delay: 0.5 + index * 0.1 }}
                   className="flex items-start gap-4 p-4 rounded-xl bg-white/50 backdrop-blur-sm border border-slate-100 hover:border-slate-200 hover:shadow-md transition-all will-animate"
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-hero-accent/10 to-hero-secondary/10 flex items-center justify-center text-2xl">
-                    {benefit.icon}
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-hero-accent/10 to-hero-secondary/10 flex items-center justify-center text-xl font-bold">
+                    {benefit.icon === "CHECK" && <span className="text-emerald-600">✓</span>}
+                    {benefit.icon === "LOCK" && <span className="text-slate-700">◆</span>}
+                    {benefit.icon === "STAR" && <span className="text-hero-accent">★</span>}
                   </div>
                   <div>
                     <h3 className="font-semibold text-slate-900">{benefit.title}</h3>
