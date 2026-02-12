@@ -1,7 +1,7 @@
-import { InventoryMode, Listing, ListingSize } from "@prisma/client";
+import { InventoryMode, ListingSize } from "@prisma/client";
 
 export function getTotalPairs(
-  listing: Listing & { sizes?: ListingSize[] },
+  listing: { sizes?: ListingSize[]; inventoryMode?: InventoryMode; totalPairs?: number | null },
 ): number {
   if (listing.inventoryMode === InventoryMode.MIXED_BATCH) {
     return listing.totalPairs ?? 0;
@@ -14,7 +14,7 @@ export function getTotalPairs(
 }
 
 export function isSoldOut(
-  listing: Listing & { sizes?: ListingSize[] },
+  listing: { sizes?: ListingSize[]; inventoryMode?: InventoryMode; totalPairs?: number | null },
 ): boolean {
   if (listing.inventoryMode === InventoryMode.MIXED_BATCH) {
     return (listing.totalPairs ?? 0) === 0;

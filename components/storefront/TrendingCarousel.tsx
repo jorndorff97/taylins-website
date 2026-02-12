@@ -5,11 +5,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ListingCard } from "./ListingCard";
 import type { Listing, ListingImage, ListingSize, ListingTierPrice } from "@prisma/client";
 
+// Serialized listing type for client components (Decimal fields converted to number)
+type SerializedListing = Omit<Listing, 'flatPricePerPair' | 'basePricePerPair' | 'costPerPair' | 'stockXPrice'> & {
+  flatPricePerPair: number | null;
+  basePricePerPair: number | null;
+  costPerPair: number | null;
+  stockXPrice: number | null;
+};
+
+type SerializedTierPrice = Omit<ListingTierPrice, 'pricePerPair'> & {
+  pricePerPair: number;
+};
+
 interface TrendingCarouselProps {
-  listings: (Listing & {
+  listings: (SerializedListing & {
     images: ListingImage[];
     sizes?: ListingSize[];
-    tierPrices?: ListingTierPrice[];
+    tierPrices?: SerializedTierPrice[];
   })[];
 }
 

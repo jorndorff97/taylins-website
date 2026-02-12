@@ -59,6 +59,19 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
           : { updatedAt: "desc" },
   });
 
+  // Serialize Decimal fields for client components
+  const serializedListings = listings.map(listing => ({
+    ...listing,
+    flatPricePerPair: listing.flatPricePerPair ? Number(listing.flatPricePerPair) : null,
+    basePricePerPair: listing.basePricePerPair ? Number(listing.basePricePerPair) : null,
+    costPerPair: listing.costPerPair ? Number(listing.costPerPair) : null,
+    stockXPrice: listing.stockXPrice ? Number(listing.stockXPrice) : null,
+    tierPrices: listing.tierPrices.map(tp => ({
+      ...tp,
+      pricePerPair: Number(tp.pricePerPair),
+    })),
+  }));
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
@@ -131,7 +144,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
         ))}
       </div>
 
-      {listings.length === 0 ? (
+      {serializedListings.length === 0 ? (
         <p className="mt-12 text-slate-500">
           No listings match your filters.{" "}
           <Link href="/browse" className="text-hero-accent hover:underline">
@@ -140,7 +153,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
         </p>
       ) : (
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {listings.map((listing) => (
+          {serializedListings.map((listing) => (
             <ListingCard key={listing.id} listing={listing} />
           ))}
         </div>

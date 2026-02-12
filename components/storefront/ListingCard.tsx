@@ -10,11 +10,23 @@ import { MagneticHover } from "@/components/effects/MagneticHover";
 import type { Listing, ListingImage, ListingSize, ListingTierPrice } from "@prisma/client";
 import { PricingMode } from "@prisma/client";
 
+// Serialized listing type for client components (Decimal fields converted to number)
+type SerializedListing = Omit<Listing, 'flatPricePerPair' | 'basePricePerPair' | 'costPerPair' | 'stockXPrice'> & {
+  flatPricePerPair: number | null;
+  basePricePerPair: number | null;
+  costPerPair: number | null;
+  stockXPrice: number | null;
+};
+
+type SerializedTierPrice = Omit<ListingTierPrice, 'pricePerPair'> & {
+  pricePerPair: number;
+};
+
 interface ListingCardProps {
-  listing: Listing & {
+  listing: SerializedListing & {
     images: ListingImage[];
     sizes?: ListingSize[];
-    tierPrices?: ListingTierPrice[];
+    tierPrices?: SerializedTierPrice[];
   };
   rank?: number;
   index?: number;

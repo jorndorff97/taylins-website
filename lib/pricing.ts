@@ -1,11 +1,23 @@
-import { Listing, ListingTierPrice, PricingMode } from "@prisma/client";
+import { PricingMode } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
+
+// Helper type that accepts both Decimal and number for price fields
+type FlexibleListing = {
+  pricingMode?: PricingMode;
+  flatPricePerPair?: Decimal | number | null;
+};
+
+type FlexibleTierPrice = {
+  minQty: number;
+  pricePerPair: Decimal | number | null;
+};
 
 export function getApplicableTier(
-  tiers: ListingTierPrice[],
+  tiers: FlexibleTierPrice[],
   orderQty: number,
-): ListingTierPrice | null {
+): FlexibleTierPrice | null {
   const sorted = [...tiers].sort((a, b) => a.minQty - b.minQty);
-  let best: ListingTierPrice | null = null;
+  let best: FlexibleTierPrice | null = null;
 
   for (const tier of sorted) {
     if (orderQty >= tier.minQty) {
@@ -17,8 +29,8 @@ export function getApplicableTier(
 }
 
 export function calculateOrderPrice(options: {
-  listing: Listing;
-  tiers: ListingTierPrice[];
+  listing: FlexibleListing;
+  tiers: FlexibleTierPrice[];
   orderQty: number;
 }): number | null {
   const { listing, tiers, orderQty } = options;
@@ -38,8 +50,8 @@ export function calculateOrderPrice(options: {
 
 /** Minimum price per pair for display (e.g. listing cards). */
 export function getStartingPricePerPair(options: {
-  listing: Listing;
-  tiers: ListingTierPrice[];
+  listing: FlexibleListing;
+  tiers: FlexibleTierPrice[];
 }): number | null {
   const { listing, tiers } = options;
 
@@ -60,8 +72,8 @@ export function getStartingPricePerPair(options: {
 
 /** Calculate total order details including price per pair and total amount */
 export function calculateOrderTotal(options: {
-  listing: Listing;
-  tiers: ListingTierPrice[];
+  listing: FlexibleListing;
+  tiers: FlexibleTierPrice[];
   totalPairs: number;
 }): { pricePerPair: number; totalPairs: number; totalAmount: number } {
   const { listing, tiers, totalPairs } = options;

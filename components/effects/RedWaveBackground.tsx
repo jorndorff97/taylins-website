@@ -1,10 +1,39 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 export function RedWaveBackground() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/d4fae22e-da3c-4290-91e9-330f30caed4d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RedWaveBackground.tsx:11',message:'Component mounted',data:{rendered:true},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+
+    if (containerRef.current) {
+      const el = containerRef.current;
+      const rect = el.getBoundingClientRect();
+      const computed = window.getComputedStyle(el);
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/d4fae22e-da3c-4290-91e9-330f30caed4d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RedWaveBackground.tsx:20',message:'Container dimensions and styles',data:{width:rect.width,height:rect.height,position:computed.position,zIndex:computed.zIndex,display:computed.display,visibility:computed.visibility,opacity:computed.opacity,top:computed.top,left:computed.left,right:computed.right,bottom:computed.bottom},timestamp:Date.now(),hypothesisId:'B,C,D,E'})}).catch(()=>{});
+      // #endregion
+
+      const firstChild = el.firstElementChild as HTMLElement;
+      if (firstChild) {
+        const childRect = firstChild.getBoundingClientRect();
+        const childComputed = window.getComputedStyle(firstChild);
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/d4fae22e-da3c-4290-91e9-330f30caed4d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RedWaveBackground.tsx:31',message:'First wave child styles',data:{width:childRect.width,height:childRect.height,position:childComputed.position,background:childComputed.background,filter:childComputed.filter,opacity:childComputed.opacity,display:childComputed.display,visibility:childComputed.visibility},timestamp:Date.now(),hypothesisId:'B,D,E'})}).catch(()=>{});
+        // #endregion
+      }
+    }
+  }, []);
+
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+    <div ref={containerRef} className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
       {/* Large Primary Wave - Center */}
       <motion.div
         className="absolute top-[10%] left-[50%] w-[1000px] h-[1000px] rounded-full"

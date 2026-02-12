@@ -55,8 +55,21 @@ export default async function HomePage() {
     listings = [...trendingListings, ...recentListings];
   }
 
+  // Serialize Decimal fields for client components
+  const serializedListings = listings.map(listing => ({
+    ...listing,
+    flatPricePerPair: listing.flatPricePerPair ? Number(listing.flatPricePerPair) : null,
+    basePricePerPair: listing.basePricePerPair ? Number(listing.basePricePerPair) : null,
+    costPerPair: listing.costPerPair ? Number(listing.costPerPair) : null,
+    stockXPrice: listing.stockXPrice ? Number(listing.stockXPrice) : null,
+    tierPrices: listing.tierPrices.map(tp => ({
+      ...tp,
+      pricePerPair: Number(tp.pricePerPair),
+    })),
+  }));
+
   // Prepare hero products (listings with images)
-  const heroProducts = listings
+  const heroProducts = serializedListings
     .filter((l) => l.images.length > 0)
     .slice(0, 4)
     .map((l) => ({
@@ -142,9 +155,20 @@ export default async function HomePage() {
   });
 
   // Sort to match topDeals order (by savings percent)
-  const sortedBestDeals = topDeals.map(deal => 
-    bestDealsListings.find(l => l.id === deal.id)
-  ).filter(Boolean) as typeof bestDealsListings;
+  const sortedBestDeals = topDeals
+    .map(deal => bestDealsListings.find(l => l.id === deal.id))
+    .filter((listing): listing is NonNullable<typeof listing> => listing !== undefined)
+    .map(listing => ({
+      ...listing,
+      flatPricePerPair: listing.flatPricePerPair ? Number(listing.flatPricePerPair) : null,
+      basePricePerPair: listing.basePricePerPair ? Number(listing.basePricePerPair) : null,
+      costPerPair: listing.costPerPair ? Number(listing.costPerPair) : null,
+      stockXPrice: listing.stockXPrice ? Number(listing.stockXPrice) : null,
+      tierPrices: listing.tierPrices.map(tp => ({
+        ...tp,
+        pricePerPair: Number(tp.pricePerPair),
+      })),
+    }));
 
   // Get listings with StockX prices for pricing comparison section
   const stockXListings = await prisma.listing.findMany({
@@ -199,7 +223,7 @@ export default async function HomePage() {
                 </h2>
               </div>
               <TrendingTabs 
-                trendingListings={listings} 
+                trendingListings={serializedListings} 
                 bestDealsListings={sortedBestDeals}
               />
             </div>

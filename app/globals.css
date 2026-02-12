@@ -4,6 +4,7 @@
 
 html {
   scroll-behavior: smooth;
+  background: transparent;
 }
 
 html,
@@ -12,7 +13,7 @@ body {
 }
 
 body {
-  @apply bg-white text-slate-900 font-sans antialiased;
+  @apply bg-transparent text-slate-900 font-sans antialiased;
 }
 
 main {
