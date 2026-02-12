@@ -18,24 +18,6 @@ interface PhoneMockupProps {
   deals: DealData[];
 }
 
-function PriceTrendGraph() {
-  const bars = [65, 70, 60, 55, 50];
-  
-  return (
-    <div className="flex items-end gap-1 h-12 mt-4">
-      {bars.map((height, i) => (
-        <motion.div
-          key={i}
-          initial={{ height: 0 }}
-          animate={{ height: `${height}%` }}
-          transition={{ duration: 0.5, delay: i * 0.05 }}
-          className="flex-1 bg-gradient-to-t from-neutral-300 to-neutral-200 rounded-t"
-        />
-      ))}
-    </div>
-  );
-}
-
 function DealCard({ deal }: { deal: DealData }) {
   return (
     <div className="h-full flex flex-col bg-white/90 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
@@ -77,15 +59,9 @@ function DealCard({ deal }: { deal: DealData }) {
       </div>
 
       {/* Savings Badge */}
-      <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-700 font-bold rounded-full px-4 py-2 mb-3">
+      <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-700 font-bold rounded-full px-4 py-2">
         <span className="text-lg">Save {deal.savingsPercent}%</span>
         <span className="text-xs opacity-75">${deal.savingsDollar.toFixed(0)}</span>
-      </div>
-
-      {/* Mini Graph */}
-      <div className="mt-auto">
-        <p className="text-xs text-neutral-400 mb-2">Price Trend</p>
-        <PriceTrendGraph />
       </div>
     </div>
   );
