@@ -15,8 +15,8 @@ module.exports = {
         },
         hero: {
           bg: "#fafafa",
-          accent: "#8b5cf6",
-          secondary: "#6366f1",
+          accent: "#ef4444",
+          secondary: "#dc2626",
         },
         glass: {
           bg: "rgba(255, 255, 255, 0.7)",
@@ -24,15 +24,15 @@ module.exports = {
         },
         brand: "#0f172a",
         neon: {
-          purple: "#a855f7",
-          pink: "#ec4899",
+          purple: "#ef4444",
+          pink: "#f87171",
           blue: "#3b82f6",
           cyan: "#06b6d4",
           green: "#10b981",
         },
         glow: {
-          purple: "rgba(168, 85, 247, 0.5)",
-          pink: "rgba(236, 72, 153, 0.5)",
+          purple: "rgba(239, 68, 68, 0.5)",
+          pink: "rgba(248, 113, 113, 0.5)",
           blue: "rgba(59, 130, 246, 0.5)",
         },
         neutral: {

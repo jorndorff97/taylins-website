@@ -189,7 +189,7 @@ export default async function HomePage() {
         <ScrollReveal>
           <section className="relative overflow-hidden border-t border-neutral-200/50 bg-gradient-to-b from-neutral-50 via-white to-neutral-50 py-20 sm:py-24">
             {/* Ambient gradient orbs for depth */}
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl -z-10" />
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-100/30 to-red-100/30 rounded-full blur-3xl -z-10" />
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-pink-100/30 to-orange-100/30 rounded-full blur-3xl -z-10" />
             
             <div className="mx-auto max-w-7xl px-4 sm:px-6">

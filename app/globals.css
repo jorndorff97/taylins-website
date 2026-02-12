@@ -134,7 +134,7 @@ main {
   inset: -2px;
   border-radius: 1.5rem;
   padding: 2px;
-  background: linear-gradient(45deg, #a855f7, #ec4899, #3b82f6, #06b6d4);
+  background: linear-gradient(45deg, #ef4444, #f87171, #3b82f6, #06b6d4);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -149,7 +149,7 @@ main {
 
 /* Animated gradient text */
 .gradient-text {
-  background: linear-gradient(90deg, #a855f7, #ec4899, #3b82f6, #06b6d4, #a855f7);
+  background: linear-gradient(90deg, #ef4444, #f87171, #3b82f6, #06b6d4, #ef4444);
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -169,8 +169,8 @@ main {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(168, 85, 247, 0.1), 
-              0 0 80px rgba(236, 72, 153, 0.05);
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.1), 
+              0 0 80px rgba(248, 113, 113, 0.05);
 }
 
 /* Blur on scroll */
