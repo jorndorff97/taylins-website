@@ -50,22 +50,6 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            {/* Integrated Rank Badge */}
-            {rank != null && (
-              <motion.div 
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: index * 0.08 + 0.3, duration: 0.4 }}
-                className="absolute top-3 right-3 z-20 pointer-events-none"
-              >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 shadow-lg">
-                  <span className="text-xs font-bold text-white">
-                    #{rank}
-                  </span>
-                </div>
-              </motion.div>
-            )}
-
             {/* Sold Out Badge */}
             {soldOut && (
               <div className="absolute left-3 top-3 z-20 rounded-full bg-neutral-900/90 backdrop-blur-sm px-3 py-1.5 ring-1 ring-white/20">
