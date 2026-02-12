@@ -4,11 +4,11 @@ import { STOREFRONT_CATEGORIES, getActiveCategories } from "@/lib/categories";
 import { HeroSection } from "@/components/storefront/HeroSection";
 import { AuthenticitySection } from "@/components/storefront/AuthenticitySection";
 import { PricingComparisonSection } from "@/components/storefront/PricingComparisonSection";
-import { Top10Carousel } from "@/components/storefront/Top10Carousel";
+import { TrendingCarousel } from "@/components/storefront/TrendingCarousel";
 import { ScrollReveal } from "@/components/effects/ScrollReveal";
 import { ListingStatus } from "@prisma/client";
 import { getTotalPairs } from "@/lib/inventory";
-
+import { motion } from "framer-motion";
 export default async function HomePage() {
   // Get active categories for badge display
   const activeCategoryLabels = await getActiveCategories();
@@ -31,12 +31,12 @@ export default async function HomePage() {
     orderBy: {
       orders: { _count: "desc" }
     },
-    take: 10,
+    take: 6,
   });
 
   // Fallback to recent listings if not enough trending ones
   let listings = trendingListings;
-  if (trendingListings.length < 10) {
+  if (trendingListings.length < 6) {
     const recentListings = await prisma.listing.findMany({
       where: { 
         status: ListingStatus.ACTIVE,
@@ -48,7 +48,7 @@ export default async function HomePage() {
         tierPrices: true,
       },
       orderBy: { createdAt: "desc" },
-      take: 10 - trendingListings.length,
+      take: 6 - trendingListings.length,
     });
     
     listings = [...trendingListings, ...recentListings];
@@ -137,19 +137,23 @@ export default async function HomePage() {
         {/* Hero Section with Rotating Text */}
         <HeroSection heroProducts={heroProducts} stats={stats} />
 
-        {/* Trending Listings Grid - Zellerfeld "Top 10" Style */}
+        {/* Trending Now Section - Modern Glassmorphism Style */}
         <ScrollReveal>
-          <section className="border-t border-neutral-200 bg-neutral-50 py-20 sm:py-24">
+          <section className="relative overflow-hidden border-t border-neutral-200/50 bg-gradient-to-b from-neutral-50 via-white to-neutral-50 py-20 sm:py-24">
+            {/* Ambient gradient orbs for depth */}
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl -z-10" />
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-pink-100/30 to-orange-100/30 rounded-full blur-3xl -z-10" />
+            
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
-              <div className="mb-12 sm:mb-16">
-                <h2 className="text-4xl font-black tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl">
-                  Top 10
+              <div className="mb-12 sm:mb-16 text-center">
+                <h2 className="text-4xl font-black tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900 bg-clip-text text-transparent sm:text-5xl lg:text-6xl">
+                  Trending Now
                 </h2>
                 <p className="mt-3 text-base text-neutral-600 sm:text-lg">
-                  Most popular wholesale sneakers right now
+                  The hottest wholesale sneakers of the moment
                 </p>
               </div>
-              <Top10Carousel listings={listings} />
+              <TrendingCarousel listings={listings} />
             </div>
           </section>
         </ScrollReveal>

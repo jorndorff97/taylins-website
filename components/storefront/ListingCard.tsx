@@ -38,37 +38,37 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
           delay: index * 0.08,
           ease: [0.25, 0.1, 0.25, 1]
         }}
-        className="will-animate relative overflow-visible"
+        className="will-animate"
       >
         <Link
           href={`/listing/${listing.id}`}
-          className="group block relative overflow-visible"
+          className="group block relative"
         >
-          {/* Zellerfeld-style rank number - massive and subtle, positioned behind card */}
-          {rank != null && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/4 z-0 pointer-events-none">
-              <motion.span 
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: index * 0.08 + 0.2, duration: 0.5 }}
-                className="text-[180px] sm:text-[200px] lg:text-[220px] font-black leading-none text-neutral-300/30 select-none"
-                style={{ 
-                  fontFamily: 'system-ui, -apple-system, sans-serif'
-                }}
-              >
-                {rank}
-              </motion.span>
-            </div>
-          )}
-
-          {/* Product Image Container - Neutral */}
+          {/* Glassmorphic Card Container */}
           <motion.div 
-            className="relative aspect-square overflow-hidden rounded-2xl bg-neutral-100 lg:rounded-3xl z-10"
+            className="relative aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 backdrop-blur-sm border border-white/20 shadow-2xl lg:rounded-3xl"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
           >
+            {/* Integrated Rank Badge */}
+            {rank != null && (
+              <motion.div 
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: index * 0.08 + 0.3, duration: 0.4 }}
+                className="absolute top-3 right-3 z-20 pointer-events-none"
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 shadow-lg">
+                  <span className="text-xs font-bold text-white">
+                    #{rank}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Sold Out Badge */}
             {soldOut && (
-              <div className="absolute left-3 top-3 z-10 rounded-full bg-neutral-900/90 backdrop-blur-sm px-3 py-1.5 ring-1 ring-white/20">
+              <div className="absolute left-3 top-3 z-20 rounded-full bg-neutral-900/90 backdrop-blur-sm px-3 py-1.5 ring-1 ring-white/20">
                 <span className="text-[9px] font-semibold uppercase tracking-wider text-white">
                   Sold Out
                 </span>
@@ -84,8 +84,8 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
                   className="h-full w-full object-cover transition-all duration-700 group-hover:scale-105"
                 />
                 
-                {/* Subtle neutral overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                {/* Glassmorphic hover overlay */}
+                <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500" />
               </>
             ) : (
               <div className="flex h-full w-full items-center justify-center text-neutral-400 text-sm">
@@ -108,7 +108,7 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
               {listing.title}
             </h3>
             
-            {/* Price Only - Zellerfeld style */}
+            {/* Price Only */}
             <div className="pt-0.5">
               {startingPrice != null && (
                 <span className="text-lg lg:text-xl font-bold text-neutral-900">

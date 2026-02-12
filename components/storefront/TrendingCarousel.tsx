@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ListingCard } from "./ListingCard";
 import type { Listing, ListingImage, ListingSize, ListingTierPrice } from "@prisma/client";
 
-interface Top10CarouselProps {
+interface TrendingCarouselProps {
   listings: (Listing & {
     images: ListingImage[];
     sizes?: ListingSize[];
@@ -13,7 +13,7 @@ interface Top10CarouselProps {
   })[];
 }
 
-export function Top10Carousel({ listings }: Top10CarouselProps) {
+export function TrendingCarousel({ listings }: TrendingCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -101,12 +101,12 @@ export function Top10Carousel({ listings }: Top10CarouselProps) {
         {/* Carousel Container - Always horizontal scroll with snap */}
         <div
           ref={scrollContainerRef}
-          className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+          className="flex gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
         >
           {listings.map((listing, i) => (
             <div
               key={listing.id}
-              className="snap-center shrink-0 w-[85vw] sm:w-[45%] lg:w-[calc(33.333%-1rem)]"
+              className="snap-center shrink-0 w-[85vw] sm:w-[45%] lg:w-[calc(33.333%-1.33rem)]"
             >
               <ListingCard listing={listing} rank={i + 1} index={i} />
             </div>
@@ -133,7 +133,7 @@ export function Top10Carousel({ listings }: Top10CarouselProps) {
 
         {/* Scroll Hint - Desktop Only */}
         {canScrollRight && (
-          <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-neutral-50 via-neutral-50/50 to-transparent pointer-events-none" />
+          <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white via-white/50 to-transparent pointer-events-none" />
         )}
       </div>
 
