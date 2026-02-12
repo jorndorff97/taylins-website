@@ -22,12 +22,12 @@ function DealCard({ deal }: { deal: DealData }) {
   return (
     <div className="h-full flex flex-col bg-white/90 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
       {/* Product Image */}
-      <div className="aspect-square bg-neutral-100 rounded-2xl overflow-hidden mb-4">
+      <div className="aspect-square bg-neutral-100 rounded-2xl overflow-hidden mb-4 flex items-center justify-center p-2">
         {deal.imageUrl ? (
           <img
             src={deal.imageUrl}
             alt={deal.title}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-neutral-400 text-sm">

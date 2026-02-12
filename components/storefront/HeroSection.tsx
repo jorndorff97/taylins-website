@@ -8,6 +8,7 @@ import { LandscapeBackground } from "./LandscapeBackground";
 import { FloatingElements } from "./FloatingElements";
 import { useParallax } from "@/hooks/useScrollProgress";
 import { PhoneMockup } from "./PhoneMockup";
+import { BrandCarousel } from "./BrandCarousel";
 
 interface HeroProduct {
   id: number;
@@ -53,7 +54,7 @@ export function HeroSection({ heroProducts, topDeals }: HeroSectionProps) {
   const currentText = ROTATING_TEXTS[currentTextIndex];
 
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-neutral-100 via-neutral-50 to-white">
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-neutral-100 via-neutral-50 to-white pt-24 sm:pt-32">
       {/* Landscape Background */}
       <LandscapeBackground />
       
@@ -61,11 +62,13 @@ export function HeroSection({ heroProducts, topDeals }: HeroSectionProps) {
       <FloatingElements />
 
       {/* Hero Content */}
-      <div className="relative z-10 mx-auto max-w-5xl px-4 text-center">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 w-full">
+        {/* Centered Title + Rotating Text */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+          className="text-center mb-12 sm:mb-16"
         >
           <h1 className="text-4xl font-light tracking-tight leading-tight text-neutral-900 sm:text-5xl sm:tracking-tighter md:text-6xl lg:text-7xl xl:text-8xl">
             Wholesale sneakers.
@@ -89,38 +92,47 @@ export function HeroSection({ heroProducts, topDeals }: HeroSectionProps) {
           </h1>
         </motion.div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
-          className="mt-6 text-base text-neutral-600 leading-relaxed sm:mt-8 sm:text-lg md:text-xl lg:text-2xl px-2 sm:px-0 max-w-2xl mx-auto"
-        >
-          Premium wholesale marketplace built for retailers who demand quality and value.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: [0.4, 0, 0.2, 1] }}
-        >
-          <Link
-            href="/browse"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-8 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 hover:scale-105 sm:mt-12 sm:px-10 sm:py-4 sm:text-base will-animate"
+        {/* 3-Column Layout (Desktop) / Stacked (Mobile) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-center">
+          {/* Left: Subheading + CTA */}
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="text-center lg:text-left space-y-6"
           >
-            Explore listings
-            <span aria-hidden>→</span>
-          </Link>
-        </motion.div>
+            <p className="text-sm sm:text-base text-neutral-600 leading-relaxed">
+              Premium wholesale marketplace built for retailers who demand quality and value.
+            </p>
+            <Link
+              href="/browse"
+              className="inline-flex items-center gap-2 rounded-full bg-neutral-900 px-8 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 hover:scale-105 will-animate"
+            >
+              Explore listings
+              <span aria-hidden>→</span>
+            </Link>
+          </motion.div>
 
-        {/* Phone Mockup with Top Deals */}
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          className="mt-16 flex justify-center sm:mt-20"
-        >
-          <PhoneMockup deals={topDeals} />
-        </motion.div>
+          {/* Center: Phone Mockup */}
+          <motion.div
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: [0.4, 0, 0.2, 1] }}
+            className="flex justify-center"
+          >
+            <PhoneMockup deals={topDeals} />
+          </motion.div>
+
+          {/* Right: Brand Carousel (hidden on mobile) */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.6, ease: [0.4, 0, 0.2, 1] }}
+            className="hidden lg:block"
+          >
+            <BrandCarousel />
+          </motion.div>
+        </div>
       </div>
     </section>
   );
