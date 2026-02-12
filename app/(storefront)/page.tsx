@@ -182,7 +182,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <div className="relative">
+      <div className="relative min-h-screen">
         <RedWaveBackground />
         
         <div className="noise-texture">

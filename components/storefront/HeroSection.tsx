@@ -37,20 +37,19 @@ export function HeroSection({ heroProducts, topDeals }: HeroSectionProps) {
       <div className="relative z-10 mx-auto max-w-7xl px-4 w-full">
         {/* 3-Column Layout (Desktop) / Stacked (Mobile) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 items-center">
-          {/* Center: Headline + Phone Mockup - Order 1 on mobile, Order 2 on desktop */}
+          {/* Headline - Order 1 on mobile, Order 2 on desktop (center) */}
           <motion.div
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4, ease: [0.4, 0, 0.2, 1] }}
-            className="flex flex-col items-center gap-6 order-1 md:order-2"
+            className="flex flex-col items-center order-1 md:order-2"
           >
             <h1 className="text-4xl font-light tracking-tight leading-tight text-neutral-900 sm:text-5xl md:text-6xl lg:text-7xl text-center">
               Wholesale sneakers.
             </h1>
-            <PhoneMockup deals={topDeals} />
           </motion.div>
 
-          {/* Left: Subheading + CTA - Order 2 on mobile, Order 1 on desktop */}
+          {/* Subheading + CTA - Order 2 on mobile, Order 1 on desktop (left) */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
@@ -69,12 +68,22 @@ export function HeroSection({ heroProducts, topDeals }: HeroSectionProps) {
             </Link>
           </motion.div>
 
-          {/* Right: Brand Carousel (hidden on mobile) - Order 3 */}
+          {/* Phone Mockup - Order 3 on mobile, Order 2 on desktop (center, below headline) */}
+          <motion.div
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            className="flex justify-center order-3 md:order-2"
+          >
+            <PhoneMockup deals={topDeals} />
+          </motion.div>
+
+          {/* Brand Carousel - Order 4, hidden on mobile, Order 3 on desktop (right) */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.6, ease: [0.4, 0, 0.2, 1] }}
-            className="hidden md:block order-3"
+            className="hidden md:block order-4 md:order-3"
           >
             <BrandCarousel />
           </motion.div>
