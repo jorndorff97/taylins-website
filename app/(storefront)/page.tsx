@@ -191,7 +191,7 @@ export default async function HomePage() {
 
         {/* Trending Now Section - Modern Glassmorphism Style */}
         <ScrollReveal>
-          <section className="relative overflow-hidden border-t border-neutral-200/50 bg-white/50 py-20 sm:py-24">
+          <section className="relative overflow-hidden border-t border-neutral-200/50 bg-white/30 py-20 sm:py-24">
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
               <div className="mb-6 sm:mb-8">
                 <h2 className="text-3xl font-black tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900 bg-clip-text text-transparent sm:text-4xl lg:text-5xl">
@@ -221,7 +221,7 @@ export default async function HomePage() {
         {/* Browse by Categories - Only show if there's more than 1 category */}
         {activeCategoryLabels.length > 1 && (
           <ScrollReveal>
-            <section className="border-t border-neutral-200 bg-white/60 py-16 sm:py-20">
+            <section className="border-t border-neutral-200 bg-white/30 py-16 sm:py-20">
               <div className="mx-auto max-w-7xl px-4 sm:px-6">
                 <h2 className="text-center text-2xl font-light tracking-tight text-neutral-900 sm:text-3xl">
                   Browse by Categories

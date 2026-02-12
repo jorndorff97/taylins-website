@@ -9,8 +9,8 @@ export function RedWaveBackground() {
       <motion.div
         className="absolute top-[10%] left-[50%] w-[1000px] h-[1000px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(239,68,68,0.35) 0%, rgba(239,68,68,0.15) 40%, rgba(239,68,68,0) 70%)',
-          filter: 'blur(80px)',
+          background: 'radial-gradient(circle, rgba(239,68,68,0.6) 0%, rgba(239,68,68,0.25) 40%, rgba(239,68,68,0) 70%)',
+          filter: 'blur(60px)',
           willChange: 'transform',
         }}
         animate={{
@@ -29,8 +29,8 @@ export function RedWaveBackground() {
       <motion.div
         className="absolute top-[30%] left-[5%] w-[800px] h-[800px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(248,113,113,0.3) 0%, rgba(248,113,113,0.12) 45%, rgba(248,113,113,0) 70%)',
-          filter: 'blur(70px)',
+          background: 'radial-gradient(circle, rgba(248,113,113,0.5) 0%, rgba(248,113,113,0.2) 45%, rgba(248,113,113,0) 70%)',
+          filter: 'blur(50px)',
           willChange: 'transform',
         }}
         animate={{
@@ -49,8 +49,8 @@ export function RedWaveBackground() {
       <motion.div
         className="absolute top-[50%] right-[10%] w-[900px] h-[900px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(220,38,38,0.28) 0%, rgba(220,38,38,0.1) 50%, rgba(220,38,38,0) 70%)',
-          filter: 'blur(75px)',
+          background: 'radial-gradient(circle, rgba(220,38,38,0.45) 0%, rgba(220,38,38,0.18) 50%, rgba(220,38,38,0) 70%)',
+          filter: 'blur(55px)',
           willChange: 'transform',
         }}
         animate={{
@@ -69,8 +69,8 @@ export function RedWaveBackground() {
       <motion.div
         className="absolute top-[15%] right-[20%] w-[700px] h-[700px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(254,202,202,0.4) 0%, rgba(254,202,202,0.15) 40%, rgba(254,202,202,0) 70%)',
-          filter: 'blur(65px)',
+          background: 'radial-gradient(circle, rgba(254,202,202,0.55) 0%, rgba(254,202,202,0.22) 40%, rgba(254,202,202,0) 70%)',
+          filter: 'blur(45px)',
           willChange: 'transform',
         }}
         animate={{
@@ -89,8 +89,8 @@ export function RedWaveBackground() {
       <motion.div
         className="absolute bottom-[10%] left-[15%] w-[850px] h-[850px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(239,68,68,0.32) 0%, rgba(239,68,68,0.14) 45%, rgba(239,68,68,0) 70%)',
-          filter: 'blur(70px)',
+          background: 'radial-gradient(circle, rgba(239,68,68,0.52) 0%, rgba(239,68,68,0.22) 45%, rgba(239,68,68,0) 70%)',
+          filter: 'blur(50px)',
           willChange: 'transform',
         }}
         animate={{
@@ -109,8 +109,8 @@ export function RedWaveBackground() {
       <motion.div
         className="absolute bottom-[20%] left-[40%] w-[750px] h-[750px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(248,113,113,0.25) 0%, rgba(248,113,113,0.1) 50%, rgba(248,113,113,0) 70%)',
-          filter: 'blur(60px)',
+          background: 'radial-gradient(circle, rgba(248,113,113,0.42) 0%, rgba(248,113,113,0.18) 50%, rgba(248,113,113,0) 70%)',
+          filter: 'blur(45px)',
           willChange: 'transform',
         }}
         animate={{
@@ -129,8 +129,8 @@ export function RedWaveBackground() {
       <motion.div
         className="absolute top-[5%] left-[25%] w-[650px] h-[650px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(220,38,38,0.22) 0%, rgba(220,38,38,0.08) 55%, rgba(220,38,38,0) 70%)',
-          filter: 'blur(65px)',
+          background: 'radial-gradient(circle, rgba(220,38,38,0.38) 0%, rgba(220,38,38,0.15) 55%, rgba(220,38,38,0) 70%)',
+          filter: 'blur(48px)',
           willChange: 'transform',
         }}
         animate={{
