@@ -97,6 +97,36 @@ export default async function HomePage() {
     avgSavings,
   };
 
+  // Get top 5 deals with best StockX savings for hero phone mockup
+  const allListingsWithPrices = await prisma.listing.findMany({
+    where: {
+      status: ListingStatus.ACTIVE,
+      stockXPrice: { not: null },
+      flatPricePerPair: { not: null },
+    },
+    include: {
+      images: { orderBy: { sortOrder: "asc" } },
+    },
+    take: 100,
+  });
+
+  const topDeals = allListingsWithPrices
+    .map(l => ({
+      id: l.id,
+      title: l.title,
+      brand: l.brand || "Unknown",
+      imageUrl: l.images[0]?.url || "",
+      ourPrice: Number(l.flatPricePerPair),
+      stockXPrice: Number(l.stockXPrice),
+      savingsPercent: Math.round(
+        ((Number(l.stockXPrice) - Number(l.flatPricePerPair)) / Number(l.stockXPrice)) * 100
+      ),
+      savingsDollar: Number(l.stockXPrice) - Number(l.flatPricePerPair),
+    }))
+    .filter(d => d.savingsPercent > 0 && d.imageUrl)
+    .sort((a, b) => b.savingsPercent - a.savingsPercent)
+    .slice(0, 5);
+
   // Get listings with StockX prices for pricing comparison section
   const stockXListings = await prisma.listing.findMany({
     where: {
@@ -134,8 +164,8 @@ export default async function HomePage() {
   return (
     <>
       <div className="noise-texture">
-        {/* Hero Section with Rotating Text */}
-        <HeroSection heroProducts={heroProducts} stats={stats} />
+        {/* Hero Section with Phone Mockup */}
+        <HeroSection heroProducts={heroProducts} topDeals={topDeals} />
 
         {/* Trending Now Section - Modern Glassmorphism Style */}
         <ScrollReveal>

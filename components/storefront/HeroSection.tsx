@@ -7,6 +7,7 @@ import { textRotate } from "@/lib/animations";
 import { LandscapeBackground } from "./LandscapeBackground";
 import { FloatingElements } from "./FloatingElements";
 import { useParallax } from "@/hooks/useScrollProgress";
+import { PhoneMockup } from "./PhoneMockup";
 
 interface HeroProduct {
   id: number;
@@ -14,13 +15,20 @@ interface HeroProduct {
   imageUrl: string;
 }
 
+interface DealData {
+  id: number;
+  title: string;
+  brand: string;
+  imageUrl: string;
+  ourPrice: number;
+  stockXPrice: number;
+  savingsPercent: number;
+  savingsDollar: number;
+}
+
 interface HeroSectionProps {
   heroProducts: HeroProduct[];
-  stats: {
-    totalPairs: number;
-    activeListings: number;
-    avgSavings: number;
-  };
+  topDeals: DealData[];
 }
 
 const ROTATING_TEXTS = [
@@ -30,7 +38,7 @@ const ROTATING_TEXTS = [
   { text: "Volume pricing.", color: "text-hero-accent" },
 ];
 
-export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
+export function HeroSection({ heroProducts, topDeals }: HeroSectionProps) {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const parallaxY = useParallax(50);
 
@@ -104,95 +112,16 @@ export function HeroSection({ heroProducts, stats }: HeroSectionProps) {
           </Link>
         </motion.div>
 
-        {/* Glassmorphic Stat Cards - Desktop Only */}
+        {/* Phone Mockup with Top Deals */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          className="mt-16 hidden sm:flex flex-wrap justify-center gap-4 sm:mt-20 sm:gap-6"
-          style={{ perspective: "1000px" }}
+          className="mt-16 flex justify-center sm:mt-20"
         >
-          <StatCard 
-            label="Total Pairs" 
-            value={stats.totalPairs.toLocaleString()} 
-            delay={0.7}
-          />
-          <StatCard 
-            label="Active Listings" 
-            value={stats.activeListings.toString()} 
-            delay={0.8}
-          />
-          <StatCard 
-            label="Avg. Savings" 
-            value={`${stats.avgSavings}%`} 
-            delay={0.9}
-            highlight
-          />
+          <PhoneMockup deals={topDeals} />
         </motion.div>
       </div>
     </section>
-  );
-}
-
-function StatCard({ 
-  label, 
-  value, 
-  delay, 
-  highlight 
-}: { 
-  label: string; 
-  value: string; 
-  delay: number;
-  highlight?: boolean;
-}) {
-  const [rotateX, setRotateX] = useState(0);
-  const [rotateY, setRotateY] = useState(0);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateXValue = ((y - centerY) / centerY) * -10;
-    const rotateYValue = ((x - centerX) / centerX) * 10;
-    
-    setRotateX(rotateXValue);
-    setRotateY(rotateYValue);
-  };
-
-  const handleMouseLeave = () => {
-    setRotateX(0);
-    setRotateY(0);
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, delay, ease: [0.4, 0, 0.2, 1] }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        rotateX,
-        rotateY,
-        transformStyle: "preserve-3d",
-      }}
-      className={`glass-card rounded-2xl px-6 py-4 backdrop-blur-xl will-animate relative overflow-hidden ${
-        highlight ? "ring-2 ring-neutral-400/20" : ""
-      }`}
-    >
-      <div className="relative z-10">
-        <div className="text-sm font-medium text-neutral-500 uppercase tracking-wide">
-          {label}
-        </div>
-        <div className={`mt-1 text-2xl font-bold ${
-          highlight ? "text-neutral-900" : "text-neutral-900"
-        }`}>
-          {value}
-        </div>
-      </div>
-    </motion.div>
   );
 }
