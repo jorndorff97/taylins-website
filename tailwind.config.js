@@ -84,9 +84,14 @@ module.exports = {
           "0%": { transform: "translateY(0)" },
           "100%": { transform: "translateY(-50%)" },
         },
+        "scroll-horizontal": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "scroll-vertical": "scroll-vertical 20s linear infinite",
+        "scroll-horizontal": "scroll-horizontal 30s linear infinite",
       },
     },
   },
