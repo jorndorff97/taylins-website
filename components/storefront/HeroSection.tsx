@@ -2,8 +2,6 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { LandscapeBackground } from "./LandscapeBackground";
-import { FloatingElements } from "./FloatingElements";
 import { useParallax } from "@/hooks/useScrollProgress";
 import { PhoneMockup } from "./PhoneMockup";
 import { BrandCarousel } from "./BrandCarousel";
@@ -34,13 +32,7 @@ export function HeroSection({ heroProducts, topDeals }: HeroSectionProps) {
   const parallaxY = useParallax(50);
 
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-neutral-100 via-neutral-50 to-white pt-24 sm:pt-32">
-      {/* Landscape Background */}
-      <LandscapeBackground />
-      
-      {/* Floating Particles */}
-      <FloatingElements />
-
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-transparent pt-24 sm:pt-32">
       {/* Hero Content */}
       <div className="relative z-10 mx-auto max-w-7xl px-4 w-full">
         {/* 3-Column Layout (Desktop) / Stacked (Mobile) */}

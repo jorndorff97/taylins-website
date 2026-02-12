@@ -6,6 +6,7 @@ import { AuthenticitySection } from "@/components/storefront/AuthenticitySection
 import { PricingComparisonSection } from "@/components/storefront/PricingComparisonSection";
 import { TrendingTabs } from "@/components/storefront/TrendingTabs";
 import { ScrollReveal } from "@/components/effects/ScrollReveal";
+import { RedWaveBackground } from "@/components/effects/RedWaveBackground";
 import { ListingStatus } from "@prisma/client";
 import { getTotalPairs } from "@/lib/inventory";
 import { motion } from "framer-motion";
@@ -181,17 +182,16 @@ export default async function HomePage() {
 
   return (
     <>
-      <div className="noise-texture">
-        {/* Hero Section with Phone Mockup */}
-        <HeroSection heroProducts={heroProducts} topDeals={topDeals} />
+      <div className="relative">
+        <RedWaveBackground />
+        
+        <div className="noise-texture">
+          {/* Hero Section with Phone Mockup */}
+          <HeroSection heroProducts={heroProducts} topDeals={topDeals} />
 
         {/* Trending Now Section - Modern Glassmorphism Style */}
         <ScrollReveal>
-          <section className="relative overflow-hidden border-t border-neutral-200/50 bg-gradient-to-b from-neutral-50 via-white to-neutral-50 py-20 sm:py-24">
-            {/* Ambient gradient orbs for depth */}
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-100/30 to-red-100/30 rounded-full blur-3xl -z-10" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-pink-100/30 to-orange-100/30 rounded-full blur-3xl -z-10" />
-            
+          <section className="relative overflow-hidden border-t border-neutral-200/50 bg-white/50 py-20 sm:py-24">
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
               <div className="mb-6 sm:mb-8">
                 <h2 className="text-3xl font-black tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900 bg-clip-text text-transparent sm:text-4xl lg:text-5xl">
@@ -221,7 +221,7 @@ export default async function HomePage() {
         {/* Browse by Categories - Only show if there's more than 1 category */}
         {activeCategoryLabels.length > 1 && (
           <ScrollReveal>
-            <section className="border-t border-neutral-200 bg-white py-16 sm:py-20">
+            <section className="border-t border-neutral-200 bg-white/60 py-16 sm:py-20">
               <div className="mx-auto max-w-7xl px-4 sm:px-6">
                 <h2 className="text-center text-2xl font-light tracking-tight text-neutral-900 sm:text-3xl">
                   Browse by Categories
@@ -244,6 +244,7 @@ export default async function HomePage() {
           </ScrollReveal>
         )}
       </div>
+    </div>
     </>
   );
 }

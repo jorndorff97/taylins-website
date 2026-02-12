@@ -69,20 +69,13 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
   return (
     <section 
       ref={ref}
-      className="relative overflow-hidden border-t border-slate-100 bg-gradient-to-b from-slate-50/30 via-white to-slate-50/30 py-20 sm:py-32"
+      className="relative overflow-hidden border-t border-slate-100 bg-white/60 py-20 sm:py-32"
     >
-      {/* Animated Background Gradient */}
-      <motion.div 
-        className="absolute inset-0 opacity-20"
-        animate={{
-          background: [
-            "radial-gradient(circle at 20% 50%, #8b5cf6 0%, transparent 50%)",
-            "radial-gradient(circle at 80% 50%, #6366f1 0%, transparent 50%)",
-            "radial-gradient(circle at 20% 50%, #8b5cf6 0%, transparent 50%)",
-          ]
-        }}
-        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-      />
+      {/* Animated Background Gradient - Removed since red waves handle it */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-hero-accent blur-3xl" />
+        <div className="absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-hero-secondary blur-3xl" />
+      </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mx-auto max-w-3xl text-center">
