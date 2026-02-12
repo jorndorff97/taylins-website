@@ -80,7 +80,7 @@ export function BrandCarousel() {
       <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-neutral-50 to-transparent z-10 pointer-events-none" />
       
       {/* Scrolling container */}
-      <div className="flex flex-col gap-4 animate-scroll-vertical py-4">
+      <div className="flex flex-col gap-4 animate-scroll-vertical hover:pause py-4">
         {allBrands.map((brand, index) => (
           <motion.div
             key={`${brand.name}-${index}`}
@@ -94,25 +94,6 @@ export function BrandCarousel() {
           </motion.div>
         ))}
       </div>
-
-      <style jsx>{`
-        @keyframes scroll-vertical {
-          0% {
-            transform: translateY(0);
-          }
-          100% {
-            transform: translateY(-50%);
-          }
-        }
-        
-        .animate-scroll-vertical {
-          animation: scroll-vertical 20s linear infinite;
-        }
-        
-        .animate-scroll-vertical:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
     </div>
   );
 }
