@@ -101,12 +101,12 @@ export function TrendingCarousel({ listings }: TrendingCarouselProps) {
         {/* Carousel Container - Always horizontal scroll with snap */}
         <div
           ref={scrollContainerRef}
-          className="flex gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+          className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
         >
           {listings.map((listing, i) => (
             <div
               key={listing.id}
-              className="snap-center shrink-0 w-[85vw] sm:w-[45%] lg:w-[calc(33.333%-1.33rem)]"
+              className="snap-center shrink-0 w-[45vw] sm:w-[45%] lg:w-[calc(20%-1.6rem)]"
             >
               <ListingCard listing={listing} rank={i + 1} index={i} />
             </div>

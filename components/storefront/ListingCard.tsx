@@ -29,22 +29,22 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
   });
   
   return (
-    <MagneticHover strength={0.05}>
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ 
-          duration: 0.6, 
-          delay: index * 0.08,
-          ease: [0.25, 0.1, 0.25, 1]
-        }}
-        className="will-animate"
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.6, 
+        delay: index * 0.08,
+        ease: [0.25, 0.1, 0.25, 1]
+      }}
+      className="will-animate"
+    >
+      <Link
+        href={`/listing/${listing.id}`}
+        className="group block relative"
       >
-        <Link
-          href={`/listing/${listing.id}`}
-          className="group block relative"
-        >
-          {/* Glassmorphic Card Container */}
+        {/* Glassmorphic Card Container */}
+        <MagneticHover strength={0.05}>
           <motion.div 
             className="relative aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 backdrop-blur-sm border border-white/20 shadow-2xl lg:rounded-3xl"
             whileHover={{ scale: 1.02 }}
@@ -93,9 +93,10 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
               </div>
             )}
           </motion.div>
+        </MagneticHover>
           
-          {/* Product Info - Always Visible, Neutral Colors */}
-          <div className="mt-4 space-y-2 lg:mt-5 lg:space-y-2.5">
+        {/* Product Info - Always Visible, Neutral Colors */}
+        <div className="mt-4 space-y-2 lg:mt-5 lg:space-y-2.5">
             {/* Brand Name */}
             {listing.brand && (
               <p className="text-[11px] lg:text-xs font-bold uppercase tracking-wide text-neutral-400">
@@ -120,6 +121,5 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
           </div>
         </Link>
       </motion.div>
-    </MagneticHover>
   );
 }

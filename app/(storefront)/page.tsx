@@ -175,13 +175,10 @@ export default async function HomePage() {
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-pink-100/30 to-orange-100/30 rounded-full blur-3xl -z-10" />
             
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
-              <div className="mb-12 sm:mb-16 text-center">
-                <h2 className="text-4xl font-black tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900 bg-clip-text text-transparent sm:text-5xl lg:text-6xl">
+              <div className="mb-12 sm:mb-16">
+                <h2 className="text-3xl font-black tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900 bg-clip-text text-transparent sm:text-4xl lg:text-5xl">
                   Trending Now
                 </h2>
-                <p className="mt-3 text-base text-neutral-600 sm:text-lg">
-                  The hottest wholesale sneakers of the moment
-                </p>
               </div>
               <TrendingCarousel listings={listings} />
             </div>
