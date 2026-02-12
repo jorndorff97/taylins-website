@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export function RedWaveBackground() {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+    <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
       {/* Large Primary Wave - Center */}
       <motion.div
         className="absolute top-[10%] left-[50%] w-[1000px] h-[1000px] rounded-full"
