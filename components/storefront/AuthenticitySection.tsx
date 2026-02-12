@@ -29,7 +29,7 @@ export function AuthenticitySection() {
   return (
     <section 
       ref={ref}
-      className="relative overflow-hidden border-t border-slate-100 bg-white/40 py-20 sm:py-32"
+      className="relative overflow-hidden border-t border-slate-100 py-20 sm:py-32"
     >
       {/* Background Pattern - Reduced opacity */}
       <div className="absolute inset-0 opacity-[0.02]">

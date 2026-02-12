@@ -69,7 +69,7 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
   return (
     <section 
       ref={ref}
-      className="relative overflow-hidden border-t border-slate-100 bg-white/40 py-20 sm:py-32"
+      className="relative overflow-hidden border-t border-slate-100 py-20 sm:py-32"
     >
       {/* Animated Background Gradient - Removed since red waves handle it */}
       <div className="absolute inset-0 opacity-5">
