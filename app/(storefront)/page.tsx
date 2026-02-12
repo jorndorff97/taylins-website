@@ -4,7 +4,7 @@ import { STOREFRONT_CATEGORIES, getActiveCategories } from "@/lib/categories";
 import { HeroSection } from "@/components/storefront/HeroSection";
 import { AuthenticitySection } from "@/components/storefront/AuthenticitySection";
 import { PricingComparisonSection } from "@/components/storefront/PricingComparisonSection";
-import { TrendingCarousel } from "@/components/storefront/TrendingCarousel";
+import { TrendingTabs } from "@/components/storefront/TrendingTabs";
 import { ScrollReveal } from "@/components/effects/ScrollReveal";
 import { ListingStatus } from "@prisma/client";
 import { getTotalPairs } from "@/lib/inventory";
@@ -125,7 +125,25 @@ export default async function HomePage() {
     }))
     .filter(d => d.savingsPercent > 0 && d.imageUrl)
     .sort((a, b) => b.savingsPercent - a.savingsPercent)
-    .slice(0, 5);
+    .slice(0, 6); // Changed from 5 to 6
+
+  // Prepare best deals listings for carousel (get full listing data for top 6 deals)
+  const bestDealsListings = await prisma.listing.findMany({
+    where: {
+      id: { in: topDeals.map(d => d.id) },
+      status: ListingStatus.ACTIVE,
+    },
+    include: {
+      images: { orderBy: { sortOrder: "asc" } },
+      sizes: true,
+      tierPrices: true,
+    },
+  });
+
+  // Sort to match topDeals order (by savings percent)
+  const sortedBestDeals = topDeals.map(deal => 
+    bestDealsListings.find(l => l.id === deal.id)
+  ).filter(Boolean) as typeof bestDealsListings;
 
   // Get listings with StockX prices for pricing comparison section
   const stockXListings = await prisma.listing.findMany({
@@ -175,12 +193,15 @@ export default async function HomePage() {
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-pink-100/30 to-orange-100/30 rounded-full blur-3xl -z-10" />
             
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
-              <div className="mb-12 sm:mb-16">
+              <div className="mb-6 sm:mb-8">
                 <h2 className="text-3xl font-black tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900 bg-clip-text text-transparent sm:text-4xl lg:text-5xl">
                   Trending Now
                 </h2>
               </div>
-              <TrendingCarousel listings={listings} />
+              <TrendingTabs 
+                trendingListings={listings} 
+                bestDealsListings={sortedBestDeals}
+              />
             </div>
           </section>
         </ScrollReveal>
