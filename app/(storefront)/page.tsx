@@ -182,9 +182,9 @@ export default async function HomePage() {
 
   return (
     <>
-      <div className="relative min-h-screen">
-        <RedWaveBackground />
-        
+      <RedWaveBackground />
+      
+      <div className="min-h-screen">
         <div className="noise-texture">
           {/* Hero Section with Phone Mockup */}
           <HeroSection heroProducts={heroProducts} topDeals={topDeals} />
@@ -243,8 +243,8 @@ export default async function HomePage() {
             </section>
           </ScrollReveal>
         )}
+        </div>
       </div>
-    </div>
     </>
   );
 }
