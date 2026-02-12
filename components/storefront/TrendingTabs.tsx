@@ -3,20 +3,19 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingCarousel } from "./TrendingCarousel";
-
-interface Listing {
-  id: number;
-  title: string;
-  brand: string | null;
-  category: string;
-  images: { url: string }[];
-  sizes: any[];
-  tierPrices: any[];
-}
+import type { Listing, ListingImage, ListingSize, ListingTierPrice } from "@prisma/client";
 
 interface TrendingTabsProps {
-  trendingListings: Listing[];
-  bestDealsListings: Listing[];
+  trendingListings: (Listing & {
+    images: ListingImage[];
+    sizes?: ListingSize[];
+    tierPrices?: ListingTierPrice[];
+  })[];
+  bestDealsListings: (Listing & {
+    images: ListingImage[];
+    sizes?: ListingSize[];
+    tierPrices?: ListingTierPrice[];
+  })[];
 }
 
 export function TrendingTabs({ trendingListings, bestDealsListings }: TrendingTabsProps) {
