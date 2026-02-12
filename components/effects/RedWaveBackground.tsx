@@ -1,176 +1,133 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useRef } from "react";
 
 export function RedWaveBackground() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/d4fae22e-da3c-4290-91e9-330f30caed4d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RedWaveBackground.tsx:11',message:'Component mounted',data:{rendered:true},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
-    if (containerRef.current) {
-      const el = containerRef.current;
-      const rect = el.getBoundingClientRect();
-      const computed = window.getComputedStyle(el);
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/d4fae22e-da3c-4290-91e9-330f30caed4d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RedWaveBackground.tsx:20',message:'Container dimensions and styles',data:{width:rect.width,height:rect.height,position:computed.position,zIndex:computed.zIndex,display:computed.display,visibility:computed.visibility,opacity:computed.opacity,top:computed.top,left:computed.left,right:computed.right,bottom:computed.bottom},timestamp:Date.now(),hypothesisId:'B,C,D,E'})}).catch(()=>{});
-      // #endregion
-
-      const firstChild = el.firstElementChild as HTMLElement;
-      if (firstChild) {
-        const childRect = firstChild.getBoundingClientRect();
-        const childComputed = window.getComputedStyle(firstChild);
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/d4fae22e-da3c-4290-91e9-330f30caed4d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RedWaveBackground.tsx:31',message:'First wave child styles',data:{width:childRect.width,height:childRect.height,position:childComputed.position,background:childComputed.background,filter:childComputed.filter,opacity:childComputed.opacity,display:childComputed.display,visibility:childComputed.visibility},timestamp:Date.now(),hypothesisId:'B,D,E'})}).catch(()=>{});
-        // #endregion
-      }
-    }
-  }, []);
-
   return (
-    <div ref={containerRef} className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-      {/* Large Primary Wave - Center */}
+    <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+      {/* Wave Ripple 1 - Top Center */}
       <motion.div
-        className="absolute top-[10%] left-[50%] w-[1000px] h-[1000px] rounded-full"
+        className="absolute top-[10%] left-[50%] w-[600px] h-[600px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(239,68,68,0.6) 0%, rgba(239,68,68,0.25) 40%, rgba(239,68,68,0) 70%)',
-          filter: 'blur(60px)',
+          background: 'radial-gradient(circle, rgba(220,38,38,0.5) 0%, rgba(239,68,68,0.35) 25%, rgba(248,113,113,0.2) 50%, rgba(254,202,202,0.1) 75%, transparent 100%)',
+          filter: 'blur(35px)',
           willChange: 'transform',
         }}
         animate={{
-          x: [-100, 150, -100],
-          y: [0, -120, 0],
-          scale: [1, 1.3, 1],
+          scale: [0.5, 2.5, 0.5],
+          opacity: [0.4, 0.7, 0.4],
+          rotate: [0, 180, 360],
         }}
         transition={{
-          duration: 25,
+          duration: 10,
           repeat: Infinity,
           ease: "easeInOut",
+          delay: 0,
         }}
       />
 
-      {/* Secondary Wave - Left Side */}
+      {/* Wave Ripple 2 - Left Side */}
       <motion.div
-        className="absolute top-[30%] left-[5%] w-[800px] h-[800px] rounded-full"
+        className="absolute top-[40%] left-[15%] w-[700px] h-[700px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(248,113,113,0.5) 0%, rgba(248,113,113,0.2) 45%, rgba(248,113,113,0) 70%)',
-          filter: 'blur(50px)',
+          background: 'radial-gradient(circle, rgba(239,68,68,0.45) 0%, rgba(248,113,113,0.3) 30%, rgba(254,202,202,0.15) 60%, transparent 100%)',
+          filter: 'blur(40px)',
           willChange: 'transform',
         }}
         animate={{
-          x: [0, -80, 120, 0],
-          y: [0, 100, -50, 0],
-          scale: [1, 0.9, 1.2, 1],
+          scale: [0.6, 2.3, 0.6],
+          opacity: [0.3, 0.6, 0.3],
+          rotate: [0, -160, -320],
         }}
         transition={{
-          duration: 22,
+          duration: 12,
           repeat: Infinity,
           ease: "easeInOut",
+          delay: 2,
         }}
       />
 
-      {/* Tertiary Wave - Right Side */}
+      {/* Wave Ripple 3 - Right Side */}
       <motion.div
-        className="absolute top-[50%] right-[10%] w-[900px] h-[900px] rounded-full"
+        className="absolute top-[25%] right-[10%] w-[800px] h-[800px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(220,38,38,0.45) 0%, rgba(220,38,38,0.18) 50%, rgba(220,38,38,0) 70%)',
-          filter: 'blur(55px)',
+          background: 'radial-gradient(circle, rgba(248,113,113,0.5) 0%, rgba(254,202,202,0.35) 35%, rgba(239,68,68,0.2) 65%, transparent 100%)',
+          filter: 'blur(38px)',
           willChange: 'transform',
         }}
         animate={{
-          x: [0, 100, -150, 0],
-          y: [0, -80, 60, 0],
-          scale: [1, 1.25, 0.95, 1],
+          scale: [0.7, 2.4, 0.7],
+          opacity: [0.35, 0.65, 0.35],
+          rotate: [0, 200, 400],
         }}
         transition={{
-          duration: 20,
+          duration: 11,
           repeat: Infinity,
           ease: "easeInOut",
+          delay: 4,
         }}
       />
 
-      {/* Accent Wave - Upper Right */}
+      {/* Wave Ripple 4 - Bottom Left */}
       <motion.div
-        className="absolute top-[15%] right-[20%] w-[700px] h-[700px] rounded-full"
+        className="absolute bottom-[15%] left-[25%] w-[650px] h-[650px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(254,202,202,0.55) 0%, rgba(254,202,202,0.22) 40%, rgba(254,202,202,0) 70%)',
-          filter: 'blur(45px)',
+          background: 'radial-gradient(circle, rgba(220,38,38,0.4) 0%, rgba(239,68,68,0.3) 28%, rgba(248,113,113,0.18) 55%, rgba(254,202,202,0.08) 80%, transparent 100%)',
+          filter: 'blur(32px)',
           willChange: 'transform',
         }}
         animate={{
-          x: [0, -120, 80, 0],
-          y: [0, 90, -40, 0],
-          scale: [1, 1.15, 0.9, 1],
+          scale: [0.5, 2.6, 0.5],
+          opacity: [0.4, 0.7, 0.4],
+          rotate: [0, -180, -360],
         }}
         transition={{
-          duration: 18,
+          duration: 9,
           repeat: Infinity,
           ease: "easeInOut",
+          delay: 1,
         }}
       />
 
-      {/* Deep Wave - Bottom Left */}
+      {/* Wave Ripple 5 - Bottom Right */}
       <motion.div
-        className="absolute bottom-[10%] left-[15%] w-[850px] h-[850px] rounded-full"
+        className="absolute bottom-[20%] right-[20%] w-[750px] h-[750px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(239,68,68,0.52) 0%, rgba(239,68,68,0.22) 45%, rgba(239,68,68,0) 70%)',
-          filter: 'blur(50px)',
+          background: 'radial-gradient(circle, rgba(254,202,202,0.5) 0%, rgba(248,113,113,0.35) 32%, rgba(239,68,68,0.22) 58%, rgba(220,38,38,0.12) 82%, transparent 100%)',
+          filter: 'blur(36px)',
           willChange: 'transform',
         }}
         animate={{
-          x: [0, 140, -90, 0],
-          y: [0, -70, 110, 0],
-          scale: [1, 0.95, 1.3, 1],
+          scale: [0.6, 2.5, 0.6],
+          opacity: [0.35, 0.68, 0.35],
+          rotate: [0, 220, 440],
         }}
         transition={{
-          duration: 24,
+          duration: 10.5,
           repeat: Infinity,
           ease: "easeInOut",
+          delay: 3,
         }}
       />
 
-      {/* Subtle Wave - Center Bottom */}
+      {/* Wave Ripple 6 - Center Deep */}
       <motion.div
-        className="absolute bottom-[20%] left-[40%] w-[750px] h-[750px] rounded-full"
+        className="absolute top-[50%] left-[40%] w-[900px] h-[900px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(248,113,113,0.42) 0%, rgba(248,113,113,0.18) 50%, rgba(248,113,113,0) 70%)',
-          filter: 'blur(45px)',
+          background: 'radial-gradient(circle, rgba(239,68,68,0.42) 0%, rgba(220,38,38,0.28) 26%, rgba(248,113,113,0.16) 52%, rgba(254,202,202,0.06) 78%, transparent 100%)',
+          filter: 'blur(40px)',
           willChange: 'transform',
         }}
         animate={{
-          x: [0, -60, 100, 0],
-          y: [0, 50, -80, 0],
-          scale: [1, 1.2, 0.85, 1],
+          scale: [0.55, 2.2, 0.55],
+          opacity: [0.38, 0.65, 0.38],
+          rotate: [0, -140, -280],
         }}
         transition={{
-          duration: 19,
+          duration: 13,
           repeat: Infinity,
           ease: "easeInOut",
-        }}
-      />
-
-      {/* Additional Ambient Wave - Top Left */}
-      <motion.div
-        className="absolute top-[5%] left-[25%] w-[650px] h-[650px] rounded-full"
-        style={{
-          background: 'radial-gradient(circle, rgba(220,38,38,0.38) 0%, rgba(220,38,38,0.15) 55%, rgba(220,38,38,0) 70%)',
-          filter: 'blur(48px)',
-          willChange: 'transform',
-        }}
-        animate={{
-          x: [0, 90, -110, 0],
-          y: [0, -100, 70, 0],
-          scale: [1, 1.1, 1.25, 1],
-        }}
-        transition={{
-          duration: 21,
-          repeat: Infinity,
-          ease: "easeInOut",
+          delay: 5,
         }}
       />
     </div>

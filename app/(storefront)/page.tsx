@@ -215,7 +215,7 @@ export default async function HomePage() {
 
         {/* Trending Now Section - Modern Glassmorphism Style */}
         <ScrollReveal>
-          <section className="relative overflow-hidden border-t border-neutral-200/50 py-20 sm:py-24">
+          <section className="relative overflow-hidden border-t border-neutral-200/50 bg-white py-20 sm:py-24">
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
               <div className="mb-6 sm:mb-8">
                 <h2 className="text-3xl font-black tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900 bg-clip-text text-transparent sm:text-4xl lg:text-5xl">

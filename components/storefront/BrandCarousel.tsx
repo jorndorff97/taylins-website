@@ -81,10 +81,6 @@ export function BrandCarousel() {
 
   return (
     <div className="relative w-full h-24 overflow-hidden">
-      {/* Gradient overlays for fade effect */}
-      <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-neutral-50 to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-neutral-50 to-transparent z-10 pointer-events-none" />
-      
       {/* Scrolling container */}
       <div className="flex flex-row gap-4 animate-scroll-horizontal py-3">
         {allBrands.map((brand, index) => (
@@ -92,7 +88,7 @@ export function BrandCarousel() {
             key={`${brand.name}-${index}`}
             whileHover={{ scale: 1.05, y: -5 }}
             transition={{ duration: 0.2 }}
-            className="flex items-center gap-3 bg-white/60 backdrop-blur-sm border border-neutral-200/50 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-neutral-300/50 transition-all will-animate flex-shrink-0"
+            className="flex items-center gap-3 backdrop-blur-sm border border-neutral-200/50 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-neutral-300/50 transition-all will-animate flex-shrink-0"
             style={{ width: "160px" }}
           >
             <div className="text-neutral-700 hover:text-neutral-900 transition-colors">
