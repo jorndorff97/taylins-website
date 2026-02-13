@@ -38,8 +38,27 @@ export function TrendingTabs({ trendingListings, bestDealsListings }: TrendingTa
     { id: "bestDeals" as const, label: "Best Deals" },
   ];
   
+  // Dynamic title based on active tab
+  const sectionTitle = activeTab === "trending" ? "Trending Now" : "Best Deals";
+  
   return (
     <div>
+      {/* Dynamic Section Title */}
+      <div className="mb-6 sm:mb-8">
+        <AnimatePresence mode="wait">
+          <motion.h2
+            key={activeTab}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="text-3xl font-black tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900 bg-clip-text text-transparent sm:text-4xl lg:text-5xl pb-2 leading-tight"
+          >
+            {sectionTitle}
+          </motion.h2>
+        </AnimatePresence>
+      </div>
+      
       {/* Tab Buttons */}
       <div className="flex gap-2 mb-8">
         {tabs.map((tab) => (
