@@ -7,6 +7,7 @@ import { ListingForm } from "@/components/admin/listings/ListingForm";
 import { DeleteListingButton } from "@/components/admin/listings/DeleteListingButton";
 import { Button } from "@/components/ui/button";
 import { InventoryMode, ListingStatus, PricingMode, TierPricingType } from "@prisma/client";
+import { fetchStockXPrice } from "@/lib/fetch-stockx-price";
 
 interface EditListingPageProps {
   params: Promise<{ id: string }>;
@@ -67,6 +68,21 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     const status =
       intent === "publish" ? ListingStatus.ACTIVE : ListingStatus.DRAFT;
 
+    // Fetch StockX price automatically if SKU is provided and no manual override
+    let fetchedStockXPrice = null;
+    let stockXPriceTimestamp = null;
+    
+    if (productSKU && !manualStockXPrice) {
+      console.log(`Fetching StockX price for SKU: ${productSKU}`);
+      fetchedStockXPrice = await fetchStockXPrice(productSKU);
+      if (fetchedStockXPrice) {
+        stockXPriceTimestamp = new Date();
+        console.log(`Successfully fetched StockX price: $${fetchedStockXPrice}`);
+      } else {
+        console.log(`Could not fetch StockX price for SKU: ${productSKU}`);
+      }
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.listing.update({
         where: { id },
@@ -87,6 +103,10 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
           ...(manualStockXPrice && {
             stockXPrice: manualStockXPrice,
             stockXPriceUpdatedAt: new Date(),
+          }),
+          ...(fetchedStockXPrice && !manualStockXPrice && {
+            stockXPrice: fetchedStockXPrice,
+            stockXPriceUpdatedAt: stockXPriceTimestamp,
           }),
           discordLink,
           instagramLink,

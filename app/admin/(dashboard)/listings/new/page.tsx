@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { ListingForm } from "@/components/admin/listings/ListingForm";
 import { InventoryMode, ListingStatus, PricingMode, TierPricingType } from "@prisma/client";
+import { fetchStockXPrice } from "@/lib/fetch-stockx-price";
 
 export default function NewListingPage() {
   async function handleSubmit(formData: FormData) {
@@ -45,6 +46,21 @@ export default function NewListingPage() {
     const status =
       intent === "publish" ? ListingStatus.ACTIVE : ListingStatus.DRAFT;
 
+    // Fetch StockX price automatically if SKU is provided and no manual override
+    let fetchedStockXPrice = null;
+    let stockXPriceTimestamp = null;
+    
+    if (productSKU && !manualStockXPrice) {
+      console.log(`Fetching StockX price for SKU: ${productSKU}`);
+      fetchedStockXPrice = await fetchStockXPrice(productSKU);
+      if (fetchedStockXPrice) {
+        stockXPriceTimestamp = new Date();
+        console.log(`Successfully fetched StockX price: $${fetchedStockXPrice}`);
+      } else {
+        console.log(`Could not fetch StockX price for SKU: ${productSKU}`);
+      }
+    }
+
     const listing = await prisma.$transaction(async (tx) => {
       const created = await tx.listing.create({
         data: {
@@ -61,8 +77,8 @@ export default function NewListingPage() {
           sellerNotes,
           stockXLink,
           productSKU,
-          stockXPrice: manualStockXPrice,
-          stockXPriceUpdatedAt: manualStockXPrice ? new Date() : null,
+          stockXPrice: manualStockXPrice || fetchedStockXPrice,
+          stockXPriceUpdatedAt: manualStockXPrice ? new Date() : stockXPriceTimestamp,
           discordLink,
           instagramLink,
         },
