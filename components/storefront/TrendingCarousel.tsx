@@ -23,9 +23,10 @@ interface TrendingCarouselProps {
     sizes?: ListingSize[];
     tierPrices?: SerializedTierPrice[];
   })[];
+  showDiscount?: boolean;
 }
 
-export function TrendingCarousel({ listings }: TrendingCarouselProps) {
+export function TrendingCarousel({ listings, showDiscount = false }: TrendingCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -120,7 +121,7 @@ export function TrendingCarousel({ listings }: TrendingCarouselProps) {
               key={listing.id}
               className="snap-center shrink-0 w-[45vw] sm:w-[calc(25%-1.5rem)]"
             >
-              <ListingCard listing={listing} rank={i + 1} index={i} />
+              <ListingCard listing={listing} rank={i + 1} index={i} showDiscount={showDiscount} />
             </div>
           ))}
         </div>

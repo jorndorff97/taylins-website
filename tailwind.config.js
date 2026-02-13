@@ -91,7 +91,7 @@ module.exports = {
       },
       animation: {
         "scroll-vertical": "scroll-vertical 20s linear infinite",
-        "scroll-horizontal": "scroll-horizontal 15s linear infinite",
+        "scroll-horizontal": "scroll-horizontal 12s linear infinite",
       },
     },
   },

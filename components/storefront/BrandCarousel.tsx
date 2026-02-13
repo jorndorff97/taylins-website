@@ -53,7 +53,7 @@ export function BrandCarousel() {
   return (
     <div className="relative w-full h-24 overflow-hidden">
       {/* Scrolling container */}
-      <div className="flex flex-row gap-1 animate-scroll-horizontal py-3">
+      <div className="flex flex-row gap-3 animate-scroll-horizontal py-3">
         {allBrands.map((brand, index) => (
           <div
             key={`${brand.name}-${index}`}

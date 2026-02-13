@@ -76,6 +76,7 @@ export function TrendingTabs({ trendingListings, bestDealsListings }: TrendingTa
           >
             <TrendingCarousel 
               listings={activeTab === "trending" ? trendingListings : bestDealsListings}
+              showDiscount={activeTab === "bestDeals"}
             />
           </motion.div>
         </AnimatePresence>

@@ -29,15 +29,21 @@ interface ListingCardProps {
   };
   rank?: number;
   index?: number;
+  showDiscount?: boolean;
 }
 
-export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
+export function ListingCard({ listing, rank, index = 0, showDiscount = false }: ListingCardProps) {
   const primaryImage = listing.images[0]?.url;
   const soldOut = isSoldOut(listing);
   const startingPrice = getStartingPricePerPair({
     listing,
     tiers: listing.tierPrices ?? [],
   });
+
+  // Calculate discount percentage if both prices exist
+  const discountPercent = (listing.stockXPrice && listing.flatPricePerPair)
+    ? Math.round(((listing.stockXPrice - listing.flatPricePerPair) / listing.stockXPrice) * 100)
+    : 0;
   
   return (
     <motion.div
@@ -59,6 +65,15 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
           whileHover={{ y: -4 }}
           transition={{ duration: 0.2 }}
         >
+          {/* Discount Badge - GOAT Style */}
+          {showDiscount && discountPercent > 0 && !soldOut && (
+            <div className="absolute left-2 top-2 z-20 bg-black px-2 py-0.5">
+              <span className="text-xs font-semibold text-white">
+                -{discountPercent}%
+              </span>
+            </div>
+          )}
+
           {/* Sold Out Badge */}
           {soldOut && (
             <div className="absolute left-2 top-2 z-20 bg-black px-2 py-1">
