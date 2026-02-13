@@ -3,290 +3,241 @@
 import { motion } from "framer-motion";
 
 export function RedWaveBackground() {
-  // Multi-tonal color palette
+  // Monochrome red color palette
   const colors = {
-    deepRed: 'rgba(185, 28, 28',
-    brightRed: 'rgba(239, 68, 68',
-    orange: 'rgba(249, 115, 22',
-    pink: 'rgba(236, 72, 153',
-    coral: 'rgba(251, 146, 60',
+    veryLight: 'rgba(254, 226, 226',  // #fee2e2 - almost white-red
+    light: 'rgba(254, 202, 202',       // #fecaca - light red
+    medium: 'rgba(252, 165, 165',      // #fca5a5 - medium red
+    base: 'rgba(239, 68, 68',          // #ef4444 - base red
+    dark: 'rgba(220, 38, 38',          // #dc2626 - dark red
+    veryDark: 'rgba(185, 28, 28',      // #b91c1c - very dark red
+  };
+
+  // Glass panel component with chromatic aberration
+  const GlassPanel = ({ 
+    size, 
+    position, 
+    color, 
+    blur, 
+    opacity, 
+    duration, 
+    delay, 
+    shape,
+    rotation = 0 
+  }: {
+    size: string;
+    position: { top?: string; left?: string; right?: string; bottom?: string };
+    color: string;
+    blur: number;
+    opacity: [number, number, number];
+    duration: number;
+    delay: number;
+    shape: 'rounded' | 'square' | 'vertical' | 'horizontal' | 'blob';
+    rotation?: number;
+  }) => {
+    const shapeStyles = {
+      rounded: { borderRadius: '60px' },
+      square: { borderRadius: '20px', transform: `rotate(${rotation}deg)` },
+      vertical: { borderRadius: '80px', aspectRatio: '1/1.5' },
+      horizontal: { borderRadius: '80px', aspectRatio: '1.5/1' },
+      blob: { borderRadius: '45% 55% 60% 40% / 50% 60% 40% 50%' },
+    };
+
+    const baseStyle = {
+      position: 'absolute' as const,
+      width: size,
+      height: size,
+      ...position,
+      background: `linear-gradient(135deg, ${color}, 0.25), ${color}, 0.08))`,
+      filter: `blur(${blur}px)`,
+      backdropFilter: 'blur(40px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      boxShadow: '0 8px 32px 0 rgba(185, 28, 28, 0.15)',
+      willChange: 'transform, opacity',
+      transform: 'translate3d(0, 0, 0)',
+      ...shapeStyles[shape],
+    };
+
+    return (
+      <div style={{ position: 'absolute', ...position }}>
+        {/* Red channel (right offset) */}
+        <motion.div
+          style={{
+            ...baseStyle,
+            mixBlendMode: 'screen',
+            transform: 'translate(3px, 0)',
+          }}
+          animate={{
+            x: [-30, 70, -30],
+            y: [0, -50, 0],
+            scale: [1.0, 1.1, 1.0],
+            rotate: [0, 3, -3, 0],
+            opacity: opacity,
+          }}
+          transition={{
+            duration,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay,
+          }}
+        />
+        
+        {/* Base channel (center) */}
+        <motion.div
+          style={baseStyle}
+          animate={{
+            x: [-30, 70, -30],
+            y: [0, -50, 0],
+            scale: [1.0, 1.1, 1.0],
+            rotate: [0, 3, -3, 0],
+            opacity: opacity,
+          }}
+          transition={{
+            duration,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay,
+          }}
+        />
+        
+        {/* Pink channel (left offset) */}
+        <motion.div
+          style={{
+            ...baseStyle,
+            mixBlendMode: 'screen',
+            transform: 'translate(-3px, 0)',
+            background: `linear-gradient(135deg, ${colors.medium}, 0.2), ${colors.light}, 0.06))`,
+          }}
+          animate={{
+            x: [-30, 70, -30],
+            y: [0, -50, 0],
+            scale: [1.0, 1.1, 1.0],
+            rotate: [0, 3, -3, 0],
+            opacity: opacity,
+          }}
+          transition={{
+            duration,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay,
+          }}
+        />
+      </div>
+    );
   };
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-      {/* BACK LAYER - Large, slow, heavily blurred */}
+      {/* LAYER 1 - Far Background (most subtle) */}
       
-      {/* Back Shape 1 - Deep Red Blob */}
-      <motion.div
-        className="absolute top-[5%] left-[10%] w-[1000px] h-[1000px]"
-        style={{
-          background: `radial-gradient(circle, ${colors.deepRed}, 0.4) 0%, ${colors.brightRed}, 0.25) 30%, ${colors.coral}, 0.12) 60%, transparent 100%)`,
-          filter: 'blur(55px)',
-          borderRadius: '40% 60% 70% 30% / 50% 60% 40% 50%',
-          mixBlendMode: 'screen',
-          willChange: 'transform, opacity',
-        }}
-        animate={{
-          scale: [0.4, 2.8, 0.4],
-          rotate: [0, 360, 720],
-          x: [-50, 100, -50],
-          y: [0, -80, 0],
-          opacity: [0.2, 0.4, 0.2],
-          borderRadius: [
-            '40% 60% 70% 30% / 50% 60% 40% 50%',
-            '60% 40% 30% 70% / 40% 50% 60% 50%',
-            '40% 60% 70% 30% / 50% 60% 40% 50%',
-          ],
-        }}
-        transition={{
-          duration: 6,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 0,
-        }}
+      {/* Far Back Panel 1 - Very Light Red */}
+      <GlassPanel
+        size="1400px"
+        position={{ top: '5%', left: '10%' }}
+        color={colors.veryLight}
+        blur={60}
+        opacity={[0.08, 0.12, 0.08]}
+        duration={25}
+        delay={0}
+        shape="blob"
       />
-
-      {/* Back Shape 2 - Orange/Pink Blend */}
-      <motion.div
-        className="absolute top-[40%] right-[5%] w-[1200px] h-[1200px]"
-        style={{
-          background: `conic-gradient(from 180deg, ${colors.orange}, 0.35) 0deg, ${colors.pink}, 0.3) 120deg, ${colors.brightRed}, 0.2) 240deg, ${colors.orange}, 0.35) 360deg)`,
-          filter: 'blur(60px)',
-          borderRadius: '30% 70% 60% 40% / 70% 30% 70% 30%',
-          mixBlendMode: 'color-dodge',
-          willChange: 'transform, opacity',
-        }}
-        animate={{
-          scale: [0.3, 3.0, 0.3],
-          rotate: [0, -540, 0],
-          x: [80, -60, 80],
-          y: [40, -40, 40],
-          opacity: [0.15, 0.38, 0.15],
-          borderRadius: [
-            '30% 70% 60% 40% / 70% 30% 70% 30%',
-            '70% 30% 40% 60% / 30% 70% 30% 70%',
-            '30% 70% 60% 40% / 70% 30% 70% 30%',
-          ],
-        }}
-        transition={{
-          duration: 5.5,
-          repeat: Infinity,
-          ease: "anticipate",
-          delay: 2,
-        }}
-      />
-
-      {/* Back Shape 3 - Coral Wave */}
-      <motion.div
-        className="absolute bottom-[10%] left-[25%] w-[900px] h-[900px]"
-        style={{
-          background: `radial-gradient(ellipse, ${colors.coral}, 0.38) 0%, ${colors.orange}, 0.25) 35%, ${colors.pink}, 0.15) 70%, transparent 100%)`,
-          filter: 'blur(52px)',
-          borderRadius: '55% 45% 65% 35% / 45% 55% 45% 55%',
-          mixBlendMode: 'screen',
-          willChange: 'transform, opacity',
-        }}
-        animate={{
-          scale: [0.5, 2.5, 0.5],
-          rotate: [0, 720, 1440],
-          x: [-40, 70, -40],
-          y: [-30, 60, -30],
-          opacity: [0.18, 0.35, 0.18],
-          borderRadius: [
-            '55% 45% 65% 35% / 45% 55% 45% 55%',
-            '45% 55% 35% 65% / 55% 45% 55% 45%',
-            '55% 45% 65% 35% / 45% 55% 45% 55%',
-          ],
-        }}
-        transition={{
-          duration: 5.8,
-          repeat: Infinity,
-          ease: "circInOut",
-          delay: 4,
-        }}
-      />
-
-      {/* MID LAYER - Medium size, moderate blur */}
       
-      {/* Mid Shape 1 - Bright Red Chromatic */}
-      <motion.div
-        className="absolute top-[20%] left-[45%] w-[650px] h-[650px]"
-        style={{
-          background: `radial-gradient(circle, ${colors.brightRed}, 0.55) 0%, ${colors.deepRed}, 0.4) 40%, ${colors.orange}, 0.2) 75%, transparent 100%)`,
-          filter: 'blur(38px)',
-          borderRadius: '48% 52% 38% 62% / 62% 38% 62% 38%',
-          mixBlendMode: 'screen',
-          willChange: 'transform, opacity',
-        }}
-        animate={{
-          scale: [0.4, 3.0, 0.4],
-          rotate: [0, -720, 0],
-          x: [60, -90, 60],
-          y: [-50, 80, -50],
-          opacity: [0.3, 0.6, 0.3],
-          borderRadius: [
-            '48% 52% 38% 62% / 62% 38% 62% 38%',
-            '52% 48% 62% 38% / 38% 62% 38% 62%',
-            '48% 52% 38% 62% / 62% 38% 62% 38%',
-          ],
-        }}
-        transition={{
-          duration: 4.2,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 1,
-        }}
+      {/* Far Back Panel 2 - Light Red */}
+      <GlassPanel
+        size="1200px"
+        position={{ top: '40%', right: '5%' }}
+        color={colors.light}
+        blur={60}
+        opacity={[0.1, 0.12, 0.1]}
+        duration={22}
+        delay={8}
+        shape="horizontal"
       />
 
-      {/* Mid Shape 2 - Pink/Orange Split */}
-      <motion.div
-        className="absolute top-[55%] right-[30%] w-[580px] h-[580px]"
-        style={{
-          background: `conic-gradient(from 90deg, ${colors.pink}, 0.5) 0deg, ${colors.coral}, 0.45) 90deg, ${colors.orange}, 0.35) 180deg, ${colors.brightRed}, 0.4) 270deg, ${colors.pink}, 0.5) 360deg)`,
-          filter: 'blur(42px)',
-          borderRadius: '35% 65% 58% 42% / 52% 48% 52% 48%',
-          mixBlendMode: 'color-dodge',
-          willChange: 'transform, opacity',
-        }}
-        animate={{
-          scale: [0.5, 2.8, 0.5],
-          rotate: [0, 900, 0],
-          x: [-70, 50, -70],
-          y: [30, -70, 30],
-          opacity: [0.35, 0.58, 0.35],
-          borderRadius: [
-            '35% 65% 58% 42% / 52% 48% 52% 48%',
-            '65% 35% 42% 58% / 48% 52% 48% 52%',
-            '35% 65% 58% 42% / 52% 48% 52% 48%',
-          ],
-        }}
-        transition={{
-          duration: 3.8,
-          repeat: Infinity,
-          ease: "anticipate",
-          delay: 2.5,
-        }}
-      />
-
-      {/* Mid Shape 3 - Deep Red Morph */}
-      <motion.div
-        className="absolute bottom-[25%] left-[15%] w-[700px] h-[700px]"
-        style={{
-          background: `radial-gradient(ellipse, ${colors.deepRed}, 0.48) 0%, ${colors.coral}, 0.38) 30%, ${colors.pink}, 0.22) 65%, transparent 100%)`,
-          filter: 'blur(40px)',
-          borderRadius: '42% 58% 70% 30% / 38% 62% 38% 62%',
-          mixBlendMode: 'screen',
-          willChange: 'transform, opacity',
-        }}
-        animate={{
-          scale: [0.35, 3.2, 0.35],
-          rotate: [0, -540, -1080],
-          x: [45, -85, 45],
-          y: [-45, 65, -45],
-          opacity: [0.32, 0.55, 0.32],
-          borderRadius: [
-            '42% 58% 70% 30% / 38% 62% 38% 62%',
-            '58% 42% 30% 70% / 62% 38% 62% 38%',
-            '42% 58% 70% 30% / 38% 62% 38% 62%',
-          ],
-        }}
-        transition={{
-          duration: 4.5,
-          repeat: Infinity,
-          ease: "circInOut",
-          delay: 3.2,
-        }}
-      />
-
-      {/* FRONT LAYER - Small, fast, less blur */}
+      {/* LAYER 2 - Mid Background */}
       
-      {/* Front Shape 1 - Orange Pulse */}
-      <motion.div
-        className="absolute top-[35%] left-[60%] w-[500px] h-[500px]"
-        style={{
-          background: `radial-gradient(circle, ${colors.orange}, 0.65) 0%, ${colors.coral}, 0.5) 35%, ${colors.brightRed}, 0.28) 70%, transparent 100%)`,
-          filter: 'blur(25px)',
-          borderRadius: '50% 50% 45% 55% / 55% 45% 55% 45%',
-          mixBlendMode: 'screen',
-          willChange: 'transform, opacity',
-        }}
-        animate={{
-          scale: [0.4, 3.0, 0.4],
-          rotate: [0, 720, 1440],
-          x: [-55, 95, -55],
-          y: [50, -85, 50],
-          opacity: [0.4, 0.7, 0.4],
-          borderRadius: [
-            '50% 50% 45% 55% / 55% 45% 55% 45%',
-            '50% 50% 55% 45% / 45% 55% 45% 55%',
-            '50% 50% 45% 55% / 55% 45% 55% 45%',
-          ],
-        }}
-        transition={{
-          duration: 3.2,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 0.5,
-        }}
+      {/* Mid Panel 1 - Light to Medium Red */}
+      <GlassPanel
+        size="1000px"
+        position={{ top: '15%', right: '20%' }}
+        color={colors.light}
+        blur={45}
+        opacity={[0.12, 0.16, 0.12]}
+        duration={20}
+        delay={3}
+        shape="rounded"
+      />
+      
+      {/* Mid Panel 2 - Medium Red */}
+      <GlassPanel
+        size="900px"
+        position={{ bottom: '20%', left: '15%' }}
+        color={colors.medium}
+        blur={45}
+        opacity={[0.14, 0.18, 0.14]}
+        duration={18}
+        delay={10}
+        shape="vertical"
+      />
+      
+      {/* Mid Panel 3 - Base Red */}
+      <GlassPanel
+        size="800px"
+        position={{ top: '50%', left: '45%' }}
+        color={colors.base}
+        blur={45}
+        opacity={[0.12, 0.17, 0.12]}
+        duration={19}
+        delay={6}
+        shape="square"
+        rotation={25}
       />
 
-      {/* Front Shape 2 - Pink Burst */}
-      <motion.div
-        className="absolute top-[65%] right-[15%] w-[450px] h-[450px]"
-        style={{
-          background: `conic-gradient(from 45deg, ${colors.pink}, 0.6) 0deg, ${colors.brightRed}, 0.55) 120deg, ${colors.coral}, 0.45) 240deg, ${colors.pink}, 0.6) 360deg)`,
-          filter: 'blur(28px)',
-          borderRadius: '38% 62% 52% 48% / 48% 52% 48% 52%',
-          mixBlendMode: 'color-dodge',
-          willChange: 'transform, opacity',
-        }}
-        animate={{
-          scale: [0.5, 2.9, 0.5],
-          rotate: [0, -900, 0],
-          x: [70, -60, 70],
-          y: [-40, 75, -40],
-          opacity: [0.45, 0.68, 0.45],
-          borderRadius: [
-            '38% 62% 52% 48% / 48% 52% 48% 52%',
-            '62% 38% 48% 52% / 52% 48% 52% 48%',
-            '38% 62% 52% 48% / 48% 52% 48% 52%',
-          ],
-        }}
-        transition={{
-          duration: 3.5,
-          repeat: Infinity,
-          ease: "anticipate",
-          delay: 1.8,
-        }}
+      {/* LAYER 3 - Foreground Glass (most prominent) */}
+      
+      {/* Front Panel 1 - Base Red */}
+      <GlassPanel
+        size="750px"
+        position={{ top: '25%', left: '25%' }}
+        color={colors.base}
+        blur={30}
+        opacity={[0.18, 0.23, 0.18]}
+        duration={17}
+        delay={2}
+        shape="rounded"
+      />
+      
+      {/* Front Panel 2 - Dark Red */}
+      <GlassPanel
+        size="650px"
+        position={{ bottom: '15%', right: '25%' }}
+        color={colors.dark}
+        blur={30}
+        opacity={[0.2, 0.25, 0.2]}
+        duration={15}
+        delay={12}
+        shape="blob"
+      />
+      
+      {/* Front Panel 3 - Very Dark Red */}
+      <GlassPanel
+        size="600px"
+        position={{ top: '60%', right: '10%' }}
+        color={colors.veryDark}
+        blur={30}
+        opacity={[0.18, 0.22, 0.18]}
+        duration={16}
+        delay={7}
+        shape="square"
+        rotation={-15}
       />
 
-      {/* Front Shape 3 - Coral Glitch */}
-      <motion.div
-        className="absolute top-[12%] right-[40%] w-[520px] h-[520px]"
+      {/* Subtle noise texture overlay for depth */}
+      <div 
+        className="absolute inset-0 opacity-[0.015]"
         style={{
-          background: `radial-gradient(ellipse, ${colors.coral}, 0.58) 0%, ${colors.orange}, 0.48) 30%, ${colors.deepRed}, 0.3) 65%, transparent 100%)`,
-          filter: 'blur(22px)',
-          borderRadius: '45% 55% 60% 40% / 42% 58% 42% 58%',
-          mixBlendMode: 'screen',
-          willChange: 'transform, opacity',
-        }}
-        animate={{
-          scale: [0.3, 3.1, 0.3],
-          rotate: [0, 540, 1080],
-          x: [-65, 85, -65],
-          y: [35, -70, 35],
-          opacity: [0.42, 0.65, 0.42],
-          borderRadius: [
-            '45% 55% 60% 40% / 42% 58% 42% 58%',
-            '55% 45% 40% 60% / 58% 42% 58% 42%',
-            '45% 55% 60% 40% / 42% 58% 42% 58%',
-          ],
-        }}
-        transition={{
-          duration: 3.0,
-          repeat: Infinity,
-          ease: "circInOut",
-          delay: 4.5,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          pointerEvents: 'none',
         }}
       />
     </div>
