@@ -50,7 +50,8 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
     "FIXED_PRICE"  // Default to fixed price for now
   );
   const [basePricePerPair, setBasePricePerPair] = useState(
-    initialListing?.basePricePerPair?.toString() ?? ""
+    initialListing?.basePricePerPair?.toString() ?? 
+    initialListing?.flatPricePerPair?.toString() ?? ""
   );
   const [imageUrls, setImageUrls] = useState<string[]>(
     initialListing?.images?.sort((a, b) => a.sortOrder - b.sortOrder).map(img => img.url) ?? []
@@ -364,30 +365,31 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
             </p>
           </div>
 
-          {/* Pricing Foundation (for tiered pricing) */}
-          {pricingMode === PricingMode.TIER && (
-            <div className="space-y-3 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-              <h3 className="text-xs font-semibold text-slate-700">Pricing Foundation</h3>
-              <div className="w-48 space-y-1.5">
-                <label className="text-[11px] font-medium text-slate-700">
-                  Base wholesale price
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">$</span>
-                  <Input
-                    name="basePricePerPair"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={basePricePerPair}
-                    onChange={(e) => setBasePricePerPair(e.target.value)}
-                    className="pl-6"
-                    placeholder="120.00"
-                    required={tierPricingType === "PERCENTAGE_OFF"}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-500">Reference price for tier discounts</p>
+          {/* Universal Price Input - Shows for Flat and Tiered Percentage modes */}
+          {(pricingMode === PricingMode.FLAT || tierPricingType === "PERCENTAGE_OFF") && (
+            <div className="w-48 space-y-1.5">
+              <label className="text-xs font-medium text-slate-700">
+                Price per pair (USD)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">$</span>
+                <Input
+                  name={pricingMode === PricingMode.FLAT ? "flatPricePerPair" : "basePricePerPair"}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={basePricePerPair}
+                  onChange={(e) => setBasePricePerPair(e.target.value)}
+                  className="pl-6"
+                  placeholder="120.00"
+                  required
+                />
               </div>
+              <p className="text-[10px] text-slate-500">
+                {pricingMode === PricingMode.FLAT 
+                  ? "Your selling price per pair" 
+                  : "Base price before tier discounts"}
+              </p>
             </div>
           )}
 
@@ -419,7 +421,7 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
 
           <input type="hidden" name="pricingMode" value={pricingMode} />
 
-          {/* Tier Pricing Type Toggle (new) */}
+          {/* Tier Pricing Type Toggle */}
           {pricingMode === PricingMode.TIER && (
             <div className="space-y-2">
               <label className="text-xs font-medium text-slate-700">Discount Structure</label>
@@ -451,20 +453,8 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
             </div>
           )}
 
-          {pricingMode === PricingMode.FLAT ? (
-            <div className="w-40 space-y-1.5">
-              <label className="text-xs font-medium text-slate-700">
-                Price per pair (USD)
-              </label>
-              <Input
-                name="flatPricePerPair"
-                type="number"
-                step="0.01"
-                min={0}
-                defaultValue={initialListing?.flatPricePerPair != null ? String(initialListing.flatPricePerPair) : ""}
-              />
-            </div>
-          ) : (
+          {/* Tier Pricing Tables */}
+          {pricingMode === PricingMode.TIER && (
             tierPricingType === "FIXED_PRICE" ? 
               <TierPricingTable tiers={initialListing?.tierPrices ?? []} /> :
               <PercentageTierTable 
