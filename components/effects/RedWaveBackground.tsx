@@ -37,15 +37,6 @@ export function RedWaveBackground() {
   };
   
   const { horizontalLines, verticalLines } = generatePerspectiveLines();
-  
-  // Flowing red glow path (S-curve from bottom-left to top-right)
-  const glowPath = [
-    { x: 20, y: 85, size: 120 },
-    { x: 30, y: 70, size: 100 },
-    { x: 45, y: 55, size: 140 },
-    { x: 60, y: 45, size: 110 },
-    { x: 75, y: 35, size: 130 },
-  ];
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -118,34 +109,6 @@ export function RedWaveBackground() {
           ))}
         </svg>
       </motion.div>
-      
-      {/* Red accent glows along flowing path */}
-      {glowPath.map((glow, i) => (
-        <motion.div
-          key={`glow-${i}`}
-          className="absolute rounded-full"
-          style={{
-            left: `${glow.x}%`,
-            top: `${glow.y}%`,
-            width: `${glow.size}px`,
-            height: `${glow.size}px`,
-            background: 'radial-gradient(circle, rgba(239, 68, 68, 0.6) 0%, rgba(239, 68, 68, 0.3) 40%, rgba(239, 68, 68, 0.1) 70%, transparent 100%)',
-            filter: 'blur(30px)',
-            transform: 'translate(-50%, -50%)',
-            willChange: 'transform, opacity',
-          }}
-          animate={{
-            scale: [1.0, 1.15, 1.0],
-            opacity: [0.5, 0.7, 0.5],
-          }}
-          transition={{
-            duration: 10,
-            delay: i * 1.5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
       
       {/* Subtle vignette at edges */}
       <div 
