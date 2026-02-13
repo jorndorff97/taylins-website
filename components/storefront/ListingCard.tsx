@@ -6,7 +6,6 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { isSoldOut } from "@/lib/inventory";
 import { getStartingPricePerPair } from "@/lib/pricing";
-import { MagneticHover } from "@/components/effects/MagneticHover";
 import type { Listing, ListingImage, ListingSize, ListingTierPrice } from "@prisma/client";
 import { PricingMode } from "@prisma/client";
 
@@ -49,73 +48,61 @@ export function ListingCard({ listing, rank, index = 0 }: ListingCardProps) {
         delay: index * 0.08,
         ease: [0.25, 0.1, 0.25, 1]
       }}
-      className="will-animate"
     >
       <Link
         href={`/listing/${listing.id}`}
         className="group block relative"
       >
-        {/* Glassmorphic Card Container */}
-        <MagneticHover strength={0.05}>
-          <motion.div 
-            className="relative aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 backdrop-blur-sm border border-white/20 shadow-2xl lg:rounded-3xl"
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            {/* Sold Out Badge */}
-            {soldOut && (
-              <div className="absolute left-3 top-3 z-20 rounded-full bg-neutral-900/90 backdrop-blur-sm px-3 py-1.5 ring-1 ring-white/20">
-                <span className="text-[9px] font-semibold uppercase tracking-wider text-white">
-                  Sold Out
-                </span>
-              </div>
-            )}
-            
-            {primaryImage ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={primaryImage}
-                  alt={listing.title}
-                  className="h-full w-full object-cover transition-all duration-700 group-hover:scale-105"
-                />
-                
-                {/* Glassmorphic hover overlay */}
-                <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500" />
-              </>
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-neutral-400 text-sm">
-                No image
-              </div>
-            )}
-          </motion.div>
-        </MagneticHover>
-          
-        {/* Product Info - Always Visible, Neutral Colors */}
-        <div className="mt-4 space-y-2 lg:mt-5 lg:space-y-2.5">
-            {/* Brand Name */}
-            {listing.brand && (
-              <p className="text-[11px] lg:text-xs font-bold uppercase tracking-wide text-neutral-400">
-                {listing.brand}
-              </p>
-            )}
-            
-            {/* Product Title - Always Visible */}
-            <h3 className="text-base lg:text-lg font-semibold text-neutral-900 leading-snug group-hover:text-neutral-700 transition-colors line-clamp-2">
-              {listing.title}
-            </h3>
-            
-            {/* Price Only */}
-            <div className="pt-0.5">
-              {startingPrice != null && (
-                <span className="text-lg lg:text-xl font-bold text-neutral-900">
-                  ${startingPrice.toLocaleString()}
-                  {listing.pricingMode === PricingMode.TIER && "+"}
-                </span>
-              )}
+        {/* Clean Card Container - GOAT Style */}
+        <motion.div 
+          className="relative aspect-square overflow-hidden bg-white border border-neutral-200"
+          whileHover={{ y: -4 }}
+          transition={{ duration: 0.2 }}
+        >
+          {/* Sold Out Badge */}
+          {soldOut && (
+            <div className="absolute left-2 top-2 z-20 bg-black px-2 py-1">
+              <span className="text-xs font-medium uppercase tracking-wide text-white">
+                Sold Out
+              </span>
             </div>
+          )}
+          
+          {primaryImage ? (
+            <img
+              src={primaryImage}
+              alt={listing.title}
+              className="h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-neutral-400 text-sm">
+              No image
+            </div>
+          )}
+        </motion.div>
+          
+        {/* Product Info */}
+        <div className="mt-3 space-y-1">
+          {listing.brand && (
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+              {listing.brand}
+            </p>
+          )}
+          
+          <h3 className="text-sm font-medium text-neutral-900 line-clamp-2">
+            {listing.title}
+          </h3>
+          
+          <div className="pt-1">
+            {startingPrice != null && (
+              <span className="text-base font-semibold text-neutral-900">
+                ${startingPrice.toLocaleString()}
+                {listing.pricingMode === PricingMode.TIER && "+"}
+              </span>
+            )}
           </div>
-        </Link>
-      </motion.div>
+        </div>
+      </Link>
+    </motion.div>
   );
 }
