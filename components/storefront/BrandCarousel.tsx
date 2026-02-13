@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { SiNike, SiAdidas, SiJordan, SiPuma, SiNewbalance, SiReebok } from 'react-icons/si';
 
 const brands = [
@@ -54,22 +53,19 @@ export function BrandCarousel() {
   return (
     <div className="relative w-full h-24 overflow-hidden">
       {/* Scrolling container */}
-      <div className="flex flex-row gap-2 animate-scroll-horizontal py-3">
+      <div className="flex flex-row gap-1 animate-scroll-horizontal py-3">
         {allBrands.map((brand, index) => (
-          <motion.div
+          <div
             key={`${brand.name}-${index}`}
-            whileHover={{ scale: 1.05, y: -5 }}
-            transition={{ duration: 0.2 }}
-            className="flex items-center gap-3 backdrop-blur-sm rounded-xl p-3 shadow-sm hover:shadow-md transition-all will-animate flex-shrink-0"
-            style={{ width: "160px" }}
+            className="flex items-center gap-2 flex-shrink-0"
           >
-            <div className="text-neutral-700 hover:text-neutral-900 transition-colors">
+            <div className="text-neutral-700">
               {brand.icon}
             </div>
             <span className="text-sm font-medium text-neutral-800">
               {brand.name}
             </span>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
