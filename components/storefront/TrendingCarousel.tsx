@@ -101,7 +101,7 @@ export function TrendingCarousel({ listings, showDiscount = false }: TrendingCar
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
               onClick={() => scroll("left")}
-              className="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 h-12 w-12 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-lg ring-1 ring-slate-200/50 hover:bg-white hover:scale-110 transition-all duration-200 -translate-x-6 opacity-0 group-hover:opacity-100"
+              className="flex absolute left-0 top-1/2 -translate-y-1/2 z-10 h-12 w-12 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-lg ring-1 ring-slate-200/50 hover:bg-white hover:scale-110 transition-all duration-200 -translate-x-6"
               aria-label="Scroll left"
             >
               <svg className="h-5 w-5 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -134,7 +134,7 @@ export function TrendingCarousel({ listings, showDiscount = false }: TrendingCar
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
               onClick={() => scroll("right")}
-              className="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 h-12 w-12 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-lg ring-1 ring-slate-200/50 hover:bg-white hover:scale-110 transition-all duration-200 translate-x-6 opacity-0 group-hover:opacity-100"
+              className="flex absolute right-0 top-1/2 -translate-y-1/2 z-10 h-12 w-12 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-lg ring-1 ring-slate-200/50 hover:bg-white hover:scale-110 transition-all duration-200 translate-x-6"
               aria-label="Scroll right"
             >
               <svg className="h-5 w-5 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -146,32 +146,8 @@ export function TrendingCarousel({ listings, showDiscount = false }: TrendingCar
 
         {/* Scroll Hint - Desktop Only */}
         {canScrollRight && (
-          <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none" />
+          <div className="block absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none" />
         )}
-      </div>
-
-      {/* Pagination Dots - Mobile/Tablet Only */}
-      <div className="flex justify-center gap-2 mt-6 lg:hidden">
-        {listings.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              if (!scrollContainerRef.current) return;
-              const container = scrollContainerRef.current;
-              const cardWidth = container.querySelector('div')?.offsetWidth || 0;
-              container.scrollTo({
-                left: cardWidth * i,
-                behavior: "smooth",
-              });
-            }}
-            className={`transition-all duration-300 rounded-full ${
-              i === activeIndex
-                ? "w-2 h-2 bg-neutral-900"
-                : "w-2 h-2 bg-neutral-300 hover:bg-neutral-400"
-            }`}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
       </div>
     </div>
   );

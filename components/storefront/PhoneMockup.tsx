@@ -142,23 +142,6 @@ export function PhoneMockup({ deals }: PhoneMockupProps) {
           </AnimatePresence>
         </div>
       </div>
-
-      {/* Pagination Dots (non-interactive, just indicators) */}
-      {deals.length > 1 && (
-        <div className="flex items-center gap-2">
-          {deals.map((_, index) => (
-            <div
-              key={index}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === activeIndex
-                  ? "bg-neutral-900 w-6"
-                  : "bg-neutral-300"
-              }`}
-              aria-label={`Deal ${index + 1} of ${deals.length}`}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
