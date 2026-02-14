@@ -125,7 +125,7 @@ export function PhoneMockup({ deals }: PhoneMockupProps) {
   return (
     <div className="flex flex-col items-center gap-4">
       {/* Phone Frame */}
-      <div className="w-[280px] h-[350px] sm:w-[320px] sm:h-[500px] bg-white/80 backdrop-blur-sm border-[8px] border-neutral-200/80 rounded-[3rem] shadow-2xl shadow-neutral-900/10 p-2 overflow-hidden">
+      <div className="w-[280px] h-[350px] sm:w-[320px] sm:h-[500px] bg-white/80 backdrop-blur-sm border-[8px] border-neutral-200/80 rounded-[3rem] sm:shadow-2xl sm:shadow-neutral-900/10 p-2 overflow-hidden">
         {/* Screen Content with AnimatePresence for smooth transitions */}
         <div className="w-full h-full rounded-[2.5rem] relative">
           <AnimatePresence mode="wait">
