@@ -105,6 +105,17 @@ function saturateColor(hex: string, percent: number): string {
   return rgbToHex(newR, newG, newB);
 }
 
+// Helper to check if a color is vibrant enough
+function isVibrantColor(hex: string): boolean {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const [h, s, l] = rgbToHsl(r, g, b);
+  
+  // Color must have reasonable saturation and not be too light or too dark
+  return s > 15 && l > 20 && l < 80;
+}
+
 // Extract and adjust colors from image for gradient
 export async function extractGradientColors(imageUrl: string): Promise<GradientColors> {
   const fac = new FastAverageColor();
@@ -122,53 +133,131 @@ export async function extractGradientColors(imageUrl: string): Promise<GradientC
       setTimeout(() => reject(new Error('Image load timeout')), 10000);
     });
 
-    // Extract dominant color, ignoring white/near-white pixels
-    const color = await fac.getColorAsync(img, {
+    // Create a canvas to analyze different regions
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not get canvas context');
+    ctx.drawImage(img, 0, 0);
+
+    // Extract colors from different regions of the image
+    const colors: Array<{ hex: string; saturation: number; lightness: number }> = [];
+    
+    // Analyze top third
+    const topColor = await fac.getColorAsync(img, {
       algorithm: 'dominant',
-      ignoredColor: [
-        [255, 255, 255, 255, 50], // Ignore pure white and near-white
-      ],
+      top: 0,
+      height: Math.floor(img.height / 3),
+      ignoredColor: [[255, 255, 255, 255, 50]],
     });
     
-    console.log('Extracted color:', color.hex, color.rgb);
+    // Analyze middle third
+    const midColor = await fac.getColorAsync(img, {
+      algorithm: 'dominant',
+      top: Math.floor(img.height / 3),
+      height: Math.floor(img.height / 3),
+      ignoredColor: [[255, 255, 255, 255, 50]],
+    });
     
-    // Get hex color
-    let baseColor = color.hex;
+    // Analyze bottom third
+    const bottomColor = await fac.getColorAsync(img, {
+      algorithm: 'dominant',
+      top: Math.floor((img.height * 2) / 3),
+      height: Math.ceil(img.height / 3),
+      ignoredColor: [[255, 255, 255, 255, 50]],
+    });
     
-    // Check if extracted color is too light/desaturated (likely white background)
-    const r = parseInt(baseColor.slice(1, 3), 16);
-    const g = parseInt(baseColor.slice(3, 5), 16);
-    const b = parseInt(baseColor.slice(5, 7), 16);
-    const [h, s, l] = rgbToHsl(r, g, b);
-    
-    console.log('HSL values:', { h, s, l });
-    
-    // If saturation is too low or lightness too high, it's probably white background
-    if (s < 15 || l > 85) {
-      console.warn('Color too desaturated/light, using fallback red');
-      // Use a nice default red from the shoe brand
-      baseColor = '#DC2626';
-    }
+    // Also get overall dominant color as backup
+    const overallColor = await fac.getColorAsync(img, {
+      algorithm: 'dominant',
+      ignoredColor: [[255, 255, 255, 255, 50]],
+    });
 
-    // Adjust color for better background aesthetics
-    // First saturate to make it more vibrant
-    baseColor = saturateColor(baseColor, 15);
+    // Collect all colors with their properties
+    const allColors = [topColor, midColor, bottomColor, overallColor];
     
-    // Then create gradient by lightening
-    const from = lightenColor(baseColor, 40);  // Lightest
-    const via = lightenColor(baseColor, 25);   // Mid
-    const to = lightenColor(baseColor, 15);    // Base adjusted
+    console.log('Extracted colors from regions:', allColors.map(c => c.hex));
     
-    console.log('Final gradient:', { from, via, to });
+    for (const color of allColors) {
+      const r = color.value[0];
+      const g = color.value[1];
+      const b = color.value[2];
+      const [h, s, l] = rgbToHsl(r, g, b);
+      
+      if (isVibrantColor(color.hex)) {
+        colors.push({ hex: color.hex, saturation: s, lightness: l });
+      }
+    }
+    
+    // Remove duplicate colors (similar colors)
+    const uniqueColors: Array<{ hex: string; saturation: number; lightness: number }> = [];
+    for (const color of colors) {
+      const isDuplicate = uniqueColors.some(existing => {
+        const r1 = parseInt(color.hex.slice(1, 3), 16);
+        const g1 = parseInt(color.hex.slice(3, 5), 16);
+        const b1 = parseInt(color.hex.slice(5, 7), 16);
+        const r2 = parseInt(existing.hex.slice(1, 3), 16);
+        const g2 = parseInt(existing.hex.slice(3, 5), 16);
+        const b2 = parseInt(existing.hex.slice(5, 7), 16);
+        
+        // Colors are similar if all RGB values are within 30 of each other
+        return Math.abs(r1 - r2) < 30 && Math.abs(g1 - g2) < 30 && Math.abs(b1 - b2) < 30;
+      });
+      
+      if (!isDuplicate) {
+        uniqueColors.push(color);
+      }
+    }
+    
+    // Sort by saturation (most vibrant first)
+    uniqueColors.sort((a, b) => b.saturation - a.saturation);
+    
+    console.log('Unique vibrant colors:', uniqueColors.map(c => c.hex));
+    
+    let primaryColor: string;
+    let secondaryColor: string;
+    
+    if (uniqueColors.length === 0) {
+      // No vibrant colors found, use fallback
+      console.warn('No vibrant colors found, using fallback red');
+      primaryColor = '#DC2626';
+      secondaryColor = lightenColor(primaryColor, 35);
+    } else if (uniqueColors.length === 1) {
+      // Only one vibrant color, use it and a lighter version
+      primaryColor = saturateColor(uniqueColors[0].hex, 10);
+      secondaryColor = lightenColor(primaryColor, 30);
+    } else {
+      // Multiple colors found, use the top 2
+      primaryColor = saturateColor(uniqueColors[0].hex, 10);
+      secondaryColor = uniqueColors[1].hex;
+      
+      // If secondary is too dark, lighten it
+      const secR = parseInt(secondaryColor.slice(1, 3), 16);
+      const secG = parseInt(secondaryColor.slice(3, 5), 16);
+      const secB = parseInt(secondaryColor.slice(5, 7), 16);
+      const [secH, secS, secL] = rgbToHsl(secR, secG, secB);
+      
+      if (secL < 60) {
+        secondaryColor = lightenColor(secondaryColor, 25);
+      }
+    }
+    
+    // Gradient always ends with white for readability
+    const from = primaryColor;          // Bold primary color
+    const via = secondaryColor;          // Secondary color or lighter primary
+    const to = '#FFFFFF';                // Pure white for text readability
+    
+    console.log('Final gradient colors:', { from, via, to });
 
     return { from, via, to };
   } catch (error) {
     console.error('Failed to extract colors:', error);
-    // Fallback to white gradient
+    // Fallback to subtle gradient ending in white
     return {
-      from: '#FFFFFF',
-      via: '#F5F5F5',
-      to: '#E5E5E5',
+      from: '#F5F5F5',
+      via: '#FAFAFA',
+      to: '#FFFFFF',
     };
   } finally {
     fac.destroy();
