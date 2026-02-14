@@ -31,6 +31,15 @@ export default function NewListingPage() {
     const instagramLink = String(formData.get("instagramLink") ?? "").trim() || null;
     const intent = String(formData.get("intent") ?? "draft");
 
+    // Debug: Log what we received from the form
+    console.log('[FORM DATA] Received from form:', {
+      productSKU,
+      manualStockXPrice,
+      intent,
+      hasProductSKU: !!productSKU,
+      hasManualPrice: !!manualStockXPrice,
+    });
+
     // Get pricing based on mode
     const flatPriceRaw = formData.get("flatPricePerPair");
     const basePriceRaw = formData.get("basePricePerPair");
@@ -68,6 +77,13 @@ export default function NewListingPage() {
     let stockXPriceTimestamp = null;
     let stockXFetchError = null;
     
+    console.log('[STOCKX FETCH] Conditions check:', {
+      hasProductSKU: !!productSKU,
+      productSKU,
+      hasManualPrice: !!manualStockXPrice,
+      willAttemptFetch: !!(productSKU && !manualStockXPrice),
+    });
+    
     if (productSKU && !manualStockXPrice) {
       console.log(`[STOCKX FETCH] Attempting to fetch price for SKU: ${productSKU}`);
       try {
@@ -83,6 +99,10 @@ export default function NewListingPage() {
         console.error(`[STOCKX FETCH] ✗ Error fetching price:`, error);
         stockXFetchError = error instanceof Error ? error.message : "Unknown error";
       }
+    } else {
+      console.log('[STOCKX FETCH] Skipping fetch:', 
+        !productSKU ? 'No SKU provided' : 'Manual price override is set'
+      );
     }
 
     const finalStockXPrice = manualStockXPrice || fetchedStockXPrice;

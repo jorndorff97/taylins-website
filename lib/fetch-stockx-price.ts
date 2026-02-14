@@ -5,27 +5,44 @@
 export async function fetchStockXPrice(productSKU: string): Promise<number | null> {
   if (!productSKU) return null;
   
+  // Check environment variables
+  const rapidApiKey = process.env.RAPIDAPI_KEY;
+  const rapidApiHost = process.env.RAPIDAPI_HOST;
+  
+  console.log('[STOCKX API] Environment check:', {
+    hasKey: !!rapidApiKey,
+    hasHost: !!rapidApiHost,
+    host: rapidApiHost,
+  });
+  
+  if (!rapidApiKey || !rapidApiHost) {
+    console.error('[STOCKX API] Missing environment variables!');
+    return null;
+  }
+  
   try {
     const options = {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY!,
-        'X-RapidAPI-Host': process.env.RAPIDAPI_HOST!,
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': rapidApiHost,
       },
     };
 
-    const response = await fetch(
-      `https://${process.env.RAPIDAPI_HOST}/productprice?styleId=${encodeURIComponent(productSKU)}`,
-      options
-    );
+    const url = `https://${rapidApiHost}/productprice?styleId=${encodeURIComponent(productSKU)}`;
+    console.log('[STOCKX API] Fetching from URL:', url);
+
+    const response = await fetch(url, options);
+
+    console.log('[STOCKX API] Response status:', response.status, response.statusText);
 
     if (!response.ok) {
-      console.error(`RapidAPI request failed: ${response.status} ${response.statusText}`);
+      console.error(`[STOCKX API] Request failed: ${response.status} ${response.statusText}`);
       return null;
     }
 
     const data = await response.json();
-    console.log('RapidAPI response for SKU', productSKU, ':', JSON.stringify(data, null, 2));
+    console.log('[STOCKX API] Response data for SKU', productSKU, ':', JSON.stringify(data, null, 2));
     
     // Parse the price from response based on actual API structure
     let price = null;
@@ -48,11 +65,11 @@ export async function fetchStockXPrice(productSKU: string): Promise<number | nul
     else if (data.market?.lowestAsk) price = data.market.lowestAsk;
     else if (data.market?.lastSale) price = data.market.lastSale;
     
-    console.log('Extracted price for SKU', productSKU, ':', price);
+    console.log('[STOCKX API] Extracted price for SKU', productSKU, ':', price);
     
     return price ? Number(price) : null;
   } catch (error) {
-    console.error("StockX price fetch error for SKU", productSKU, ":", error);
+    console.error("[STOCKX API] Error fetching price for SKU", productSKU, ":", error);
     return null;
   }
 }
