@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useBackgroundColors } from "@/context/BackgroundColorContext";
+import { extractGradientColors } from "@/hooks/useProductColors";
 
 interface DealData {
   id: number;
@@ -71,15 +73,37 @@ export function PhoneMockup({ deals }: PhoneMockupProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const autoRotateRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const { setColors } = useBackgroundColors();
 
-  // Auto-rotate every 5 seconds
+  // Extract colors when active product changes
+  useEffect(() => {
+    const extractColors = async () => {
+      const currentDeal = deals[activeIndex];
+      if (!currentDeal?.imageUrl) {
+        setColors({ from: '#FFFFFF', via: '#F5F5F5', to: '#E5E5E5' });
+        return;
+      }
+
+      try {
+        const gradientColors = await extractGradientColors(currentDeal.imageUrl);
+        setColors(gradientColors);
+      } catch (error) {
+        console.error('Color extraction failed:', error);
+        setColors({ from: '#FFFFFF', via: '#F5F5F5', to: '#E5E5E5' });
+      }
+    };
+
+    extractColors();
+  }, [activeIndex, deals, setColors]);
+
+  // Auto-rotate every 4 seconds
   useEffect(() => {
     if (deals.length <= 1) return;
 
     const startAutoRotate = () => {
       autoRotateRef.current = setInterval(() => {
         setActiveIndex((prev) => (prev + 1) % deals.length);
-      }, 5000);
+      }, 4000);
     };
 
     startAutoRotate();
@@ -120,7 +144,7 @@ export function PhoneMockup({ deals }: PhoneMockupProps) {
       }
       autoRotateRef.current = setInterval(() => {
         setActiveIndex((prev) => (prev + 1) % deals.length);
-      }, 5000);
+      }, 4000);
     }
   };
 

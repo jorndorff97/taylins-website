@@ -1,8 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useBackgroundColors } from "@/context/BackgroundColorContext";
 
 export function RedWaveBackground() {
+  const { colors } = useBackgroundColors();
   // God ray configurations - 3 dramatic wide-spreading beams
   const rays = [
     {
@@ -100,8 +102,17 @@ export function RedWaveBackground() {
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      {/* Blue sky gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#87CEEB] via-[#B0D4E3] to-[#E0F2F7]" />
+      {/* Dynamic gradient background with smooth transitions */}
+      <motion.div
+        className="absolute inset-0"
+        animate={{
+          background: `linear-gradient(to bottom, ${colors.from}, ${colors.via}, ${colors.to})`,
+        }}
+        transition={{
+          duration: 1.5,
+          ease: 'easeInOut',
+        }}
+      />
       
       {/* SVG container for god rays and clouds */}
       <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
