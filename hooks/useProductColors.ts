@@ -224,13 +224,32 @@ export async function extractGradientColors(imageUrl: string): Promise<GradientC
       primaryColor = lightenColor('#DC2626', 20);
       secondaryColor = lightenColor(primaryColor, 25);
     } else if (uniqueColors.length === 1) {
-      // Only one vibrant color, use it and a lighter version
-      primaryColor = lightenColor(uniqueColors[0].hex, 15);
-      secondaryColor = lightenColor(primaryColor, 25);
+      // Only one vibrant color
+      const baseColor = uniqueColors[0];
+      
+      // Check if color is already light
+      if (baseColor.lightness > 60) {
+        // Already light, don't lighten further - use as-is
+        primaryColor = baseColor.hex;
+        secondaryColor = lightenColor(primaryColor, 15);
+      } else {
+        // Dark color, lighten it
+        primaryColor = lightenColor(baseColor.hex, 15);
+        secondaryColor = lightenColor(primaryColor, 25);
+      }
     } else {
       // Multiple colors found, use the top 2
-      // Lighten the primary color to reduce boldness
-      primaryColor = lightenColor(uniqueColors[0].hex, 15);
+      const baseColor = uniqueColors[0];
+      
+      // Check if primary color is already light
+      if (baseColor.lightness > 60) {
+        // Already light, use as-is or slightly adjust
+        primaryColor = baseColor.hex;
+      } else {
+        // Dark color, lighten it for better readability
+        primaryColor = lightenColor(baseColor.hex, 15);
+      }
+      
       secondaryColor = uniqueColors[1].hex;
       
       // If secondary is too dark, lighten it more
@@ -245,7 +264,7 @@ export async function extractGradientColors(imageUrl: string): Promise<GradientC
     }
     
     // Gradient always ends with white for readability
-    const from = primaryColor;          // Lighter primary color for better readability
+    const from = primaryColor;          // Primary color (adjusted based on lightness)
     const via = secondaryColor;          // Secondary color or lighter primary
     const to = '#FFFFFF';                // Pure white for text readability
     
