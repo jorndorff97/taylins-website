@@ -69,14 +69,8 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
   return (
     <section 
       ref={ref}
-      className="relative overflow-hidden border-t border-slate-100 py-20 sm:py-32"
+      className="relative overflow-hidden bg-white py-20 sm:py-32"
     >
-      {/* Animated Background Gradient - Removed since red waves handle it */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-hero-accent blur-3xl" />
-        <div className="absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-hero-secondary blur-3xl" />
-      </div>
-
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mx-auto max-w-3xl text-center">
           <motion.div
@@ -91,7 +85,7 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
             <h2 className="mt-4 text-4xl font-light tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
               Beat StockX.
               <br />
-              <span className="font-extralight text-hero-accent">Every time.</span>
+              <span className="font-extralight text-slate-900">Every time.</span>
             </h2>
 
             <p className="mt-6 text-lg text-slate-600">
@@ -108,7 +102,7 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
             className="mt-12 mx-auto max-w-2xl will-animate"
             style={{ transformStyle: "preserve-3d", perspective: "1000px" }}
           >
-            <div className="glass-card rounded-3xl p-8 shadow-2xl border-2 border-white/20">
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-200">
               {/* Product Selector Dots */}
               {products.length > 1 && (
                 <div className="flex justify-center gap-2 mb-6">
@@ -118,7 +112,7 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
                       onClick={() => setSelectedProduct(index)}
                       className={`h-2 rounded-full transition-all ${
                         index === selectedProduct 
-                          ? "w-8 bg-hero-accent" 
+                          ? "w-8 bg-slate-900" 
                           : "w-2 bg-slate-300 hover:bg-slate-400"
                       }`}
                       aria-label={`Select product ${index + 1}`}
@@ -174,17 +168,17 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-                className="relative p-6 rounded-2xl bg-gradient-to-br from-hero-accent/10 to-hero-secondary/10 border-2 border-hero-accent/20"
+                className="relative p-6 rounded-2xl bg-slate-50 border border-slate-200"
               >
                 <div className="text-sm font-medium text-slate-600 mb-2">You Save</div>
                 <div className="flex items-baseline justify-center gap-3">
                   <motion.span
                     key={counter}
-                    className="text-5xl font-bold text-hero-accent"
+                    className="text-5xl font-bold text-emerald-600"
                   >
                     ${counter}
                   </motion.span>
-                  <span className="text-2xl font-semibold text-hero-accent/70">
+                  <span className="text-2xl font-semibold text-emerald-600/70">
                     ({savingsPercent}% off)
                   </span>
                 </div>
