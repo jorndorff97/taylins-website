@@ -3,112 +3,182 @@
 import { motion } from "framer-motion";
 
 export function RedWaveBackground() {
-  // Aurora wave layer configurations - Northern Lights inspired
-  const waves = [
+  // Light beam configurations - Diagonal beams shining through clouds
+  const beams = [
     {
-      // Wave 1 - Bottom layer, largest, slowest (Deep burgundy base)
-      size: { width: '220%', height: '800px' },
-      position: { bottom: '0%', left: '-60%' },
-      gradient: 'radial-gradient(ellipse at center, rgba(136,19,55,0.85) 0%, rgba(127,29,29,0.65) 40%, rgba(185,28,28,0.5) 70%, transparent 100%)',
-      borderRadius: '35% 65% 55% 45% / 50% 45% 55% 50%',
-      animation: { 
-        x: ['0%', '15%', '-10%', '0%'],
-        y: ['0%', '-8%', '5%', '0%'],
-        scale: [1, 1.08, 0.98, 1],
+      // Beam 1 - Far left
+      position: { top: '20px', left: '10%' },
+      size: { width: '120px', height: '100vh' },
+      gradient: 'linear-gradient(to bottom, rgba(220,38,38,0.7) 0%, rgba(239,68,68,0.5) 30%, rgba(220,38,38,0.2) 60%, transparent 100%)',
+      rotation: 12,
+      animation: {
+        rotate: ['12deg', '14deg', '12deg'],
+        opacity: [0.65, 0.75, 0.65],
       },
-      duration: 45,
-      opacity: 0.75,
+      duration: 25,
+      baseOpacity: 0.7,
     },
     {
-      // Wave 2 - Mid-back layer (Rich crimson with bright highlights)
-      size: { width: '200%', height: '700px' },
-      position: { bottom: '5%', left: '20%' },
-      gradient: 'radial-gradient(ellipse at 40% 50%, rgba(220,38,38,0.9) 0%, rgba(185,28,28,0.7) 35%, rgba(127,29,29,0.5) 65%, transparent 100%)',
-      borderRadius: '40% 60% 50% 50% / 45% 55% 45% 55%',
-      animation: { 
-        x: ['0%', '-20%', '15%', '0%'],
-        y: ['0%', '12%', '-8%', '0%'],
-        scale: [1, 1.12, 1.05, 1],
+      // Beam 2 - Left-center
+      position: { top: '40px', left: '25%' },
+      size: { width: '100px', height: '100vh' },
+      gradient: 'linear-gradient(to bottom, rgba(239,68,68,0.65) 0%, rgba(220,38,38,0.45) 30%, rgba(185,28,28,0.25) 60%, transparent 100%)',
+      rotation: -10,
+      animation: {
+        rotate: ['-10deg', '-8deg', '-10deg'],
+        opacity: [0.6, 0.7, 0.6],
       },
-      duration: 32,
-      opacity: 0.8,
+      duration: 30,
+      baseOpacity: 0.65,
     },
     {
-      // Wave 3 - Middle layer (Bright red to deep crimson)
-      size: { width: '190%', height: '650px' },
-      position: { bottom: '10%', left: '-40%' },
-      gradient: 'radial-gradient(ellipse at 60% 40%, rgba(239,68,68,0.95) 0%, rgba(220,38,38,0.75) 30%, rgba(159,18,57,0.6) 60%, transparent 100%)',
-      borderRadius: '30% 70% 60% 40% / 50% 40% 60% 50%',
-      animation: { 
-        x: ['0%', '25%', '-15%', '0%'],
-        y: ['0%', '-15%', '10%', '0%'],
-        scale: [1, 1.15, 0.95, 1],
-        rotate: [0, 3, -2, 0],
+      // Beam 3 - Center-left
+      position: { top: '10px', left: '42%' },
+      size: { width: '110px', height: '100vh' },
+      gradient: 'linear-gradient(to bottom, rgba(220,38,38,0.75) 0%, rgba(239,68,68,0.55) 30%, rgba(220,38,38,0.25) 60%, transparent 100%)',
+      rotation: 13,
+      animation: {
+        rotate: ['13deg', '15deg', '13deg'],
+        opacity: [0.7, 0.8, 0.7],
+      },
+      duration: 22,
+      baseOpacity: 0.75,
+    },
+    {
+      // Beam 4 - Center-right
+      position: { top: '50px', left: '58%' },
+      size: { width: '95px', height: '100vh' },
+      gradient: 'linear-gradient(to bottom, rgba(239,68,68,0.7) 0%, rgba(220,38,38,0.5) 30%, rgba(185,28,28,0.2) 60%, transparent 100%)',
+      rotation: -11,
+      animation: {
+        rotate: ['-11deg', '-9deg', '-11deg'],
+        opacity: [0.65, 0.75, 0.65],
       },
       duration: 28,
-      opacity: 0.85,
+      baseOpacity: 0.7,
     },
     {
-      // Wave 4 - Mid-front layer, faster (Vibrant crimson with coral accents)
-      size: { width: '170%', height: '550px' },
-      position: { bottom: '15%', left: '30%' },
-      gradient: 'radial-gradient(ellipse at 50% 60%, rgba(239,68,68,0.95) 0%, rgba(248,113,113,0.85) 25%, rgba(220,38,38,0.65) 55%, transparent 100%)',
-      borderRadius: '45% 55% 48% 52% / 55% 50% 50% 45%',
-      animation: { 
-        x: ['0%', '-30%', '20%', '0%'],
-        y: ['0%', '18%', '-12%', '0%'],
-        scale: [1, 1.18, 1.08, 1],
-        rotate: [0, -4, 3, 0],
+      // Beam 5 - Right-center
+      position: { top: '30px', left: '75%' },
+      size: { width: '115px', height: '100vh' },
+      gradient: 'linear-gradient(to bottom, rgba(220,38,38,0.72) 0%, rgba(239,68,68,0.52) 30%, rgba(220,38,38,0.22) 60%, transparent 100%)',
+      rotation: 14,
+      animation: {
+        rotate: ['14deg', '16deg', '14deg'],
+        opacity: [0.68, 0.78, 0.68],
       },
-      duration: 18,
-      opacity: 0.88,
+      duration: 24,
+      baseOpacity: 0.72,
     },
     {
-      // Wave 5 - Front layer, fastest (Bright red highlights)
-      size: { width: '160%', height: '500px' },
-      position: { bottom: '20%', left: '-30%' },
-      gradient: 'radial-gradient(ellipse at 45% 55%, rgba(248,113,113,0.95) 0%, rgba(239,68,68,0.9) 20%, rgba(220,38,38,0.7) 50%, transparent 100%)',
-      borderRadius: '38% 62% 55% 45% / 48% 52% 48% 52%',
-      animation: { 
-        x: ['0%', '35%', '-25%', '0%'],
-        y: ['0%', '-20%', '15%', '0%'],
-        scale: [1, 1.2, 0.92, 1],
-        rotate: [0, 5, -4, 0],
+      // Beam 6 - Far right
+      position: { top: '60px', left: '88%' },
+      size: { width: '105px', height: '100vh' },
+      gradient: 'linear-gradient(to bottom, rgba(239,68,68,0.68) 0%, rgba(220,38,38,0.48) 30%, rgba(185,28,28,0.2) 60%, transparent 100%)',
+      rotation: -12,
+      animation: {
+        rotate: ['-12deg', '-10deg', '-12deg'],
+        opacity: [0.63, 0.73, 0.63],
       },
-      duration: 12,
-      opacity: 0.9,
+      duration: 27,
+      baseOpacity: 0.68,
+    },
+  ];
+
+  // Cloud configurations - Fluffy white clouds at top
+  const clouds = [
+    {
+      // Cloud 1 - Large left cloud
+      position: { top: '-50px', left: '-5%' },
+      size: { width: '600px', height: '250px' },
+      gradient: 'radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(240,240,240,0.98) 50%, rgba(220,220,220,0.85) 100%)',
+      borderRadius: '60% 40% 55% 45% / 45% 60% 40% 55%',
+      animation: {
+        x: ['0%', '3%', '0%'],
+        scale: [1, 1.01, 1],
+      },
+      duration: 75,
+      opacity: 0.95,
+    },
+    {
+      // Cloud 2 - Medium center-left cloud
+      position: { top: '-20px', left: '20%' },
+      size: { width: '500px', height: '200px' },
+      gradient: 'radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(245,245,245,0.96) 50%, rgba(225,225,225,0.88) 100%)',
+      borderRadius: '55% 45% 50% 50% / 50% 55% 45% 50%',
+      animation: {
+        x: ['0%', '4%', '0%'],
+        scale: [1, 1.015, 1],
+      },
+      duration: 82,
+      opacity: 0.98,
+    },
+    {
+      // Cloud 3 - Large center cloud
+      position: { top: '-40px', left: '42%' },
+      size: { width: '650px', height: '280px' },
+      gradient: 'radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(242,242,242,0.97) 50%, rgba(222,222,222,0.87) 100%)',
+      borderRadius: '58% 42% 52% 48% / 48% 58% 42% 52%',
+      animation: {
+        x: ['0%', '2.5%', '0%'],
+        scale: [1, 1.012, 1],
+      },
+      duration: 70,
+      opacity: 1,
+    },
+    {
+      // Cloud 4 - Medium right cloud
+      position: { top: '-30px', left: '68%' },
+      size: { width: '550px', height: '220px' },
+      gradient: 'radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(243,243,243,0.96) 50%, rgba(223,223,223,0.86) 100%)',
+      borderRadius: '62% 38% 48% 52% / 52% 62% 38% 48%',
+      animation: {
+        x: ['0%', '3.5%', '0%'],
+        scale: [1, 1.018, 1],
+      },
+      duration: 78,
+      opacity: 0.96,
+    },
+    {
+      // Cloud 5 - Small far right cloud
+      position: { top: '-15px', left: '85%' },
+      size: { width: '480px', height: '190px' },
+      gradient: 'radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(244,244,244,0.95) 50%, rgba(224,224,224,0.84) 100%)',
+      borderRadius: '57% 43% 53% 47% / 47% 57% 43% 53%',
+      animation: {
+        x: ['0%', '4.5%', '0%'],
+        scale: [1, 1.02, 1],
+      },
+      duration: 85,
+      opacity: 0.94,
     },
   ];
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      {/* Base gradient background - deep crimson to rich red (northern lights night sky) */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#4a0404] via-[#7f1d1d] to-[#991b1b]" />
+      {/* Base white background */}
+      <div className="absolute inset-0 bg-white" />
       
-      {/* Aurora wave layers */}
-      {waves.map((wave, index) => (
+      {/* Light beams - render first (behind clouds) */}
+      {beams.map((beam, index) => (
         <motion.div
-          key={`wave-${index}`}
+          key={`beam-${index}`}
           className="absolute"
           style={{
-            width: wave.size.width,
-            height: wave.size.height,
-            bottom: wave.position.bottom,
-            left: wave.position.left,
-            background: wave.gradient,
-            borderRadius: wave.borderRadius,
-            opacity: wave.opacity,
-            willChange: 'transform',
-            transform: 'translate3d(0, 0, 0)',
+            width: beam.size.width,
+            height: beam.size.height,
+            top: beam.position.top,
+            left: beam.position.left,
+            background: beam.gradient,
+            transform: `rotate(${beam.rotation}deg)`,
+            transformOrigin: 'top center',
+            filter: 'blur(1px)',
+            opacity: beam.baseOpacity,
+            willChange: 'transform, opacity',
           }}
-          animate={{
-            x: wave.animation.x,
-            y: wave.animation.y,
-            scale: wave.animation.scale,
-            rotate: wave.animation.rotate || [0],
-          }}
+          animate={beam.animation}
           transition={{
-            duration: wave.duration,
+            duration: beam.duration,
             repeat: Infinity,
             ease: 'easeInOut',
             repeatType: 'loop',
@@ -116,14 +186,32 @@ export function RedWaveBackground() {
         />
       ))}
       
-      {/* Subtle grain texture overlay for richness */}
-      <div 
-        className="absolute inset-0 opacity-[0.015] mix-blend-overlay"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-          pointerEvents: 'none',
-        }}
-      />
+      {/* Clouds - render last (in front of beams) */}
+      {clouds.map((cloud, index) => (
+        <motion.div
+          key={`cloud-${index}`}
+          className="absolute"
+          style={{
+            width: cloud.size.width,
+            height: cloud.size.height,
+            top: cloud.position.top,
+            left: cloud.position.left,
+            background: cloud.gradient,
+            borderRadius: cloud.borderRadius,
+            opacity: cloud.opacity,
+            filter: 'blur(2px)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
+            willChange: 'transform',
+          }}
+          animate={cloud.animation}
+          transition={{
+            duration: cloud.duration,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            repeatType: 'loop',
+          }}
+        />
+      ))}
     </div>
   );
 }
