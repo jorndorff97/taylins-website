@@ -28,7 +28,7 @@ export function AuthenticitySection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const { themeColors } = useBackgroundColors();
 
-  const colorTransition = { duration: 1.5, ease: [0.4, 0, 0.2, 1] };
+  const colorTransition = { duration: 1.5, ease: [0.4, 0, 0.2, 1] as const };
 
   return (
     <motion.section 
