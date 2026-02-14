@@ -184,7 +184,7 @@ export default function NewListingPage() {
     });
 
     revalidatePath("/admin/listings");
-    redirect(`/admin/listings/${listing.id}/edit`);
+    redirect("/admin/listings");
   }
 
   return (

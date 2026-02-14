@@ -123,6 +123,15 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
     <form
       action={onSubmit}
       className="space-y-6"
+      onSubmit={(e) => {
+        // Prevent default scroll to invalid field
+        const form = e.currentTarget;
+        if (!form.checkValidity()) {
+          e.preventDefault();
+          // Show validation messages without scrolling
+          form.reportValidity();
+        }
+      }}
     >
       {/* StockX Integration - At the top! */}
       <Card>
