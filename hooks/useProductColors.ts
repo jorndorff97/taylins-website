@@ -221,30 +221,31 @@ export async function extractGradientColors(imageUrl: string): Promise<GradientC
     if (uniqueColors.length === 0) {
       // No vibrant colors found, use fallback
       console.warn('No vibrant colors found, using fallback red');
-      primaryColor = '#DC2626';
-      secondaryColor = lightenColor(primaryColor, 35);
+      primaryColor = lightenColor('#DC2626', 20);
+      secondaryColor = lightenColor(primaryColor, 25);
     } else if (uniqueColors.length === 1) {
       // Only one vibrant color, use it and a lighter version
-      primaryColor = saturateColor(uniqueColors[0].hex, 10);
-      secondaryColor = lightenColor(primaryColor, 30);
+      primaryColor = lightenColor(uniqueColors[0].hex, 15);
+      secondaryColor = lightenColor(primaryColor, 25);
     } else {
       // Multiple colors found, use the top 2
-      primaryColor = saturateColor(uniqueColors[0].hex, 10);
+      // Lighten the primary color to reduce boldness
+      primaryColor = lightenColor(uniqueColors[0].hex, 15);
       secondaryColor = uniqueColors[1].hex;
       
-      // If secondary is too dark, lighten it
+      // If secondary is too dark, lighten it more
       const secR = parseInt(secondaryColor.slice(1, 3), 16);
       const secG = parseInt(secondaryColor.slice(3, 5), 16);
       const secB = parseInt(secondaryColor.slice(5, 7), 16);
       const [secH, secS, secL] = rgbToHsl(secR, secG, secB);
       
-      if (secL < 60) {
-        secondaryColor = lightenColor(secondaryColor, 25);
+      if (secL < 65) {
+        secondaryColor = lightenColor(secondaryColor, 30);
       }
     }
     
     // Gradient always ends with white for readability
-    const from = primaryColor;          // Bold primary color
+    const from = primaryColor;          // Lighter primary color for better readability
     const via = secondaryColor;          // Secondary color or lighter primary
     const to = '#FFFFFF';                // Pure white for text readability
     
