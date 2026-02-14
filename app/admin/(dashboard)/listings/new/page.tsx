@@ -15,7 +15,6 @@ export default function NewListingPage() {
     const category = String(formData.get("category") ?? "");
     const moq = Number(formData.get("moq") ?? 0);
     const maxOrderQty = formData.get("maxOrderQty") ? Number(formData.get("maxOrderQty")) : null;
-    const basePricePerPair = formData.get("basePricePerPair") ? Number(formData.get("basePricePerPair")) : null;
     const tierPricingType = formData.get("tierPricingType")?.toString() || "FIXED_PRICE";
     const inventoryMode = (formData.get("inventoryMode") ??
       InventoryMode.SIZE_RUN) as InventoryMode;
@@ -31,6 +30,24 @@ export default function NewListingPage() {
     const discordLink = String(formData.get("discordLink") ?? "").trim() || null;
     const instagramLink = String(formData.get("instagramLink") ?? "").trim() || null;
     const intent = String(formData.get("intent") ?? "draft");
+
+    // Get pricing based on mode
+    const flatPriceRaw = formData.get("flatPricePerPair");
+    const basePriceRaw = formData.get("basePricePerPair");
+    
+    // Determine the actual flat price and base price
+    let flatPricePerPair: number | null = null;
+    let basePricePerPair: number | null = null;
+    
+    if (pricingMode === PricingMode.FLAT) {
+      // For flat pricing, the form sends "flatPricePerPair"
+      flatPricePerPair = flatPriceRaw ? Number(flatPriceRaw) : null;
+      console.log('[LISTING CREATE] Flat pricing mode - flatPricePerPair:', flatPricePerPair);
+    } else {
+      // For tier pricing, the form sends "basePricePerPair"
+      basePricePerPair = basePriceRaw ? Number(basePriceRaw) : null;
+      console.log('[LISTING CREATE] Tier pricing mode - basePricePerPair:', basePricePerPair);
+    }
 
     // Collect image URLs
     const imageUrls: string[] = [];
@@ -49,17 +66,37 @@ export default function NewListingPage() {
     // Fetch StockX price automatically if SKU is provided and no manual override
     let fetchedStockXPrice = null;
     let stockXPriceTimestamp = null;
+    let stockXFetchError = null;
     
     if (productSKU && !manualStockXPrice) {
-      console.log(`Fetching StockX price for SKU: ${productSKU}`);
-      fetchedStockXPrice = await fetchStockXPrice(productSKU);
-      if (fetchedStockXPrice) {
-        stockXPriceTimestamp = new Date();
-        console.log(`Successfully fetched StockX price: $${fetchedStockXPrice}`);
-      } else {
-        console.log(`Could not fetch StockX price for SKU: ${productSKU}`);
+      console.log(`[STOCKX FETCH] Attempting to fetch price for SKU: ${productSKU}`);
+      try {
+        fetchedStockXPrice = await fetchStockXPrice(productSKU);
+        if (fetchedStockXPrice) {
+          stockXPriceTimestamp = new Date();
+          console.log(`[STOCKX FETCH] ✓ Successfully fetched: $${fetchedStockXPrice}`);
+        } else {
+          console.log(`[STOCKX FETCH] ✗ No price found for SKU: ${productSKU}`);
+          stockXFetchError = "No price found for this SKU";
+        }
+      } catch (error) {
+        console.error(`[STOCKX FETCH] ✗ Error fetching price:`, error);
+        stockXFetchError = error instanceof Error ? error.message : "Unknown error";
       }
     }
+
+    const finalStockXPrice = manualStockXPrice || fetchedStockXPrice;
+    
+    console.log('[LISTING CREATE] Final values:', {
+      title,
+      inventoryMode,
+      pricingMode,
+      flatPricePerPair,
+      basePricePerPair,
+      stockXPrice: finalStockXPrice,
+      productSKU,
+      status,
+    });
 
     const listing = await prisma.$transaction(async (tx) => {
       const created = await tx.listing.create({
@@ -70,6 +107,7 @@ export default function NewListingPage() {
           moq,
           maxOrderQty,
           basePricePerPair,
+          flatPricePerPair,  // Always set in initial create
           inventoryMode,
           pricingMode,
           status,
@@ -77,7 +115,7 @@ export default function NewListingPage() {
           sellerNotes,
           stockXLink,
           productSKU,
-          stockXPrice: manualStockXPrice || fetchedStockXPrice,
+          stockXPrice: finalStockXPrice,
           stockXPriceUpdatedAt: manualStockXPrice ? new Date() : stockXPriceTimestamp,
           discordLink,
           instagramLink,
@@ -167,18 +205,17 @@ export default function NewListingPage() {
               ...tier,
             })),
           });
-        }
-      } else {
-        const flatPriceRaw = formData.get("flatPricePerPair");
-        if (flatPriceRaw) {
-          await tx.listing.update({
-            where: { id: created.id },
-            data: {
-              flatPricePerPair: Number(flatPriceRaw),
-            },
-          });
+          console.log(`[LISTING CREATE] Created ${tiers.length} tier prices`);
         }
       }
+
+      console.log(`[LISTING CREATE] ✓ Listing created successfully:`, {
+        id: created.id,
+        title: created.title,
+        flatPricePerPair: created.flatPricePerPair,
+        stockXPrice: created.stockXPrice,
+        willShowOnHero: !!(created.stockXPrice && created.flatPricePerPair && imageUrls.length > 0),
+      });
 
       return created;
     });

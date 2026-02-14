@@ -171,6 +171,11 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               <p className="text-[10px] text-slate-500">
                 Nike/Jordan style code from the box or StockX page. Used for automatic price comparison.
               </p>
+              {productSKU && (
+                <p className="text-xs text-blue-600">
+                  ℹ️ StockX price will be fetched automatically when you publish (if SKU is valid)
+                </p>
+              )}
             </div>
             
             {/* Manual Price Override Option */}
