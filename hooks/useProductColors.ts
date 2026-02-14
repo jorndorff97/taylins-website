@@ -119,22 +119,47 @@ export async function extractGradientColors(imageUrl: string): Promise<GradientC
     await new Promise((resolve, reject) => {
       img.onload = resolve;
       img.onerror = reject;
+      setTimeout(() => reject(new Error('Image load timeout')), 10000);
     });
 
-    // Extract dominant color
-    const color = await fac.getColorAsync(img);
+    // Extract dominant color, ignoring white/near-white pixels
+    const color = await fac.getColorAsync(img, {
+      algorithm: 'dominant',
+      ignoredColor: [
+        [255, 255, 255, 255, 50], // Ignore pure white and near-white
+      ],
+    });
+    
+    console.log('Extracted color:', color.hex, color.rgb);
     
     // Get hex color
     let baseColor = color.hex;
+    
+    // Check if extracted color is too light/desaturated (likely white background)
+    const r = parseInt(baseColor.slice(1, 3), 16);
+    const g = parseInt(baseColor.slice(3, 5), 16);
+    const b = parseInt(baseColor.slice(5, 7), 16);
+    const [h, s, l] = rgbToHsl(r, g, b);
+    
+    console.log('HSL values:', { h, s, l });
+    
+    // If saturation is too low or lightness too high, it's probably white background
+    if (s < 15 || l > 85) {
+      console.warn('Color too desaturated/light, using fallback red');
+      // Use a nice default red from the shoe brand
+      baseColor = '#DC2626';
+    }
 
     // Adjust color for better background aesthetics
     // First saturate to make it more vibrant
-    baseColor = saturateColor(baseColor, 10);
+    baseColor = saturateColor(baseColor, 15);
     
     // Then create gradient by lightening
-    const from = lightenColor(baseColor, 35);  // Lightest
-    const via = lightenColor(baseColor, 20);   // Mid
-    const to = lightenColor(baseColor, 10);    // Base adjusted
+    const from = lightenColor(baseColor, 40);  // Lightest
+    const via = lightenColor(baseColor, 25);   // Mid
+    const to = lightenColor(baseColor, 15);    // Base adjusted
+    
+    console.log('Final gradient:', { from, via, to });
 
     return { from, via, to };
   } catch (error) {

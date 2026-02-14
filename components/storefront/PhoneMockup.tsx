@@ -79,13 +79,17 @@ export function PhoneMockup({ deals }: PhoneMockupProps) {
   useEffect(() => {
     const extractColors = async () => {
       const currentDeal = deals[activeIndex];
+      console.log('Extracting colors for product:', currentDeal?.title, currentDeal?.imageUrl);
+      
       if (!currentDeal?.imageUrl) {
+        console.log('No image URL, using white fallback');
         setColors({ from: '#FFFFFF', via: '#F5F5F5', to: '#E5E5E5' });
         return;
       }
 
       try {
         const gradientColors = await extractGradientColors(currentDeal.imageUrl);
+        console.log('Setting gradient colors:', gradientColors);
         setColors(gradientColors);
       } catch (error) {
         console.error('Color extraction failed:', error);
