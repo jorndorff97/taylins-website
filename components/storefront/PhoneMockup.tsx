@@ -71,8 +71,6 @@ function DealCard({ deal }: { deal: DealData }) {
 
 export function PhoneMockup({ deals }: PhoneMockupProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const autoRotateRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const { setColors } = useBackgroundColors();
 
   // Extract colors when active product changes
@@ -104,53 +102,21 @@ export function PhoneMockup({ deals }: PhoneMockupProps) {
   useEffect(() => {
     if (deals.length <= 1) return;
 
-    const startAutoRotate = () => {
-      autoRotateRef.current = setInterval(() => {
-        setActiveIndex((prev) => (prev + 1) % deals.length);
-      }, 4000);
-    };
-
-    startAutoRotate();
+    console.log('Starting auto-rotation with', deals.length, 'deals');
+    
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => {
+        const nextIndex = (prev + 1) % deals.length;
+        console.log('Auto-rotating from index', prev, 'to', nextIndex);
+        return nextIndex;
+      });
+    }, 4000);
 
     return () => {
-      if (autoRotateRef.current) {
-        clearInterval(autoRotateRef.current);
-      }
+      console.log('Cleaning up auto-rotation interval');
+      clearInterval(interval);
     };
   }, [deals.length]);
-
-  // Scroll to active card
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      const container = scrollContainerRef.current;
-      const cardWidth = container.offsetWidth;
-      container.scrollTo({
-        left: cardWidth * activeIndex,
-        behavior: "smooth",
-      });
-    }
-  }, [activeIndex]);
-
-  // Handle manual scroll
-  const handleScroll = () => {
-    if (!scrollContainerRef.current) return;
-    
-    const container = scrollContainerRef.current;
-    const cardWidth = container.offsetWidth;
-    const newIndex = Math.round(container.scrollLeft / cardWidth);
-    
-    if (newIndex !== activeIndex) {
-      setActiveIndex(newIndex);
-      
-      // Reset auto-rotate timer
-      if (autoRotateRef.current) {
-        clearInterval(autoRotateRef.current);
-      }
-      autoRotateRef.current = setInterval(() => {
-        setActiveIndex((prev) => (prev + 1) % deals.length);
-      }, 4000);
-    }
-  };
 
   if (deals.length === 0) {
     return null;
@@ -159,37 +125,36 @@ export function PhoneMockup({ deals }: PhoneMockupProps) {
   return (
     <div className="flex flex-col items-center gap-4">
       {/* Phone Frame */}
-      <div className="w-[280px] h-[350px] sm:w-[320px] sm:h-[500px] bg-white/80 backdrop-blur-sm border-[8px] border-neutral-200/80 rounded-[3rem] shadow-2xl shadow-neutral-900/10 p-2">
-        {/* Screen Content */}
-        <div
-          ref={scrollContainerRef}
-          onScroll={handleScroll}
-          className="w-full h-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide flex rounded-[2.5rem]"
-        >
-          {deals.map((deal) => (
-            <div
-              key={deal.id}
-              className="w-full h-full flex-shrink-0 snap-center p-2"
+      <div className="w-[280px] h-[350px] sm:w-[320px] sm:h-[500px] bg-white/80 backdrop-blur-sm border-[8px] border-neutral-200/80 rounded-[3rem] shadow-2xl shadow-neutral-900/10 p-2 overflow-hidden">
+        {/* Screen Content with AnimatePresence for smooth transitions */}
+        <div className="w-full h-full rounded-[2.5rem] relative">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={deals[activeIndex].id}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              className="w-full h-full absolute inset-0 p-2"
             >
-              <DealCard deal={deal} />
-            </div>
-          ))}
+              <DealCard deal={deals[activeIndex]} />
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Pagination Dots */}
+      {/* Pagination Dots (non-interactive, just indicators) */}
       {deals.length > 1 && (
         <div className="flex items-center gap-2">
           {deals.map((_, index) => (
-            <button
+            <div
               key={index}
-              onClick={() => setActiveIndex(index)}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
                 index === activeIndex
                   ? "bg-neutral-900 w-6"
-                  : "bg-neutral-300 hover:bg-neutral-400"
+                  : "bg-neutral-300"
               }`}
-              aria-label={`Go to deal ${index + 1}`}
+              aria-label={`Deal ${index + 1} of ${deals.length}`}
             />
           ))}
         </div>
