@@ -10,7 +10,28 @@ interface StorefrontNavProps {
 
 export function StorefrontNav({ buyerId }: StorefrontNavProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch unread count when user is logged in
+  useEffect(() => {
+    if (!buyerId) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await fetch("/api/messages/unread-count");
+        const data = await res.json();
+        setUnreadCount(data.unreadCount || 0);
+      } catch (error) {
+        console.error("Failed to fetch unread count:", error);
+      }
+    };
+
+    fetchUnreadCount();
+    // Poll every 30 seconds for unread count
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [buyerId]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -60,10 +81,21 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
         </Link>
         {buyerId ? (
           <>
+            <Link href="/messages" className="relative text-sm text-slate-600 hover:text-slate-900 transition-colors">
+              Messages
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-3 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
+            <Link href="/orders" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
+              Orders
+            </Link>
             <Link href="/account" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
               Account
             </Link>
-            <form action="/api/buyer/logout" method="post">
+            <form action="/api/auth/logout" method="post">
               <button type="submit" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
                 Logout
               </button>
@@ -75,10 +107,10 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
               Login
             </Link>
             <Link
-              href="/register"
+              href="/signup"
               className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
             >
-              Register
+              Sign up
             </Link>
           </>
         )}
@@ -140,13 +172,32 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
                   {buyerId ? (
                     <>
                       <Link
+                        href="/messages"
+                        className="relative flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <span>Messages</span>
+                        {unreadCount > 0 && (
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
+                      </Link>
+                      <Link
+                        href="/orders"
+                        className="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Orders
+                      </Link>
+                      <Link
                         href="/account"
                         className="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         Account
                       </Link>
-                      <form action="/api/buyer/logout" method="post">
+                      <form action="/api/auth/logout" method="post">
                         <button
                           type="submit"
                           className="w-full text-left block px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
@@ -166,11 +217,11 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
                         Login
                       </Link>
                       <Link
-                        href="/register"
+                        href="/signup"
                         className="block px-4 py-3 text-sm font-medium text-slate-900 hover:bg-slate-50 transition-colors"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        Register
+                        Sign up
                       </Link>
                     </>
                   )}

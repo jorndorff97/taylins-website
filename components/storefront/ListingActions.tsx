@@ -184,19 +184,19 @@ export function ListingActions({ listing, onQuantityChange, onPriceChange }: Lis
         )}
 
         <Link
-          href={`/order/request?listingId=${listing.id}`}
+          href={`/listing/${listing.id}/offer`}
           className={`block w-full rounded-full px-8 py-4 text-center text-base font-medium transition-all ${
             listing.instantBuy
               ? "border-2 border-slate-300 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-50"
               : "bg-slate-900 text-white hover:bg-slate-800"
           }`}
         >
-          Request quote
+          Send an offer
         </Link>
 
         {listing.instantBuy && (
           <p className="text-center text-xs text-slate-500">
-            Have questions? Want to negotiate? Use "Request quote" to discuss with the seller.
+            Have questions? Want to negotiate? Use "Send an offer" to discuss with the seller.
           </p>
         )}
       </div>
