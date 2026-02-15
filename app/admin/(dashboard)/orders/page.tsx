@@ -17,13 +17,20 @@ const STATUS_VARIANT: Record<string, "default" | "success" | "warning" | "muted"
 };
 
 export default async function AdminOrdersPage() {
-  const orders = await prisma.order.findMany({
-    include: {
-      buyer: true,
-      listing: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  let orders = [];
+
+  try {
+    orders = await prisma.order.findMany({
+      include: {
+        buyer: true,
+        listing: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    // orders will remain empty array, showing "No orders yet" message
+  }
 
   // Serialize orders for client components (convert Decimal to number)
   const serializedOrders = orders.map((order) => ({

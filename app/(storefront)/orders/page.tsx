@@ -27,18 +27,17 @@ export default async function OrdersPage() {
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    // If error, just show empty state
+    // If error, just show empty state - buyer stays null
   }
 
-  if (!buyer) {
-    redirect("/login");
-  }
+  // If buyer is null due to DB error, just show empty state
+  // Auth was already checked at line 8, so we know they're logged in
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:py-16">
       <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl mb-8">My Orders</h1>
 
-      {buyer.orders.length === 0 ? (
+      {!buyer || buyer.orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-6">
             <svg className="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
