@@ -36,9 +36,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Success - refresh layout and redirect
-      router.refresh();
-      router.push(redirect);
+      // Success - force full page reload to update session
+      window.location.href = redirect;
     } catch (err) {
       setError("Something went wrong. Please try again.");
       setLoading(false);
