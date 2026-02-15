@@ -55,7 +55,8 @@ export default function SignupPage() {
         return;
       }
 
-      // Success - redirect
+      // Success - refresh layout and redirect
+      router.refresh();
       router.push(redirect);
     } catch (err) {
       setError("Something went wrong. Please try again.");
