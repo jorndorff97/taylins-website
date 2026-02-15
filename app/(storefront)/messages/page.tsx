@@ -10,7 +10,7 @@ export default async function MessagesPage() {
     redirect("/login?redirect=/messages");
   }
 
-  let conversations = [];
+  let conversations: any[] = [];
   let hasError = false;
 
   try {
