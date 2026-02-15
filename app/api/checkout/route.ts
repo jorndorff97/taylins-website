@@ -6,7 +6,7 @@ import Stripe from "stripe";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { orderId } = body;
+    const { orderId, customQuantity, customPricePerPair } = body;
 
     if (!orderId) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Check if checkout session already exists
-    if (order.stripeCheckoutSessionId) {
+    // Check if checkout session already exists and we're not using custom pricing
+    if (order.stripeCheckoutSessionId && !customQuantity && !customPricePerPair) {
       const existingSession = await stripe.checkout.sessions.retrieve(
         order.stripeCheckoutSessionId
       );
@@ -42,19 +42,37 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create line items from order items
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = order.items.map((item) => ({
-      price_data: {
-        currency: "usd",
-        product_data: {
-          name: `${order.listing.title}${item.sizeLabel ? ` - Size ${item.sizeLabel}` : ""}`,
-          images: order.listing.images[0]?.url ? [order.listing.images[0].url] : [],
-          description: `${item.quantity} pairs`,
+    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
+
+    // Use custom pricing if provided (from admin payment link form)
+    if (customQuantity && customPricePerPair) {
+      lineItems = [{
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: order.listing.title,
+            images: order.listing.images[0]?.url ? [order.listing.images[0].url] : [],
+            description: `${customQuantity} pairs - Negotiated price`,
+          },
+          unit_amount: Math.round(Number(customPricePerPair) * 100), // Convert to cents
         },
-        unit_amount: Math.round(Number(item.pricePerPair) * 100), // Convert to cents
-      },
-      quantity: item.quantity,
-    }));
+        quantity: customQuantity,
+      }];
+    } else {
+      // Use original order items
+      lineItems = order.items.map((item) => ({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: `${order.listing.title}${item.sizeLabel ? ` - Size ${item.sizeLabel}` : ""}`,
+            images: order.listing.images[0]?.url ? [order.listing.images[0].url] : [],
+            description: `${item.quantity} pairs`,
+          },
+          unit_amount: Math.round(Number(item.pricePerPair) * 100), // Convert to cents
+        },
+        quantity: item.quantity,
+      }));
+    }
 
     // Get the base URL for success/cancel redirects
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || req.headers.get("origin") || "http://localhost:3000";
@@ -77,11 +95,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Save the checkout session ID to the order
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { stripeCheckoutSessionId: session.id },
-    });
+    // Save the checkout session ID to the order (only if not using custom pricing)
+    if (!customQuantity && !customPricePerPair) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { stripeCheckoutSessionId: session.id },
+      });
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (error) {

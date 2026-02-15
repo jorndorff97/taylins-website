@@ -5,7 +5,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { replyToOrder, sendInvoice, updateOrderStatus, sendPaymentLink } from "../actions";
+import { replyToOrder, updateOrderStatus } from "../actions";
 import { SenderType } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -30,8 +30,6 @@ export default async function AdminOrderDetailPage({
   });
 
   if (!order) notFound();
-
-  const hasInvoiceSent = order.messages.some((m) => m.invoiceSentAt != null);
 
   return (
     <>
@@ -76,12 +74,11 @@ export default async function AdminOrderDetailPage({
                     Paid on {new Date(order.paidAt).toLocaleDateString()}
                   </p>
                 ) : (
-                  <form action={sendPaymentLink} className="mt-1">
-                    <input type="hidden" name="orderId" value={order.id} />
-                    <Button type="submit" variant="secondary" className="!py-1 text-xs">
+                  <Link href={`/admin/orders/${order.id}/payment`} className="mt-1 inline-block">
+                    <Button variant="secondary" className="!py-1 text-xs">
                       Send payment link
                     </Button>
-                  </form>
+                  </Link>
                 )}
               </div>
               <div>
@@ -133,20 +130,7 @@ export default async function AdminOrderDetailPage({
           )}
 
           <Card className="p-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-slate-800">Messages</h3>
-              {!hasInvoiceSent && (
-                <form action={sendInvoice}>
-                  <input type="hidden" name="orderId" value={order.id} />
-                  <Button type="submit" variant="secondary" className="text-xs">
-                    Send invoice
-                  </Button>
-                </form>
-              )}
-              {hasInvoiceSent && (
-                <span className="text-xs text-slate-500">Invoice sent</span>
-              )}
-            </div>
+            <h3 className="text-sm font-medium text-slate-800">Messages</h3>
             <div className="mt-4 space-y-3">
               {order.messages.map((m) => (
                 <div

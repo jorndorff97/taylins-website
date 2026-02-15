@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { SenderType } from "@prisma/client";
 
@@ -21,63 +22,6 @@ export async function replyToOrder(formData: FormData) {
   revalidatePath("/admin/orders");
 }
 
-export async function sendInvoice(formData: FormData) {
-  const orderId = Number(formData.get("orderId"));
-  if (!orderId) return;
-
-  await prisma.orderMessage.create({
-    data: {
-      orderId,
-      senderType: SenderType.SELLER,
-      body: "Invoice sent to buyer.",
-      invoiceSentAt: new Date(),
-    },
-  });
-
-  revalidatePath(`/admin/orders/${orderId}`);
-  revalidatePath("/admin/orders");
-}
-
-export async function sendPaymentLink(formData: FormData) {
-  const orderId = Number(formData.get("orderId"));
-  if (!orderId) return;
-
-  try {
-    // Create a checkout session via the API
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : "http://localhost:3000";
-
-    const response = await fetch(`${baseUrl}/api/checkout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to create checkout session");
-    }
-
-    const { url } = await response.json();
-
-    // Create a message with the payment link
-    await prisma.orderMessage.create({
-      data: {
-        orderId,
-        senderType: SenderType.SELLER,
-        body: `Payment link sent: ${url}`,
-      },
-    });
-
-    revalidatePath(`/admin/orders/${orderId}`);
-    revalidatePath("/admin/orders");
-  } catch (error) {
-    console.error("Error sending payment link:", error);
-    // Error is logged but we don't return it since this is a form action
-  }
-}
-
 export async function updateOrderStatus(formData: FormData) {
   const orderId = Number(formData.get("orderId"));
   const status = String(formData.get("status"));
@@ -93,4 +37,62 @@ export async function updateOrderStatus(formData: FormData) {
 
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
+}
+
+export async function createCustomPaymentLink(formData: FormData) {
+  const orderId = Number(formData.get("orderId"));
+  const quantity = Number(formData.get("quantity"));
+  const pricePerPair = Number(formData.get("pricePerPair"));
+  const message = String(formData.get("message") ?? "").trim();
+
+  if (!orderId || !quantity || !pricePerPair) {
+    throw new Error("Missing required fields");
+  }
+
+  try {
+    const totalAmount = quantity * pricePerPair;
+
+    // Create a checkout session via the API with custom price
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : "http://localhost:3000";
+
+    const response = await fetch(`${baseUrl}/api/checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        orderId,
+        customQuantity: quantity,
+        customPricePerPair: pricePerPair,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to create checkout session");
+    }
+
+    const { url } = await response.json();
+
+    // Create a message with the payment link and optional note
+    const messageBody = message 
+      ? `${message}\n\nPayment link (${quantity} pairs @ $${pricePerPair.toFixed(2)}/pair = $${totalAmount.toFixed(2)}): ${url}`
+      : `Payment link for ${quantity} pairs @ $${pricePerPair.toFixed(2)}/pair (Total: $${totalAmount.toFixed(2)}): ${url}`;
+
+    await prisma.orderMessage.create({
+      data: {
+        orderId,
+        senderType: SenderType.SELLER,
+        body: messageBody,
+      },
+    });
+
+    revalidatePath(`/admin/orders/${orderId}`);
+    revalidatePath("/admin/orders");
+    
+    redirect(`/admin/orders/${orderId}`);
+  } catch (error) {
+    console.error("Error creating custom payment link:", error);
+    throw error;
+  }
 }
