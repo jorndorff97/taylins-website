@@ -8,7 +8,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, password } = body;
 
+    console.log('[LOGIN] Attempt for email:', email);
+
     if (!email || !password) {
+      console.log('[LOGIN] Missing credentials');
       return NextResponse.json(
         { error: "Email and password are required" },
         { status: 400 }
@@ -20,6 +23,8 @@ export async function POST(request: NextRequest) {
       where: { email: email.toLowerCase() },
     });
 
+    console.log('[LOGIN] Buyer found:', !!buyer, buyer ? `ID: ${buyer.id}` : 'Not found');
+
     if (!buyer) {
       return NextResponse.json(
         { error: "Invalid email or password" },
@@ -29,6 +34,8 @@ export async function POST(request: NextRequest) {
 
     // Verify password
     const valid = await compare(password, buyer.passwordHash);
+    console.log('[LOGIN] Password valid:', valid);
+    
     if (!valid) {
       return NextResponse.json(
         { error: "Invalid email or password" },
@@ -37,7 +44,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Set session
+    console.log('[LOGIN] Setting session for buyer:', buyer.id);
     await setBuyerSession(buyer.id);
+    console.log('[LOGIN] Session set successfully');
 
     return NextResponse.json({
       success: true,
@@ -48,7 +57,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("[LOGIN] Error:", error);
     return NextResponse.json(
       { error: "Failed to log in" },
       { status: 500 }

@@ -55,7 +55,8 @@ export default function SignupPage() {
         return;
       }
 
-      // Success - force full page reload to update session
+      // Success - wait briefly for cookie to propagate, then reload
+      await new Promise(resolve => setTimeout(resolve, 100));
       window.location.href = redirect;
     } catch (err) {
       setError("Something went wrong. Please try again.");

@@ -40,7 +40,9 @@ export function verifyBuyerSessionToken(token: string): { buyerId: number } | nu
 }
 
 export async function setBuyerSession(buyerId: number): Promise<void> {
+  console.log('[BUYER AUTH] Setting session for buyerId:', buyerId);
   const token = createBuyerSessionToken(buyerId);
+  console.log('[BUYER AUTH] Generated token (first 20 chars):', token.substring(0, 20));
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
@@ -49,17 +51,22 @@ export async function setBuyerSession(buyerId: number): Promise<void> {
     maxAge: MAX_AGE,
     path: "/",
   });
+  console.log('[BUYER AUTH] Cookie set successfully');
 }
 
 export async function clearBuyerSession(): Promise<void> {
+  console.log('[BUYER AUTH] Clearing session');
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
+  console.log('[BUYER AUTH] Session cleared');
 }
 
 export async function getBuyerId(): Promise<number | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
+  console.log('[BUYER AUTH] getBuyerId - Cookie exists:', !!token);
   if (!token) return null;
   const parsed = verifyBuyerSessionToken(token);
+  console.log('[BUYER AUTH] getBuyerId - Token valid:', !!parsed, parsed ? `BuyerId: ${parsed.buyerId}` : 'Invalid');
   return parsed?.buyerId ?? null;
 }
