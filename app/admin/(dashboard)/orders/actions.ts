@@ -42,16 +42,32 @@ export async function updateOrderStatus(formData: FormData) {
 export async function createCustomPaymentLink(formData: FormData) {
   const orderId = Number(formData.get("orderId"));
   const quantity = Number(formData.get("quantity"));
-  const pricePerPair = Number(formData.get("pricePerPair"));
+  const pricingMode = String(formData.get("pricingMode"));
+  const pricePerPairRaw = formData.get("pricePerPair");
+  const totalPriceRaw = formData.get("totalPrice");
   const message = String(formData.get("message") ?? "").trim();
 
-  if (!orderId || !quantity || !pricePerPair) {
+  if (!orderId || !quantity) {
     throw new Error("Missing required fields");
   }
 
-  try {
-    const totalAmount = quantity * pricePerPair;
+  // Calculate pricePerPair based on selected mode
+  let pricePerPair: number;
+  let totalAmount: number;
 
+  if (pricingMode === "total") {
+    totalAmount = Number(totalPriceRaw);
+    pricePerPair = totalAmount / quantity;
+  } else {
+    pricePerPair = Number(pricePerPairRaw);
+    totalAmount = quantity * pricePerPair;
+  }
+
+  if (!pricePerPair || pricePerPair <= 0) {
+    throw new Error("Invalid price");
+  }
+
+  try {
     // Create a checkout session via the API with custom price
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}` 

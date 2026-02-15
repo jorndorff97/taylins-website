@@ -101,8 +101,36 @@ export default async function SendPaymentLinkPage({
                 </p>
               </div>
 
-              {/* Price Per Pair */}
+              {/* Pricing Mode Toggle */}
               <div>
+                <label className="block text-sm font-medium text-slate-900 mb-3">
+                  Pricing Method
+                </label>
+                <div className="flex gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="pricingMode"
+                      value="perPair"
+                      defaultChecked
+                      className="w-4 h-4 text-slate-900 focus:ring-slate-900"
+                    />
+                    <span className="text-sm text-slate-700">Price per pair</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="pricingMode"
+                      value="total"
+                      className="w-4 h-4 text-slate-900 focus:ring-slate-900"
+                    />
+                    <span className="text-sm text-slate-700">Total price</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Price Per Pair */}
+              <div id="pricePerPairSection">
                 <label htmlFor="pricePerPair" className="block text-sm font-medium text-slate-900 mb-2">
                   Price per pair ($)
                 </label>
@@ -113,11 +141,29 @@ export default async function SendPaymentLinkPage({
                   min="0.01"
                   step="0.01"
                   defaultValue={defaultPricePerPair.toFixed(2)}
-                  required
                   className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
                 />
                 <p className="mt-1.5 text-xs text-slate-500">
                   Your negotiated price per pair
+                </p>
+              </div>
+
+              {/* Total Price */}
+              <div id="totalPriceSection" style={{ display: 'none' }}>
+                <label htmlFor="totalPrice" className="block text-sm font-medium text-slate-900 mb-2">
+                  Total price ($)
+                </label>
+                <input
+                  type="number"
+                  id="totalPrice"
+                  name="totalPrice"
+                  min="0.01"
+                  step="0.01"
+                  defaultValue={(defaultQuantity * defaultPricePerPair).toFixed(2)}
+                  className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                />
+                <p className="mt-1.5 text-xs text-slate-500">
+                  The total amount for all pairs
                 </p>
               </div>
 
@@ -140,13 +186,18 @@ export default async function SendPaymentLinkPage({
 
               {/* Total Preview */}
               <div className="rounded-lg bg-slate-50 border border-slate-200 p-4">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-baseline mb-2">
                   <span className="text-sm font-medium text-slate-700">Total Amount:</span>
                   <span className="text-2xl font-bold text-slate-900" id="totalPreview">
                     ${(defaultQuantity * defaultPricePerPair).toFixed(2)}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
+                <div className="text-xs text-slate-600">
+                  <span id="priceBreakdown">
+                    {defaultQuantity} pairs × ${defaultPricePerPair.toFixed(2)}/pair
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-2 pt-2 border-t border-slate-300">
                   This is the amount the buyer will be charged via Stripe
                 </p>
               </div>
@@ -188,21 +239,69 @@ export default async function SendPaymentLinkPage({
       <script
         dangerouslySetInnerHTML={{
           __html: `
-            // Update total preview when inputs change
             document.addEventListener('DOMContentLoaded', function() {
               const quantityInput = document.getElementById('quantity');
-              const priceInput = document.getElementById('pricePerPair');
+              const pricePerPairInput = document.getElementById('pricePerPair');
+              const totalPriceInput = document.getElementById('totalPrice');
               const totalPreview = document.getElementById('totalPreview');
+              const priceBreakdown = document.getElementById('priceBreakdown');
+              const pricePerPairSection = document.getElementById('pricePerPairSection');
+              const totalPriceSection = document.getElementById('totalPriceSection');
+              const pricingModeRadios = document.querySelectorAll('input[name="pricingMode"]');
+              
+              let currentMode = 'perPair';
+              
+              // Toggle between pricing modes
+              pricingModeRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                  currentMode = this.value;
+                  if (currentMode === 'perPair') {
+                    pricePerPairSection.style.display = 'block';
+                    totalPriceSection.style.display = 'none';
+                    pricePerPairInput.required = true;
+                    totalPriceInput.required = false;
+                    // Sync total price from per pair
+                    const quantity = parseFloat(quantityInput.value) || 0;
+                    const pricePerPair = parseFloat(pricePerPairInput.value) || 0;
+                    totalPriceInput.value = (quantity * pricePerPair).toFixed(2);
+                  } else {
+                    pricePerPairSection.style.display = 'none';
+                    totalPriceSection.style.display = 'block';
+                    pricePerPairInput.required = false;
+                    totalPriceInput.required = true;
+                    // Sync per pair from total
+                    const quantity = parseFloat(quantityInput.value) || 1;
+                    const total = parseFloat(totalPriceInput.value) || 0;
+                    pricePerPairInput.value = (total / quantity).toFixed(2);
+                  }
+                  updateTotal();
+                });
+              });
               
               function updateTotal() {
                 const quantity = parseFloat(quantityInput.value) || 0;
-                const price = parseFloat(priceInput.value) || 0;
-                const total = quantity * price;
+                let total = 0;
+                let pricePerPair = 0;
+                
+                if (currentMode === 'perPair') {
+                  pricePerPair = parseFloat(pricePerPairInput.value) || 0;
+                  total = quantity * pricePerPair;
+                  // Update total price input to stay in sync
+                  totalPriceInput.value = total.toFixed(2);
+                } else {
+                  total = parseFloat(totalPriceInput.value) || 0;
+                  pricePerPair = quantity > 0 ? total / quantity : 0;
+                  // Update price per pair input to stay in sync
+                  pricePerPairInput.value = pricePerPair.toFixed(2);
+                }
+                
                 totalPreview.textContent = '$' + total.toFixed(2);
+                priceBreakdown.textContent = quantity + ' pairs × $' + pricePerPair.toFixed(2) + '/pair';
               }
               
               quantityInput.addEventListener('input', updateTotal);
-              priceInput.addEventListener('input', updateTotal);
+              pricePerPairInput.addEventListener('input', updateTotal);
+              totalPriceInput.addEventListener('input', updateTotal);
             });
           `,
         }}
