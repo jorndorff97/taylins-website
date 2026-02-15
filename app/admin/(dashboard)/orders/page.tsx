@@ -17,7 +17,7 @@ const STATUS_VARIANT: Record<string, "default" | "success" | "warning" | "muted"
 };
 
 export default async function AdminOrdersPage() {
-  let orders = [];
+  let orders: any[] = [];
 
   try {
     orders = await prisma.order.findMany({
