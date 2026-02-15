@@ -2,7 +2,9 @@ import { Resend } from 'resend';
 import { prisma } from './prisma';
 import { NotificationType } from '@prisma/client';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Only initialize Resend if API key is available
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 const fromEmail = process.env.RESEND_FROM_EMAIL || 'notifications@yourdomain.com';
 
 interface SendEmailParams {
@@ -13,6 +15,12 @@ interface SendEmailParams {
 }
 
 export async function sendEmail({ to, subject, template, data }: SendEmailParams) {
+  // If Resend is not configured, skip email sending silently
+  if (!resend || !resendApiKey) {
+    console.log('[EMAIL] Skipping email send - Resend not configured:', { to, subject, template });
+    return { success: false, error: 'Email service not configured' };
+  }
+
   try {
     // For now, send simple HTML emails
     // In production, you'll want to use React Email templates
