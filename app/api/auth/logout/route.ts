@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
+import { redirect } from "next/navigation";
 import { clearBuyerSession } from "@/lib/buyer-auth";
 
 export async function POST() {
   try {
     await clearBuyerSession();
-    return NextResponse.json({ success: true });
+    redirect("/");
   } catch (error) {
     console.error("Logout error:", error);
     return NextResponse.json(
