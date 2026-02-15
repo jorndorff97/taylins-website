@@ -48,6 +48,7 @@ model Listing {
   sizes          ListingSize[]
   tierPrices     ListingTierPrice[]
   orders         Order[]
+  conversations  Conversation[]
 }
 
 model Buyer {
@@ -61,12 +62,14 @@ model Buyer {
   updatedAt      DateTime @updatedAt
 
   orders         Order[]
+  conversations  Conversation[]
 }
 
 model Order {
   id                      Int          @id @default(autoincrement())
   buyerId                 Int
   listingId               Int
+  conversationId          Int?
   status                  OrderStatus  @default(PENDING)
   totalPairs              Int
   totalAmount             Decimal
@@ -78,8 +81,9 @@ model Order {
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
 
-  buyer           Buyer        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  listing         Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer           Buyer         @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  listing         Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  conversation    Conversation? @relation(fields: [conversationId], references: [id])
   items           OrderItem[]
   messages        OrderMessage[]
 }
@@ -168,4 +172,49 @@ enum PricingMode {
 enum TierPricingType {
   FIXED_PRICE      // Current: manually set price per tier
   PERCENTAGE_OFF   // New: percentage discount off base price
+}
+
+model Conversation {
+  id              Int      @id @default(autoincrement())
+  buyerId         Int
+  listingId       Int
+  status          ConversationStatus @default(ACTIVE)
+  lastMessageAt   DateTime @default(now())
+  unreadByBuyer   Int      @default(0)
+  unreadByAdmin   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  buyer           Buyer     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  listing         Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  messages        ConversationMessage[]
+  orders          Order[]
+
+  @@unique([buyerId, listingId])
+}
+
+model ConversationMessage {
+  id              Int      @id @default(autoincrement())
+  conversationId  Int
+  senderType      SenderType
+  messageType     MessageType @default(TEXT)
+  body            String
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+  CLOSED
+}
+
+enum MessageType {
+  TEXT
+  OFFER
+  COUNTER_OFFER
+  PAYMENT_LINK
+  SYSTEM
 }
