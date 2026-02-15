@@ -8,7 +8,6 @@ export default async function OrdersPage() {
   if (!buyerId) redirect("/login?redirect=/orders");
 
   let buyer = null;
-  let hasError = false;
 
   try {
     buyer = await prisma.buyer.findUnique({
@@ -28,58 +27,33 @@ export default async function OrdersPage() {
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    hasError = true;
+    // If error, just show empty state
   }
 
-  if (!buyer && !hasError) {
+  if (!buyer) {
     redirect("/login");
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12">
-      <h1 className="text-3xl font-bold text-slate-900 mb-8">My Orders</h1>
+    <div className="mx-auto max-w-4xl px-4 py-12 sm:py-16">
+      <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl mb-8">My Orders</h1>
 
-      {hasError || !buyer ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4">
-          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      {buyer.orders.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 px-4">
+          <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-6">
+            <svg className="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">
-            {hasError ? "Orders Coming Soon" : "No orders yet"}
-          </h2>
-          <p className="text-slate-600 text-center mb-6 max-w-md">
-            {hasError
-              ? "The orders feature is being set up. In the meantime, browse our products and start shopping."
-              : "Start shopping by browsing our products. Send an offer to negotiate with sellers or buy instantly."}
+          <h2 className="text-2xl font-semibold text-slate-900 mb-3">No orders yet</h2>
+          <p className="text-slate-600 text-center mb-8 max-w-md leading-relaxed">
+            Start shopping by browsing our products. Send an offer to negotiate or buy instantly.
           </p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+            className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-8 py-3.5 text-sm font-medium text-white hover:bg-slate-800 transition-all hover:scale-105"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            Browse Products
-          </Link>
-        </div>
-      ) : buyer.orders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4">
-          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">No orders yet</h2>
-          <p className="text-slate-600 text-center mb-6 max-w-md">
-            Start shopping by browsing our products. Send an offer to negotiate with sellers or buy instantly.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
             Browse Products

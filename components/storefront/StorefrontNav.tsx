@@ -92,9 +92,6 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
             <Link href="/orders" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
               Orders
             </Link>
-            <Link href="/account" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
-              Account
-            </Link>
             <form action="/api/auth/logout" method="post">
               <button type="submit" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
                 Logout
@@ -189,13 +186,6 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
                         onClick={() => setIsMenuOpen(false)}
                       >
                         Orders
-                      </Link>
-                      <Link
-                        href="/account"
-                        className="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Account
                       </Link>
                       <form action="/api/auth/logout" method="post">
                         <button
