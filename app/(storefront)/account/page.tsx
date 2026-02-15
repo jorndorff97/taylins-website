@@ -7,19 +7,57 @@ export default async function AccountPage() {
   const buyerId = await getBuyerId();
   if (!buyerId) redirect("/login?redirect=/account");
 
-  const buyer = await prisma.buyer.findUnique({
-    where: { id: buyerId },
-    include: {
-      orders: {
-        include: { listing: true },
-        orderBy: { createdAt: "desc" },
-        take: 10,
-      },
-    },
-  });
+  let buyer = null;
+  let hasError = false;
 
-  if (!buyer) {
+  try {
+    buyer = await prisma.buyer.findUnique({
+      where: { id: buyerId },
+      include: {
+        orders: {
+          include: { listing: true },
+          orderBy: { createdAt: "desc" },
+          take: 10,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching account:", error);
+    hasError = true;
+  }
+
+  if (!buyer && !hasError) {
     redirect("/login");
+  }
+
+  if (hasError || !buyer) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 mb-8">
+          Account
+        </h1>
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Account Loading</h2>
+          <p className="text-slate-600 text-center mb-6 max-w-md">
+            We're setting up your account. Please try again in a moment or browse our products.
+          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Go to Homepage
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
