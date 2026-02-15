@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 import { OrderStatus } from "@prisma/client";
+import { notifyPaymentSuccess } from "@/lib/notifications";
 
 // Disable body parsing to get raw body for signature verification
 export const runtime = "nodejs";
@@ -42,6 +43,20 @@ export async function POST(req: NextRequest) {
           break;
         }
 
+        // Get order details for notification
+        const order = await prisma.order.findUnique({
+          where: { id: Number(orderId) },
+          include: {
+            buyer: true,
+            listing: true,
+          },
+        });
+
+        if (!order) {
+          console.error(`Order ${orderId} not found`);
+          break;
+        }
+
         // Update order status to PAID
         await prisma.order.update({
           where: { id: Number(orderId) },
@@ -50,6 +65,14 @@ export async function POST(req: NextRequest) {
             stripePaymentIntentId: session.payment_intent as string,
             paidAt: new Date(),
           },
+        });
+
+        // Send payment success notification to buyer
+        await notifyPaymentSuccess({
+          buyerId: order.buyerId,
+          orderId: order.id,
+          listingTitle: order.listing.title,
+          totalAmount: Number(order.totalAmount),
         });
 
         console.log(`Order ${orderId} marked as PAID`);

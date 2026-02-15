@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBuyerId } from "@/lib/buyer-auth";
 import { SenderType } from "@prisma/client";
+import { notifyNewMessageToAdmin } from "@/lib/notifications";
 
 export async function POST(request: Request) {
   const buyerId = await getBuyerId();
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
+    include: {
+      listing: true,
+    },
   });
 
   if (!order || order.buyerId !== buyerId) {
@@ -31,6 +35,13 @@ export async function POST(request: Request) {
       senderType: SenderType.BUYER,
       body: messageBody,
     },
+  });
+
+  // Notify admin of new message from buyer
+  await notifyNewMessageToAdmin({
+    orderId,
+    listingTitle: order.listing.title,
+    message: messageBody,
   });
 
   return NextResponse.json({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBuyerId } from "@/lib/buyer-auth";
+import { notifyNewOffer } from "@/lib/notifications";
 
 export async function POST(request: NextRequest) {
   try {
@@ -86,6 +87,15 @@ export async function POST(request: NextRequest) {
           pricePerPair,
         },
       },
+    });
+
+    // Notify admin of new offer
+    await notifyNewOffer({
+      conversationId: conversation.id,
+      listingTitle: listing.title,
+      quantity: quantity || 0,
+      pricePerPair: pricePerPair || undefined,
+      message,
     });
 
     return NextResponse.json({

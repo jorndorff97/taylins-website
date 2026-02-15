@@ -4,11 +4,23 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { SenderType } from "@prisma/client";
+import { notifyNewMessageToBuyer, notifyPaymentLinkSent, notifyOrderStatusChange } from "@/lib/notifications";
 
 export async function replyToOrder(formData: FormData) {
   const orderId = Number(formData.get("orderId"));
   const body = String(formData.get("body") ?? "").trim();
   if (!orderId || !body) return;
+
+  // Get order details for notification
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      buyer: true,
+      listing: true,
+    },
+  });
+
+  if (!order) return;
 
   await prisma.orderMessage.create({
     data: {
@@ -16,6 +28,14 @@ export async function replyToOrder(formData: FormData) {
       senderType: SenderType.SELLER,
       body,
     },
+  });
+
+  // Send notification to buyer
+  await notifyNewMessageToBuyer({
+    buyerId: order.buyerId,
+    orderId,
+    listingTitle: order.listing.title,
+    message: body,
   });
 
   revalidatePath(`/admin/orders/${orderId}`);
@@ -30,9 +50,28 @@ export async function updateOrderStatus(formData: FormData) {
   const valid = ["PENDING", "CONFIRMED", "PAID", "SHIPPED", "CANCELLED"];
   if (!valid.includes(status)) return;
 
+  // Get order details for notification
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      buyer: true,
+      listing: true,
+    },
+  });
+
+  if (!order) return;
+
   await prisma.order.update({
     where: { id: orderId },
     data: { status: status as "PENDING" | "CONFIRMED" | "PAID" | "SHIPPED" | "CANCELLED" },
+  });
+
+  // Send notification to buyer about status change
+  await notifyOrderStatusChange({
+    buyerId: order.buyerId,
+    orderId,
+    listingTitle: order.listing.title,
+    newStatus: status,
   });
 
   revalidatePath(`/admin/orders/${orderId}`);
@@ -68,6 +107,19 @@ export async function createCustomPaymentLink(formData: FormData) {
   }
 
   try {
+    // Get order details for notification
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        buyer: true,
+        listing: true,
+      },
+    });
+
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
     // Create a checkout session via the API with custom price
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}` 
@@ -101,6 +153,17 @@ export async function createCustomPaymentLink(formData: FormData) {
         senderType: SenderType.SELLER,
         body: messageBody,
       },
+    });
+
+    // Send notification to buyer with payment link
+    await notifyPaymentLinkSent({
+      buyerId: order.buyerId,
+      orderId,
+      listingTitle: order.listing.title,
+      quantity,
+      pricePerPair,
+      totalAmount,
+      paymentLink: url,
     });
 
     revalidatePath(`/admin/orders/${orderId}`);

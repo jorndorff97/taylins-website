@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { NotificationBell } from "./NotificationBell";
 
 interface StorefrontNavProps {
   buyerId: number | null;
@@ -81,6 +82,7 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
         </Link>
         {buyerId ? (
           <>
+            <NotificationBell />
             <Link href="/messages" className="relative text-sm text-slate-600 hover:text-slate-900 transition-colors">
               Messages
               {unreadCount > 0 && (

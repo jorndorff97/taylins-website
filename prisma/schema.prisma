@@ -63,6 +63,7 @@ model Buyer {
 
   orders         Order[]
   conversations  Conversation[]
+  notifications  Notification[]
 }
 
 model Order {
@@ -86,6 +87,7 @@ model Order {
   conversation    Conversation? @relation(fields: [conversationId], references: [id])
   items           OrderItem[]
   messages        OrderMessage[]
+  notifications   Notification[]
 }
 
 model OrderItem {
@@ -189,6 +191,7 @@ model Conversation {
   listing         Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
   messages        ConversationMessage[]
   orders          Order[]
+  notifications   Notification[]
 
   @@unique([buyerId, listingId])
 }
@@ -217,4 +220,49 @@ enum MessageType {
   COUNTER_OFFER
   PAYMENT_LINK
   SYSTEM
+}
+
+model Notification {
+  id              Int      @id @default(autoincrement())
+  buyerId         Int?     // Nullable for admin notifications
+  type            NotificationType
+  title           String
+  message         String
+  link            String?
+  read            Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  orderId         Int?
+  conversationId  Int?
+  buyer           Buyer?        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  order           Order?        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  conversation    Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+enum NotificationType {
+  NEW_OFFER
+  NEW_MESSAGE_BUYER
+  NEW_MESSAGE_ADMIN
+  PAYMENT_LINK_SENT
+  PAYMENT_SUCCESS
+  ORDER_STATUS_CHANGE
+}
+
+model EmailLog {
+  id          Int      @id @default(autoincrement())
+  to          String
+  subject     String
+  template    String
+  sentAt      DateTime @default(now())
+  resendId    String?
+  status      EmailStatus @default(PENDING)
+  error       String?
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+  BOUNCED
 }
