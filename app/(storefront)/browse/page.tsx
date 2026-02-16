@@ -72,6 +72,17 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
     })),
   }));
 
+  // Sort tiered listings if they don't have flatPricePerPair
+  // Since Prisma sorts nulls together, we do a secondary sort in memory to ensure
+  // starting prices are correctly ordered for TIERED listings
+  if (sort === "price-asc" || sort === "price-desc") {
+    serializedListings.sort((a, b) => {
+      const priceA = a.flatPricePerPair ?? (a.tierPrices.length > 0 ? a.tierPrices[0].pricePerPair : 0);
+      const priceB = b.flatPricePerPair ?? (b.tierPrices.length > 0 ? b.tierPrices[0].pricePerPair : 0);
+      return sort === "price-asc" ? priceA - priceB : priceB - priceA;
+    });
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
@@ -88,16 +99,16 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
               Newest
             </Link>
             <Link
-              href={`/browse?category=${categorySlug}&q=${encodeURIComponent(search)}&sort=price-asc`}
-              className={`rounded px-2 py-1 text-sm ${sort === "price-asc" ? "font-medium text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
-            >
-              Price ↑
-            </Link>
-            <Link
               href={`/browse?category=${categorySlug}&q=${encodeURIComponent(search)}&sort=price-desc`}
               className={`rounded px-2 py-1 text-sm ${sort === "price-desc" ? "font-medium text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
             >
-              Price ↓
+              Highest Price
+            </Link>
+            <Link
+              href={`/browse?category=${categorySlug}&q=${encodeURIComponent(search)}&sort=price-asc`}
+              className={`rounded px-2 py-1 text-sm ${sort === "price-asc" ? "font-medium text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
+            >
+              Lowest Price
             </Link>
           </div>
         </div>
