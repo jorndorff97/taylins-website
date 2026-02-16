@@ -141,7 +141,7 @@ export function ImageUploader({ onUpload, onRemove, currentImages = [] }: ImageU
             {currentImages.map((img, idx) => (
               <div
                 key={idx}
-                className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100"
+                className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-white"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img

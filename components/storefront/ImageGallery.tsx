@@ -54,7 +54,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
       {/* Main gallery with scroll snap */}
       <div
         ref={scrollRef}
-        className="flex aspect-square w-full snap-x snap-mandatory overflow-x-auto rounded-2xl bg-slate-100 scrollbar-hide md:rounded-3xl"
+        className="flex aspect-square w-full snap-x snap-mandatory overflow-x-auto rounded-2xl bg-white border border-slate-100 scrollbar-hide md:rounded-3xl"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {images.map((image, index) => (

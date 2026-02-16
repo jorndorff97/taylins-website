@@ -186,7 +186,7 @@ export function HeaderSearch() {
                         selectedIndex === index ? "bg-red-50 text-red-900" : "hover:bg-slate-50 text-slate-700"
                       }`}
                     >
-                      <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-100 ${selectedIndex === index ? "bg-white" : "bg-slate-50"}`}>
+                      <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-100 bg-white`}>
                         {item.images && item.images[0] ? (
                           <img 
                             src={item.images[0].url} 
