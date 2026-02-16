@@ -66,7 +66,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
             <img
               src={image.url}
               alt={index === 0 ? title : `${title} - Image ${index + 1}`}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain p-4 md:p-6"
             />
           </div>
         ))}
@@ -107,7 +107,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
               <img
                 src={image.url}
                 alt={`Thumbnail ${index + 1}`}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain p-1"
               />
             </button>
           ))}

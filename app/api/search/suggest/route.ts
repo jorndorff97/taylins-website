@@ -39,6 +39,15 @@ export async function GET(request: Request) {
         title: true,
         brand: true,
         category: true,
+        images: {
+          select: {
+            url: true,
+          },
+          take: 1,
+          orderBy: {
+            sortOrder: "asc",
+          },
+        },
       },
       take: 8,
     });

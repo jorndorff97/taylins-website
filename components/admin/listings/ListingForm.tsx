@@ -277,7 +277,10 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
               />
             ))}
             <p className="text-[11px] text-slate-500">
-              Upload product images or paste URLs. First image will be the primary.
+              Upload product images or paste URLs. First image will be the primary. 
+              <span className="block mt-1 font-medium text-blue-600">
+                Tip: Use square images with the product centered to prevent cutoff.
+              </span>
             </p>
           </div>
         </div>

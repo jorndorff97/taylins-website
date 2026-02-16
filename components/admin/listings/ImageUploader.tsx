@@ -98,7 +98,7 @@ export function ImageUploader({ onUpload, onRemove, currentImages = [] }: ImageU
         {preview ? (
           <div className="text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="Preview" className="mx-auto mb-2 h-32 w-32 rounded-lg object-cover" />
+            <img src={preview} alt="Preview" className="mx-auto mb-2 h-32 w-32 rounded-lg object-contain p-1 bg-white border" />
             <p className="text-xs text-slate-600">Uploading...</p>
           </div>
         ) : (
@@ -147,7 +147,7 @@ export function ImageUploader({ onUpload, onRemove, currentImages = [] }: ImageU
                 <img
                   src={img.url}
                   alt={`Image ${idx + 1}`}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain p-2 bg-white"
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 transition group-hover:bg-slate-900/60 group-hover:opacity-100">
                   <div className="flex flex-col items-center gap-1">

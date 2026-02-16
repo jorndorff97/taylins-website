@@ -29,18 +29,25 @@ export function SavingsGauge({ yourPrice, stockXPrice, totalPairs }: SavingsGaug
       
       {/* Compact savings display */}
       <div>
-        <p className="text-sm text-slate-500">StockX Price</p>
-        <p className="text-lg font-semibold text-slate-700 line-through">
-          ${stockXPrice.toLocaleString()}
-        </p>
-        <p className="mt-1 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-xl font-bold text-transparent md:text-2xl">
-          Save ${totalSavings.toLocaleString()} ({percentage}% off)
-        </p>
-        {totalPairs > 1 && (
-          <p className="mt-0.5 text-xs text-slate-600">
-            for {totalPairs} pairs
+        <div className="flex items-baseline justify-between">
+          <p className="text-sm text-slate-500">StockX Price</p>
+          <p className="text-sm font-semibold text-slate-400 line-through">
+            ${stockXPrice.toLocaleString()}
           </p>
-        )}
+        </div>
+        <p className="mt-1 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-xl font-bold text-transparent md:text-2xl">
+          Save ${savingsPerPair.toLocaleString()} per pair
+        </p>
+        <div className="mt-1 flex items-center justify-between">
+          <p className="text-xs font-medium text-emerald-600 uppercase tracking-wider">
+            {percentage}% savings
+          </p>
+          {totalPairs > 1 && (
+            <p className="text-xs text-slate-600">
+              Total savings: ${totalSavings.toLocaleString()}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
