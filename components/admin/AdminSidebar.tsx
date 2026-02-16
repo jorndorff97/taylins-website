@@ -8,6 +8,7 @@ import { useAdminLayout } from "./AdminLayoutClient";
 const navItems = [
   { href: "/admin/listings", label: "Listings" },
   { href: "/admin/orders", label: "Orders" },
+  { href: "/admin/messages", label: "Messages" },
 ];
 
 export function AdminSidebar() {

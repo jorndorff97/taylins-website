@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { replyToOrder, updateOrderStatus } from "../actions";
 import { SenderType } from "@prisma/client";
+import { MessageBubble } from "@/components/messaging/MessageBubble";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,11 @@ export default async function AdminOrderDetailPage({
     where: { id: orderId },
     include: {
       buyer: true,
-      listing: true,
+      listing: {
+        include: {
+          images: { take: 1, orderBy: { sortOrder: "asc" } }
+        }
+      },
       items: true,
       messages: { orderBy: { createdAt: "asc" } },
     },
@@ -37,140 +42,155 @@ export default async function AdminOrderDetailPage({
         title={`Order #${order.id}`}
         actions={
           <Link href="/admin/orders">
-            <Button variant="secondary">Back to orders</Button>
+            <Button variant="secondary" size="sm">Back to orders</Button>
           </Link>
         }
       />
-      <main className="flex-1 bg-background px-6 pb-10 pt-6">
-        <div className="mx-auto max-w-3xl space-y-6">
-          <Card className="p-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <p className="text-xs font-medium uppercase text-slate-500">Buyer</p>
-                <p className="font-medium text-slate-900">{order.buyer.email}</p>
-                {order.buyer.name && (
-                  <p className="text-sm text-slate-600">{order.buyer.name}</p>
-                )}
+      <main className="flex-1 bg-slate-50/50 px-6 pb-10 pt-6">
+        <div className="mx-auto max-w-5xl grid gap-6 md:grid-cols-3">
+          {/* Left Column: Order Details */}
+          <div className="md:col-span-1 space-y-6">
+            <Card className="p-5 shadow-sm border-slate-200/60 overflow-hidden">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                  {order.listing.images[0]?.url && (
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-white border border-slate-100 flex-shrink-0">
+                      <img src={order.listing.images[0].url} alt={order.listing.title} className="w-full h-full object-contain p-1" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Listing</p>
+                    <Link
+                      href={`/admin/listings/${order.listingId}/edit`}
+                      className="text-sm font-semibold text-slate-900 hover:text-red-600 truncate block transition-colors"
+                    >
+                      {order.listing.title}
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 text-sm">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Buyer</p>
+                    <p className="font-semibold text-slate-900">{order.buyer.name || "No name provided"}</p>
+                    <p className="text-xs text-slate-500">{order.buyer.email}</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Order Status</p>
+                    <form action={updateOrderStatus} className="flex items-center gap-2">
+                      <input type="hidden" name="orderId" value={order.id} />
+                      <select
+                        name="status"
+                        defaultValue={order.status}
+                        className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-slate-900/5 transition-all"
+                      >
+                        <option value="PENDING">PENDING</option>
+                        <option value="CONFIRMED">CONFIRMED</option>
+                        <option value="PAID">PAID</option>
+                        <option value="SHIPPED">SHIPPED</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                      </select>
+                      <Button type="submit" variant="secondary" size="sm" className="h-8 !px-3 text-[10px] uppercase font-bold">
+                        Update
+                      </Button>
+                    </form>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Financials</p>
+                    <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs text-slate-500">Total Pairs</span>
+                        <span className="text-sm font-bold text-slate-900">{order.totalPairs}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500">Total Amount</span>
+                        <span className="text-sm font-bold text-slate-900">${Number(order.totalAmount).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Payment</p>
+                    {order.paidAt ? (
+                      <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-100">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-xs font-bold uppercase">Paid {new Date(order.paidAt).toLocaleDateString()}</span>
+                      </div>
+                    ) : (
+                      <Link href={`/admin/orders/${order.id}/payment`} className="w-full">
+                        <Button variant="secondary" size="sm" className="w-full h-9 bg-slate-900 text-white hover:bg-slate-800 border-none">
+                          Generate Payment Link
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-medium uppercase text-slate-500">Listing</p>
-                <Link
-                  href={`/admin/listings/${order.listingId}/edit`}
-                  className="font-medium text-slate-900 hover:underline"
-                >
-                  {order.listing.title}
-                </Link>
+            </Card>
+
+            {order.notes && (
+              <Card className="p-5 shadow-sm border-slate-200/60 bg-yellow-50/30 border-yellow-100">
+                <p className="text-[10px] font-bold text-yellow-700 uppercase tracking-widest mb-2">Buyer Notes</p>
+                <p className="text-sm text-slate-700 italic leading-relaxed">&ldquo;{order.notes}&rdquo;</p>
+              </Card>
+            )}
+          </div>
+
+          {/* Right Column: Chat Interface */}
+          <div className="md:col-span-2 space-y-6">
+            <Card className="flex flex-col h-[700px] shadow-sm border-slate-200/60 overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between">
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                  Buyer Communication
+                </h2>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-[10px] uppercase font-bold tracking-tight">
+                    Order #{order.id}
+                  </Badge>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-medium uppercase text-slate-500">Total</p>
-                <p className="font-medium text-slate-900">
-                  {order.totalPairs} pairs · ${Number(order.totalAmount).toLocaleString()}
-                </p>
+
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30 scrollbar-hide">
+                {order.messages.map((m) => (
+                  <MessageBubble
+                    key={m.id}
+                    body={m.body}
+                    createdAt={m.createdAt}
+                    isOwnMessage={m.senderType === SenderType.SELLER}
+                    senderName={m.senderType === SenderType.SELLER ? "You" : "Buyer"}
+                  />
+                ))}
               </div>
-              <div>
-                <p className="text-xs font-medium uppercase text-slate-500">Payment Status</p>
-                {order.paidAt ? (
-                  <p className="mt-1 text-sm text-emerald-600">
-                    Paid on {new Date(order.paidAt).toLocaleDateString()}
-                  </p>
-                ) : (
-                  <Link href={`/admin/orders/${order.id}/payment`} className="mt-1 inline-block">
-                    <Button variant="secondary" className="!py-1 text-xs">
-                      Send payment link
-                    </Button>
-                  </Link>
-                )}
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase text-slate-500">Status</p>
-                <form action={updateOrderStatus} className="mt-1 flex items-center gap-2">
+
+              {/* Reply Form */}
+              <div className="p-4 bg-white border-t border-slate-200">
+                <form action={replyToOrder} className="flex flex-col gap-2">
                   <input type="hidden" name="orderId" value={order.id} />
-                  <select
-                    name="status"
-                    defaultValue={order.status}
-                    className="rounded border border-slate-200 px-2 py-1 text-sm"
-                  >
-                    <option value="PENDING">PENDING</option>
-                    <option value="CONFIRMED">CONFIRMED</option>
-                    <option value="PAID">PAID</option>
-                    <option value="SHIPPED">SHIPPED</option>
-                    <option value="CANCELLED">CANCELLED</option>
-                  </select>
-                  <Button type="submit" variant="secondary" className="!py-1 text-xs">
-                    Update
-                  </Button>
+                  <div className="relative group">
+                    <textarea
+                      name="body"
+                      required
+                      rows={3}
+                      placeholder="Type your response to the buyer..."
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 transition-all resize-none scrollbar-hide"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-[10px] text-slate-400 font-medium">The buyer will receive a notification.</p>
+                    <Button type="submit" className="bg-slate-900 text-white rounded-xl px-6 h-10 hover:bg-slate-800 transition-all active:scale-95">
+                      Send Message
+                    </Button>
+                  </div>
                 </form>
               </div>
-            </div>
-            {order.notes && (
-              <div className="mt-4 border-t border-slate-100 pt-4">
-                <p className="text-xs font-medium uppercase text-slate-500">Buyer notes</p>
-                <p className="mt-1 text-sm text-slate-700">{order.notes}</p>
-              </div>
-            )}
-          </Card>
-
-          {order.items.length > 0 && (
-            <Card className="p-6">
-              <h3 className="text-sm font-medium text-slate-800">Order items</h3>
-              <ul className="mt-3 space-y-2">
-                {order.items.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex justify-between text-sm text-slate-700"
-                  >
-                    <span>
-                      {item.sizeLabel ?? "Mixed"} × {item.quantity}
-                    </span>
-                    <span>${Number(item.pricePerPair).toLocaleString()} each</span>
-                  </li>
-                ))}
-              </ul>
             </Card>
-          )}
-
-          <Card className="p-6">
-            <h3 className="text-sm font-medium text-slate-800">Messages</h3>
-            <div className="mt-4 space-y-3">
-              {order.messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`rounded-lg border p-4 ${
-                    m.senderType === SenderType.SELLER
-                      ? "ml-8 border-slate-200 bg-slate-50"
-                      : "mr-8 border-slate-200 bg-white"
-                  }`}
-                >
-                  <p className="text-xs text-slate-500">
-                    {m.senderType === SenderType.BUYER ? "Buyer" : "You"}
-                    {" · "}
-                    {new Date(m.createdAt).toLocaleString()}
-                    {m.invoiceSentAt && (
-                      <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] text-emerald-700">
-                        Invoice sent
-                      </span>
-                    )}
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-slate-800">
-                    {m.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <form action={replyToOrder} className="mt-6">
-              <input type="hidden" name="orderId" value={order.id} />
-              <textarea
-                name="body"
-                required
-                rows={4}
-                placeholder="Reply to buyer..."
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
-              />
-              <Button type="submit" className="mt-2">
-                Send reply
-              </Button>
-            </form>
-          </Card>
+          </div>
         </div>
       </main>
     </>

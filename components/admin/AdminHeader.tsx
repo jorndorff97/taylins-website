@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useAdminLayout } from "./AdminLayoutClient";
+import { AdminNotificationBell } from "./AdminNotificationBell";
 
 interface AdminHeaderProps {
   title: string;
@@ -36,7 +37,10 @@ export function AdminHeader({ title, actions }: AdminHeaderProps) {
         </button>
         <h1 className="text-base font-semibold tracking-tight">{title}</h1>
       </div>
-      <div className="flex items-center gap-2">{actions}</div>
+      <div className="flex items-center gap-3">
+        <AdminNotificationBell />
+        <div className="flex items-center gap-2">{actions}</div>
+      </div>
     </header>
   );
 }
