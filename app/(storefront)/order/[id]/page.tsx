@@ -83,7 +83,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Status</span>
-                  <Badge variant={order.status === 'CANCELLED' ? 'danger' : 'secondary'} className="font-bold text-[10px] uppercase">
+                  <Badge variant={order.status === 'CANCELLED' ? 'danger' : 'default'} className="font-bold text-[10px] uppercase">
                     {order.status}
                   </Badge>
                 </div>

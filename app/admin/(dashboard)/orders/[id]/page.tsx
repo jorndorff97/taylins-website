@@ -149,7 +149,7 @@ export default async function AdminOrderDetailPage({
                   Buyer Communication
                 </h2>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-[10px] uppercase font-bold tracking-tight">
+                  <Badge variant="default" className="text-[10px] uppercase font-bold tracking-tight">
                     Order #{order.id}
                   </Badge>
                 </div>
