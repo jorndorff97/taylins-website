@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import type { Order, Buyer, Listing } from "@prisma/client";
+import type { Order, User, Listing } from "@prisma/client";
 
 // Serialized version with Decimal converted to number
 interface SerializedOrder extends Omit<Order, "totalAmount"> {
   totalAmount: number;
-  buyer: Buyer;
+  user: User;
   listing: Listing;
 }
 
@@ -34,12 +34,12 @@ export function OrderMobileCard({ order, statusVariant }: OrderMobileCardProps) 
         </Badge>
       </div>
 
-      {/* Buyer Info */}
+      {/* User Info */}
       <div className="mt-3 border-t border-slate-100 pt-3">
         <p className="text-xs font-medium text-slate-500">Buyer</p>
-        <p className="mt-1 text-sm text-slate-900">{order.buyer.email}</p>
-        {order.buyer.name && (
-          <p className="text-xs text-slate-500">{order.buyer.name}</p>
+        <p className="mt-1 text-sm text-slate-900">{order.user.email}</p>
+        {order.user.name && (
+          <p className="text-xs text-slate-500">{order.user.name}</p>
         )}
       </div>
 

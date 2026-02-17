@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Card } from "@/components/ui/card";
@@ -18,9 +18,9 @@ type UnifiedMessage = {
 };
 
 export default async function MessagesPage() {
-  const buyerId = await getBuyerId();
+  const userId = await getUserId();
 
-  if (!buyerId) {
+  if (!userId) {
     redirect("/login?redirect=/messages");
   }
 
@@ -31,7 +31,7 @@ export default async function MessagesPage() {
   try {
     orders = await prisma.order.findMany({
       where: {
-        buyerId,
+        userId,
         messages: {
           some: {}, // Only orders that have messages
         },
@@ -59,7 +59,7 @@ export default async function MessagesPage() {
   try {
     conversations = await prisma.conversation.findMany({
       where: {
-        buyerId,
+        userId,
       },
       include: {
         listing: {
@@ -106,7 +106,7 @@ export default async function MessagesPage() {
       listingImage: conv.listing.images[0]?.url || null,
       lastMessage: lastMessage?.body || "Inquiry started",
       lastMessageAt: conv.lastMessageAt,
-      unreadCount: conv.unreadByBuyer,
+      unreadCount: conv.unreadByUser,
       href: `/messages/${conv.id}`,
       senderType: lastMessage?.senderType,
     };

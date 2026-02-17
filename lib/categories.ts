@@ -36,26 +36,36 @@ export function categoryLabelToSlug(label: string): string {
 }
 
 /**
- * Check if a category has at least one active listing
+ * Check if a category has at least one active listing.
+ * Returns false if the database is unavailable.
  */
 export async function getCategoryStatus(categoryLabel: string): Promise<boolean> {
-  const count = await prisma.listing.count({
-    where: {
-      status: ListingStatus.ACTIVE,
-      category: { equals: categoryLabel, mode: "insensitive" }
-    }
-  });
-  return count > 0;
+  try {
+    const count = await prisma.listing.count({
+      where: {
+        status: ListingStatus.ACTIVE,
+        category: { equals: categoryLabel, mode: "insensitive" }
+      }
+    });
+    return count > 0;
+  } catch {
+    return false;
+  }
 }
 
 /**
- * Get all category labels that have at least one active listing
+ * Get all category labels that have at least one active listing.
+ * Returns [] if the database is unavailable (e.g. not set up yet).
  */
 export async function getActiveCategories(): Promise<string[]> {
-  const results = await prisma.listing.groupBy({
-    by: ['category'],
-    where: { status: ListingStatus.ACTIVE },
-    _count: { id: true }
-  });
-  return results.map(r => r.category);
+  try {
+    const results = await prisma.listing.groupBy({
+      by: ['category'],
+      where: { status: ListingStatus.ACTIVE },
+      _count: { id: true }
+    });
+    return results.map(r => r.category);
+  } catch {
+    return [];
+  }
 }

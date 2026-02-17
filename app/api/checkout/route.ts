@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const order = await prisma.order.findUnique({
       where: { id: Number(orderId) },
       include: {
-        buyer: true,
+        user: true,
         listing: {
           include: {
             images: { orderBy: { sortOrder: "asc" } },
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       mode: "payment",
       success_url: `${baseUrl}/order/${orderId}?payment=success`,
       cancel_url: `${baseUrl}/order/${orderId}?payment=cancelled`,
-      customer_email: order.buyer.email,
+      customer_email: order.user.email,
       metadata: {
         orderId: order.id.toString(),
       },

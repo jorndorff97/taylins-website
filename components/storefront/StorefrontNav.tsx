@@ -1,23 +1,23 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession, signOut } from "next-auth/react";
 import { NotificationBell } from "./NotificationBell";
 import { HeaderSearch } from "./HeaderSearch";
 
-interface StorefrontNavProps {
-  buyerId: number | null;
-}
-
-export function StorefrontNav({ buyerId }: StorefrontNavProps) {
+export function StorefrontNav() {
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === "authenticated";
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Fetch unread count when user is logged in
   useEffect(() => {
-    if (!buyerId) return;
+    if (!isLoggedIn) return;
 
     const fetchUnreadCount = async () => {
       try {
@@ -33,7 +33,7 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
     // Poll every 30 seconds for unread count
     const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
-  }, [buyerId]);
+  }, [isLoggedIn]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -87,7 +87,7 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
         {/* Common Navigation Area */}
         <div className="flex items-center gap-3 sm:gap-6">
           <HeaderSearch />
-          {buyerId && <NotificationBell />}
+          {isLoggedIn && <NotificationBell />}
           
           <div className="relative" ref={menuRef}>
             <button
@@ -131,8 +131,15 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
                     className="absolute right-0 top-full mt-3 w-56 rounded-2xl bg-white/95 backdrop-blur-xl shadow-2xl ring-1 ring-slate-200/50 z-50 overflow-hidden"
                   >
                     <div className="py-2">
-                      {/* Show Browse only in mobile dropdown if desired, but here it's in the menu for both if we want consistency.
-                          Actually, user didn't mention moving Browse, just messages/admin/logout/orders. */}
+                      <Link
+                        href="/"
+                        className="block px-5 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Home
+                      </Link>
+                      <div className="mx-5 border-t border-slate-100" />
+                      {/* Show Browse only in mobile dropdown if desired, but here it's in the menu for both if we want consistency. */}
                       <div className="sm:hidden">
                         <Link
                           href="/browse"
@@ -144,7 +151,7 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
                         <div className="mx-5 border-t border-slate-100" />
                       </div>
 
-                      {buyerId ? (
+                      {isLoggedIn ? (
                         <>
                           <Link
                             href="/messages"
@@ -165,15 +172,15 @@ export function StorefrontNav({ buyerId }: StorefrontNavProps) {
                           >
                             Orders
                           </Link>
-                          <form action="/api/auth/logout" method="post">
-                            <button
-                              type="submit"
-                              className="w-full text-left block px-5 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                              onClick={() => setIsMenuOpen(false)}
-                            >
-                              Logout
-                            </button>
-                          </form>
+                          <button
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                              signOut({ callbackUrl: "/" });
+                            }}
+                            className="w-full text-left block px-5 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                          >
+                            Logout
+                          </button>
                         </>
                       ) : (
                         <>

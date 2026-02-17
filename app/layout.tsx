@@ -2,7 +2,7 @@ import "./globals.css";
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "Taylin Wholesale",
+  title: "eForwarder Wholesale",
   description: "Wholesale sneaker marketplace",
 };
 

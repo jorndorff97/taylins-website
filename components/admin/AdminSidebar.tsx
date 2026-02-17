@@ -21,7 +21,7 @@ export function AdminSidebar() {
       <aside className="hidden md:flex h-full w-56 flex-col border-r border-slate-200 bg-card/80">
         <div className="flex h-16 items-center px-5">
           <span className="text-sm font-semibold tracking-tight">
-            Taylin Admin
+            eForwarder Admin
           </span>
         </div>
         <nav className="flex-1 space-y-1 px-2 py-4 text-sm">
@@ -64,7 +64,7 @@ export function AdminSidebar() {
       >
         <div className="flex h-16 items-center justify-between px-5">
           <span className="text-sm font-semibold tracking-tight">
-            Taylin Admin
+            eForwarder Admin
           </span>
           <button
             onClick={() => setMobileMenuOpen(false)}

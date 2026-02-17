@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 import { OrderRequestForm } from "./OrderRequestForm";
 import { isSoldOut } from "@/lib/inventory";
 
@@ -11,8 +11,8 @@ interface RequestPageProps {
 
 export default async function OrderRequestPage({ searchParams }: RequestPageProps) {
   const params = await searchParams;
-  const buyerId = await getBuyerId();
-  if (!buyerId) {
+  const userId = await getUserId();
+  if (!userId) {
     redirect(`/login?redirect=${encodeURIComponent(`/order/request?listingId=${params.listingId ?? ""}`)}`);
   }
   const listingId = Number(params.listingId);

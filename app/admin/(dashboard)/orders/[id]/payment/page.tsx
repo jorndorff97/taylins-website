@@ -20,7 +20,7 @@ export default async function SendPaymentLinkPage({
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
-      buyer: true,
+      user: true,
       listing: true,
       items: true,
     },
@@ -55,7 +55,7 @@ export default async function SendPaymentLinkPage({
             <div className="grid gap-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-slate-600">Buyer:</span>
-                <span className="font-medium text-slate-900">{order.buyer.email}</span>
+                <span className="font-medium text-slate-900">{order.user.email}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">Listing:</span>

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { SenderType } from "@prisma/client";
-import { notifyNewMessageToBuyer, notifyPaymentLinkSent, notifyOrderStatusChange } from "@/lib/notifications";
+import { notifyNewMessageToUser, notifyPaymentLinkSent, notifyOrderStatusChange } from "@/lib/notifications";
 
 export async function replyToOrder(formData: FormData) {
   const orderId = Number(formData.get("orderId"));
@@ -15,7 +15,7 @@ export async function replyToOrder(formData: FormData) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
-      buyer: true,
+      user: true,
       listing: true,
     },
   });
@@ -30,9 +30,9 @@ export async function replyToOrder(formData: FormData) {
     },
   });
 
-  // Send notification to buyer
-  await notifyNewMessageToBuyer({
-    buyerId: order.buyerId,
+  // Send notification to user
+  await notifyNewMessageToUser({
+    userId: order.userId,
     orderId,
     listingTitle: order.listing.title,
     message: body,
@@ -54,7 +54,7 @@ export async function updateOrderStatus(formData: FormData) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
-      buyer: true,
+      user: true,
       listing: true,
     },
   });
@@ -66,9 +66,9 @@ export async function updateOrderStatus(formData: FormData) {
     data: { status: status as "PENDING" | "CONFIRMED" | "PAID" | "SHIPPED" | "CANCELLED" },
   });
 
-  // Send notification to buyer about status change
+  // Send notification to user about status change
   await notifyOrderStatusChange({
-    buyerId: order.buyerId,
+    userId: order.userId,
     orderId,
     listingTitle: order.listing.title,
     newStatus: status,
@@ -111,7 +111,7 @@ export async function createCustomPaymentLink(formData: FormData) {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        buyer: true,
+        user: true,
         listing: true,
       },
     });
@@ -155,9 +155,9 @@ export async function createCustomPaymentLink(formData: FormData) {
       },
     });
 
-    // Send notification to buyer with payment link
+    // Send notification to user with payment link
     await notifyPaymentLinkSent({
-      buyerId: order.buyerId,
+      userId: order.userId,
       orderId,
       listingTitle: order.listing.title,
       quantity,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 import { hasValidAdminSession } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const limit = Number(searchParams.get("limit")) || 20;
   const isAdminRequest = searchParams.get("isAdmin") === "true";
 
-  let buyerId: number | null = null;
+  let userId: string | null = null;
   let isAdmin = false;
 
   if (isAdminRequest) {
@@ -18,15 +18,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   } else {
-    buyerId = await getBuyerId();
-    if (!buyerId) {
+    userId = await getUserId();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
   const notifications = await prisma.notification.findMany({
     where: {
-      buyerId: isAdmin ? null : buyerId,
+      userId: isAdmin ? null : userId,
       ...(unreadOnly ? { read: false } : {}),
     },
     orderBy: {
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
   const unreadCount = await prisma.notification.count({
     where: {
-      buyerId: isAdmin ? null : buyerId,
+      userId: isAdmin ? null : userId,
       read: false,
     },
   });
@@ -52,7 +52,7 @@ export async function PATCH(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const isAdminRequest = searchParams.get("isAdmin") === "true";
 
-  let buyerId: number | null = null;
+  let userId: string | null = null;
   let isAdmin = false;
 
   if (isAdminRequest) {
@@ -61,8 +61,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   } else {
-    buyerId = await getBuyerId();
-    if (!buyerId) {
+    userId = await getUserId();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
@@ -74,7 +74,7 @@ export async function PATCH(request: NextRequest) {
     // Mark all as read
     await prisma.notification.updateMany({
       where: {
-        buyerId: isAdmin ? null : buyerId,
+        userId: isAdmin ? null : userId,
         read: false,
       },
       data: {
@@ -86,7 +86,7 @@ export async function PATCH(request: NextRequest) {
     await prisma.notification.updateMany({
       where: {
         id: { in: notificationIds },
-        buyerId: isAdmin ? null : buyerId, // Security: ensure they own these notifications
+        userId: isAdmin ? null : userId, // Security: ensure they own these notifications
       },
       data: {
         read: true,

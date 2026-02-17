@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 
 export default async function AccountPage() {
-  const buyerId = await getBuyerId();
-  if (!buyerId) redirect("/login?redirect=/account");
+  const userId = await getUserId();
+  if (!userId) redirect("/login?redirect=/account");
 
-  let buyer = null;
+  let user = null;
   let hasError = false;
 
   try {
-    buyer = await prisma.buyer.findUnique({
-      where: { id: buyerId },
+    user = await prisma.user.findUnique({
+      where: { id: userId },
       include: {
         orders: {
           include: { listing: true },
@@ -26,11 +26,11 @@ export default async function AccountPage() {
     hasError = true;
   }
 
-  if (!buyer && !hasError) {
+  if (!user && !hasError) {
     redirect("/login");
   }
 
-  if (hasError || !buyer) {
+  if (hasError || !user) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-12">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 mb-8">
@@ -69,17 +69,17 @@ export default async function AccountPage() {
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm text-slate-600 mb-1">Email</p>
-            <p className="text-slate-900 font-medium">{buyer.email}</p>
-            {buyer.name && (
+            <p className="text-slate-900 font-medium">{user.email}</p>
+            {user.name && (
               <>
                 <p className="text-sm text-slate-600 mt-4 mb-1">Name</p>
-                <p className="text-slate-900">{buyer.name}</p>
+                <p className="text-slate-900">{user.name}</p>
               </>
             )}
-            {buyer.phone && (
+            {user.phone && (
               <>
                 <p className="text-sm text-slate-600 mt-4 mb-1">Phone</p>
-                <p className="text-slate-900">{buyer.phone}</p>
+                <p className="text-slate-900">{user.phone}</p>
               </>
             )}
           </div>
@@ -87,7 +87,7 @@ export default async function AccountPage() {
       </div>
 
       <h2 className="mt-10 text-lg font-medium text-slate-900">Recent orders</h2>
-      {buyer.orders.length === 0 ? (
+      {user.orders.length === 0 ? (
         <div className="mt-6 flex flex-col items-center justify-center py-12 px-4 rounded-xl border border-slate-200 bg-white">
           <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
             <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -110,7 +110,7 @@ export default async function AccountPage() {
         </div>
       ) : (
         <ul className="mt-4 space-y-3">
-          {buyer.orders.map((order) => (
+          {user.orders.map((order) => (
             <li key={order.id}>
               <Link
                 href={`/order/${order.id}`}

@@ -23,7 +23,7 @@ export default async function AdminOrderDetailPage({
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
-      buyer: true,
+      user: true,
       listing: {
         include: {
           images: { take: 1, orderBy: { sortOrder: "asc" } }
@@ -72,8 +72,8 @@ export default async function AdminOrderDetailPage({
                 <div className="grid gap-4 text-sm">
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Buyer</p>
-                    <p className="font-semibold text-slate-900">{order.buyer.name || "No name provided"}</p>
-                    <p className="text-xs text-slate-500">{order.buyer.email}</p>
+                    <p className="font-semibold text-slate-900">{order.user.name || "No name provided"}</p>
+                    <p className="text-xs text-slate-500">{order.user.email}</p>
                   </div>
                   
                   <div>

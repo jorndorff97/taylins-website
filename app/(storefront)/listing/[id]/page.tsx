@@ -26,6 +26,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   if (!listing) notFound();
 
+  // Serialize Decimal fields to plain numbers for client components
+  const serializedListing = {
+    ...listing,
+    costPerPair: listing.costPerPair ? Number(listing.costPerPair) : null,
+    basePricePerPair: listing.basePricePerPair ? Number(listing.basePricePerPair) : null,
+    flatPricePerPair: listing.flatPricePerPair ? Number(listing.flatPricePerPair) : null,
+    stockXPrice: listing.stockXPrice ? Number(listing.stockXPrice) : null,
+    tierPrices: listing.tierPrices.map(tp => ({
+      ...tp,
+      pricePerPair: Number(tp.pricePerPair),
+    })),
+  };
+
   const soldOut = isSoldOut(listing);
 
   // Calculate starting price per pair for static StockX display
@@ -96,7 +109,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {/* Size/Quantity selection and actions with desktop StockX sync */}
             {!soldOut && startingPricePerPair && (
               <ProductInteractive 
-                listing={listing}
+                listing={serializedListing}
                 startingPricePerPair={startingPricePerPair}
               />
             )}
@@ -104,9 +117,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {/* Volume Pricing */}
             {listing.pricingMode === PricingMode.TIER && listing.tierPrices.length > 0 && (
               <VolumePricing
-                tierPrices={listing.tierPrices}
+                tierPrices={serializedListing.tierPrices}
                 currentQty={0}
-                stockXPrice={listing.stockXPrice ? Number(listing.stockXPrice) : null}
+                stockXPrice={serializedListing.stockXPrice}
               />
             )}
 

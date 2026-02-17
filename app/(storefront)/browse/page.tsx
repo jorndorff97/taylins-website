@@ -1,12 +1,11 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { STOREFRONT_CATEGORIES, getCategoryStatus, getActiveCategories } from "@/lib/categories";
-import { ListingCard } from "@/components/storefront/ListingCard";
 import { ComingSoon } from "@/components/storefront/ComingSoon";
+import { BrowseFilters } from "@/components/storefront/BrowseFilters";
 import { ListingStatus } from "@prisma/client";
 
 interface BrowsePageProps {
-  searchParams: Promise<{ category?: string; q?: string; sort?: string }>;
+  searchParams: Promise<{ category?: string; q?: string; sort?: string; brands?: string; price?: string; categories?: string }>;
 }
 
 function slugToCategoryFilter(slug: string): string | null {
@@ -33,48 +32,63 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
     return <ComingSoon categoryLabel={categoryLabel} categorySlug={categorySlug} />;
   }
 
-  const listings = await prisma.listing.findMany({
-    where: {
-      status: ListingStatus.ACTIVE,
-      ...(categoryLabel && {
-        category: { equals: categoryLabel, mode: "insensitive" },
-      }),
-      ...(search && {
-        OR: [
-          { title: { contains: search, mode: "insensitive" } },
-          { category: { contains: search, mode: "insensitive" } },
-        ],
-      }),
-    },
-    include: {
-      images: { orderBy: { sortOrder: "asc" } },
-      sizes: true,
-      tierPrices: true,
-    },
-    orderBy:
-      sort === "price-asc"
-        ? { flatPricePerPair: "asc" }
-        : sort === "price-desc"
-          ? { flatPricePerPair: "desc" }
-          : { updatedAt: "desc" },
-  });
+  let listings;
+  let allBrands: string[] = [];
+  
+  try {
+    // Fetch ALL active listings - category filtering happens client-side for instant switching
+    listings = await prisma.listing.findMany({
+      where: {
+        status: ListingStatus.ACTIVE,
+        ...(search && {
+          OR: [
+            { title: { contains: search, mode: "insensitive" } },
+            { category: { contains: search, mode: "insensitive" } },
+            { brand: { contains: search, mode: "insensitive" } },
+          ],
+        }),
+      },
+      include: {
+        images: { orderBy: { sortOrder: "asc" } },
+        sizes: true,
+        tierPrices: true,
+      },
+      orderBy:
+        sort === "price-asc"
+          ? { flatPricePerPair: "asc" }
+          : sort === "price-desc"
+            ? { flatPricePerPair: "desc" }
+            : { updatedAt: "desc" },
+    });
+
+    // Get unique brands from active listings
+    const brandsResult = await prisma.listing.findMany({
+      where: { status: ListingStatus.ACTIVE, brand: { not: null } },
+      select: { brand: true },
+      distinct: ["brand"],
+    });
+    allBrands = brandsResult
+      .map((l) => l.brand)
+      .filter((b): b is string => b !== null)
+      .sort();
+  } catch {
+    listings = [];
+  }
 
   // Serialize Decimal fields for client components
-  const serializedListings = listings.map(listing => ({
+  const serializedListings = listings.map((listing: (typeof listings)[number]) => ({
     ...listing,
     flatPricePerPair: listing.flatPricePerPair ? Number(listing.flatPricePerPair) : null,
     basePricePerPair: listing.basePricePerPair ? Number(listing.basePricePerPair) : null,
     costPerPair: listing.costPerPair ? Number(listing.costPerPair) : null,
     stockXPrice: listing.stockXPrice ? Number(listing.stockXPrice) : null,
-    tierPrices: listing.tierPrices.map(tp => ({
+    tierPrices: listing.tierPrices.map((tp) => ({
       ...tp,
       pricePerPair: Number(tp.pricePerPair),
     })),
   }));
 
   // Sort tiered listings if they don't have flatPricePerPair
-  // Since Prisma sorts nulls together, we do a secondary sort in memory to ensure
-  // starting prices are correctly ordered for TIERED listings
   if (sort === "price-asc" || sort === "price-desc") {
     serializedListings.sort((a, b) => {
       const priceA = a.flatPricePerPair ?? (a.tierPrices.length > 0 ? a.tierPrices[0].pricePerPair : 0);
@@ -83,76 +97,29 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
     });
   }
 
+  // Prepare category options for the filter
+  const categoryOptions = STOREFRONT_CATEGORIES.map((cat) => ({
+    slug: cat.slug,
+    label: cat.label,
+  }));
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
           Browse Listings
         </h1>
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500">Sort:</span>
-            <Link
-              href={`/browse?category=${categorySlug}&q=${encodeURIComponent(search)}&sort=newest`}
-              className={`rounded px-2 py-1 text-sm ${sort === "newest" ? "font-medium text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
-            >
-              Newest
-            </Link>
-            <Link
-              href={`/browse?category=${categorySlug}&q=${encodeURIComponent(search)}&sort=price-desc`}
-              className={`rounded px-2 py-1 text-sm ${sort === "price-desc" ? "font-medium text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
-            >
-              Highest Price
-            </Link>
-            <Link
-              href={`/browse?category=${categorySlug}&q=${encodeURIComponent(search)}&sort=price-asc`}
-              className={`rounded px-2 py-1 text-sm ${sort === "price-asc" ? "font-medium text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
-            >
-              Lowest Price
-            </Link>
-          </div>
-        </div>
       </div>
 
-      {/* Category strip */}
-      <div className="mt-8 flex flex-wrap gap-2">
-        <Link
-          href="/browse"
-          className={`rounded-full px-4 py-2 text-sm font-medium transition ${!categorySlug ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
-        >
-          All
-        </Link>
-        {STOREFRONT_CATEGORIES.filter((cat) => 
-          activeCategoryLabels.includes(cat.label)
-        ).map((cat) => (
-          <Link
-            key={cat.slug}
-            href={`/browse?category=${cat.slug}`}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-              categorySlug === cat.slug 
-                ? "bg-slate-900 text-white" 
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
-          >
-            {cat.label}
-          </Link>
-        ))}
-      </div>
-
-      {serializedListings.length === 0 ? (
-        <p className="mt-12 text-slate-500">
-          No listings match your filters.{" "}
-          <Link href="/browse" className="text-hero-accent hover:underline">
-            Clear filters
-          </Link>
-        </p>
-      ) : (
-        <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {serializedListings.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
-          ))}
-        </div>
-      )}
+      <BrowseFilters
+        listings={serializedListings}
+        categories={categoryOptions}
+        activeCategories={activeCategoryLabels}
+        brands={allBrands}
+        currentCategory={categorySlug}
+        currentSearch={search}
+        currentSort={sort}
+      />
     </div>
   );
 }

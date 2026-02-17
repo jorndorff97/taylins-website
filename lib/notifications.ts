@@ -3,7 +3,7 @@ import { sendEmail } from './email';
 import { NotificationType } from '@prisma/client';
 
 interface CreateNotificationParams {
-  buyerId?: number | null;
+  userId?: string | null;
   type: NotificationType;
   title: string;
   message: string;
@@ -15,7 +15,7 @@ interface CreateNotificationParams {
 }
 
 export async function createNotification({
-  buyerId,
+  userId,
   type,
   title,
   message,
@@ -29,7 +29,7 @@ export async function createNotification({
     // Create in-app notification
     const notification = await prisma.notification.create({
       data: {
-        buyerId: buyerId || null,
+        userId: userId || null,
         type,
         title,
         message,
@@ -44,12 +44,12 @@ export async function createNotification({
       let recipientEmail: string | null = null;
       
       // Get recipient email
-      if (buyerId) {
-        const buyer = await prisma.buyer.findUnique({
-          where: { id: buyerId },
+      if (userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
           select: { email: true },
         });
-        recipientEmail = buyer?.email || null;
+        recipientEmail = user?.email || null;
       } else {
         // Admin notification - get admin email from env or database
         recipientEmail = process.env.ADMIN_EMAIL || null;
@@ -92,7 +92,7 @@ export async function notifyNewOffer({
   message: string;
 }) {
   return createNotification({
-    buyerId: null, // Admin notification
+    userId: null, // Admin notification
     type: 'NEW_OFFER',
     title: 'New Offer Received',
     message: `New offer for ${listingTitle}: ${quantity} pairs`,
@@ -107,21 +107,21 @@ export async function notifyNewOffer({
   });
 }
 
-export async function notifyNewMessageToBuyer({
-  buyerId,
+export async function notifyNewMessageToUser({
+  userId,
   orderId,
   conversationId,
   listingTitle,
   message,
 }: {
-  buyerId: number;
+  userId: string;
   orderId?: number;
   conversationId?: number;
   listingTitle: string;
   message: string;
 }) {
   return createNotification({
-    buyerId,
+    userId,
     type: 'NEW_MESSAGE_BUYER',
     title: 'New Message from Seller',
     message: `New message about ${listingTitle}`,
@@ -147,7 +147,7 @@ export async function notifyNewMessageToAdmin({
   message: string;
 }) {
   return createNotification({
-    buyerId: null, // Admin notification
+    userId: null, // Admin notification
     type: 'NEW_MESSAGE_ADMIN',
     title: 'New Message from Buyer',
     message: `New message about ${listingTitle}`,
@@ -162,7 +162,7 @@ export async function notifyNewMessageToAdmin({
 }
 
 export async function notifyPaymentLinkSent({
-  buyerId,
+  userId,
   orderId,
   listingTitle,
   quantity,
@@ -170,7 +170,7 @@ export async function notifyPaymentLinkSent({
   totalAmount,
   paymentLink,
 }: {
-  buyerId: number;
+  userId: string;
   orderId: number;
   listingTitle: string;
   quantity: number;
@@ -179,7 +179,7 @@ export async function notifyPaymentLinkSent({
   paymentLink: string;
 }) {
   return createNotification({
-    buyerId,
+    userId,
     type: 'PAYMENT_LINK_SENT',
     title: 'Payment Link Ready',
     message: `Your payment link for ${listingTitle} is ready`,
@@ -196,18 +196,18 @@ export async function notifyPaymentLinkSent({
 }
 
 export async function notifyPaymentSuccess({
-  buyerId,
+  userId,
   orderId,
   listingTitle,
   totalAmount,
 }: {
-  buyerId: number;
+  userId: string;
   orderId: number;
   listingTitle: string;
   totalAmount: number;
 }) {
   return createNotification({
-    buyerId,
+    userId,
     type: 'PAYMENT_SUCCESS',
     title: 'Payment Successful',
     message: `Your payment for ${listingTitle} was successful`,
@@ -222,18 +222,18 @@ export async function notifyPaymentSuccess({
 }
 
 export async function notifyOrderStatusChange({
-  buyerId,
+  userId,
   orderId,
   listingTitle,
   newStatus,
 }: {
-  buyerId: number;
+  userId: string;
   orderId: number;
   listingTitle: string;
   newStatus: string;
 }) {
   return createNotification({
-    buyerId,
+    userId,
     type: 'ORDER_STATUS_CHANGE',
     title: 'Order Status Updated',
     message: `Your order for ${listingTitle} is now ${newStatus}`,

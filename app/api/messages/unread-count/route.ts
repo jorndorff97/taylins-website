@@ -1,27 +1,27 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 
 export async function GET() {
   try {
-    const buyerId = await getBuyerId();
+    const userId = await getUserId();
     
-    if (!buyerId) {
+    if (!userId) {
       return NextResponse.json({ unreadCount: 0 });
     }
 
     const result = await prisma.conversation.aggregate({
       where: {
-        buyerId,
+        userId,
         status: "ACTIVE",
       },
       _sum: {
-        unreadByBuyer: true,
+        unreadByUser: true,
       },
     });
 
     return NextResponse.json({
-      unreadCount: result._sum.unreadByBuyer || 0,
+      unreadCount: result._sum.unreadByUser || 0,
     });
   } catch (error) {
     console.error("Error fetching unread count:", error);

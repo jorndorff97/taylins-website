@@ -22,7 +22,7 @@ export default async function AdminOrdersPage() {
   try {
     orders = await prisma.order.findMany({
       include: {
-        buyer: true,
+        user: true,
         listing: true,
       },
       orderBy: { createdAt: "desc" },
@@ -102,10 +102,10 @@ export default async function AdminOrdersPage() {
                         </span>
                       </TD>
                       <TD>
-                        <span className="text-slate-700">{order.buyer.email}</span>
-                        {order.buyer.name && (
+                        <span className="text-slate-700">{order.user.email}</span>
+                        {order.user.name && (
                           <span className="block text-xs text-slate-500">
-                            {order.buyer.name}
+                            {order.user.name}
                           </span>
                         )}
                       </TD>

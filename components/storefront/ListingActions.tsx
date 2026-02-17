@@ -3,18 +3,29 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { Listing, ListingSize, ListingTierPrice } from "@prisma/client";
-import { InventoryMode } from "@prisma/client";
+import { InventoryMode, PricingMode } from "@prisma/client";
 import { SizeSelector } from "./SizeSelector";
 import { QuantityStepper } from "./QuantityStepper";
 import { SavingsGauge } from "./SavingsGauge";
 import { calculateOrderPrice, getApplicableTier } from "@/lib/pricing";
-import { PricingMode } from "@prisma/client";
+
+// Serialized tier price with number instead of Decimal
+export interface SerializedTierPrice extends Omit<ListingTierPrice, 'pricePerPair'> {
+  pricePerPair: number;
+}
+
+// Serialized listing type with numbers instead of Decimals
+export type SerializedListing = Omit<Listing, 'costPerPair' | 'basePricePerPair' | 'flatPricePerPair' | 'stockXPrice'> & {
+  costPerPair: number | null;
+  basePricePerPair: number | null;
+  flatPricePerPair: number | null;
+  stockXPrice: number | null;
+  sizes: ListingSize[];
+  tierPrices: SerializedTierPrice[];
+};
 
 interface ListingActionsProps {
-  listing: Listing & {
-    sizes: ListingSize[];
-    tierPrices: ListingTierPrice[];
-  };
+  listing: SerializedListing;
   onQuantityChange?: (qty: number) => void;
   onPriceChange?: (price: number | null) => void;
 }

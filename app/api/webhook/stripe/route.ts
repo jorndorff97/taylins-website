@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         const order = await prisma.order.findUnique({
           where: { id: Number(orderId) },
           include: {
-            buyer: true,
+            user: true,
             listing: true,
           },
         });
@@ -67,9 +67,9 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // Send payment success notification to buyer
+        // Send payment success notification to user
         await notifyPaymentSuccess({
-          buyerId: order.buyerId,
+          userId: order.userId,
           orderId: order.id,
           listingTitle: order.listing.title,
           totalAmount: Number(order.totalAmount),

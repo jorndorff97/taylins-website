@@ -27,7 +27,7 @@ export default async function AdminMessagesPage() {
       },
     },
     include: {
-      buyer: true,
+      user: true,
       listing: {
         include: {
           images: { take: 1, orderBy: { sortOrder: "asc" } },
@@ -46,7 +46,7 @@ export default async function AdminMessagesPage() {
   // Fetch conversations
   const conversations = await prisma.conversation.findMany({
     include: {
-      buyer: true,
+      user: true,
       listing: {
         include: {
           images: { take: 1, orderBy: { sortOrder: "asc" } },
@@ -70,8 +70,8 @@ export default async function AdminMessagesPage() {
       type: 'order',
       listingTitle: order.listing.title,
       listingImage: order.listing.images[0]?.url || null,
-      buyerEmail: order.buyer.email,
-      buyerName: order.buyer.name,
+      buyerEmail: order.user.email,
+      buyerName: order.user.name,
       lastMessage: lastMessage?.body || "Order request",
       lastMessageAt: lastMessage?.createdAt || order.updatedAt,
       unreadCount: 0, // Admin unread tracking for orders not yet implemented
@@ -87,8 +87,8 @@ export default async function AdminMessagesPage() {
       type: 'conversation',
       listingTitle: conv.listing.title,
       listingImage: conv.listing.images[0]?.url || null,
-      buyerEmail: conv.buyer.email,
-      buyerName: conv.buyer.name,
+      buyerEmail: conv.user.email,
+      buyerName: conv.user.name,
       lastMessage: lastMessage?.body || "New conversation",
       lastMessageAt: conv.lastMessageAt,
       unreadCount: conv.unreadByAdmin,

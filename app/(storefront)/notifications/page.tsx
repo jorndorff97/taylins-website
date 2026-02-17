@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 
 export default async function NotificationsPage() {
-  const buyerId = await getBuyerId();
+  const userId = await getUserId();
 
-  if (!buyerId) {
+  if (!userId) {
     redirect("/login?redirect=/notifications");
   }
 
   const notifications = await prisma.notification.findMany({
     where: {
-      buyerId,
+      userId,
     },
     orderBy: {
       createdAt: "desc",
@@ -23,12 +23,12 @@ export default async function NotificationsPage() {
 
   async function markAllAsRead() {
     "use server";
-    const buyerId = await getBuyerId();
-    if (!buyerId) return;
+    const userId = await getUserId();
+    if (!userId) return;
 
     await prisma.notification.updateMany({
       where: {
-        buyerId,
+        userId,
         read: false,
       },
       data: {

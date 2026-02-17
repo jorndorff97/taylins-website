@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 import { OfferForm } from "@/components/storefront/OfferForm";
 
 interface OfferPageProps {
@@ -9,9 +9,9 @@ interface OfferPageProps {
 
 export default async function OfferPage({ params }: OfferPageProps) {
   const { id } = await params;
-  const buyerId = await getBuyerId();
+  const userId = await getUserId();
 
-  if (!buyerId) {
+  if (!userId) {
     redirect(`/login?redirect=${encodeURIComponent(`/listing/${id}/offer`)}`);
   }
 

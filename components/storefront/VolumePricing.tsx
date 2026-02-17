@@ -2,8 +2,13 @@
 
 import type { ListingTierPrice } from "@prisma/client";
 
+// Serialized tier price with number instead of Decimal
+interface SerializedTierPrice extends Omit<ListingTierPrice, 'pricePerPair'> {
+  pricePerPair: number;
+}
+
 interface VolumePricingProps {
-  tierPrices: ListingTierPrice[];
+  tierPrices: SerializedTierPrice[];
   currentQty: number;
   stockXPrice: number | null;
 }

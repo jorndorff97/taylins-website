@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 import { SenderType } from "@prisma/client";
 import { notifyNewMessageToAdmin } from "@/lib/notifications";
 
 export async function POST(request: Request) {
-  const buyerId = await getBuyerId();
-  if (!buyerId) {
+  const userId = await getUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     },
   });
 
-  if (!order || order.buyerId !== buyerId) {
+  if (!order || order.userId !== userId) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 import { OrderThread } from "./OrderThread";
 import { PaymentButton } from "@/components/storefront/PaymentButton";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +13,8 @@ interface OrderPageProps {
 }
 
 export default async function OrderPage({ params, searchParams }: OrderPageProps) {
-  const buyerId = await getBuyerId();
-  if (!buyerId) {
+  const userId = await getUserId();
+  if (!userId) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -46,7 +46,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
     },
   });
 
-  if (!order || order.buyerId !== buyerId) notFound();
+  if (!order || order.userId !== userId) notFound();
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:py-12">

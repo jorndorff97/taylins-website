@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 import { SenderType } from "@prisma/client";
 
 export async function POST(request: Request) {
-  const buyerId = await getBuyerId();
-  if (!buyerId) {
+  const userId = await getUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   const order = await prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
       data: {
-        buyerId,
+        userId,
         listingId,
         status: "PENDING",
         totalPairs,

@@ -1,15 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Listing, ListingSize, ListingTierPrice } from "@prisma/client";
-import { ListingActions } from "./ListingActions";
+import type { ListingSize } from "@prisma/client";
+import { ListingActions, type SerializedListing } from "./ListingActions";
 import { SavingsGauge } from "./SavingsGauge";
 
 interface ProductInteractiveProps {
-  listing: Listing & {
-    sizes: ListingSize[];
-    tierPrices: ListingTierPrice[];
-  };
+  listing: SerializedListing;
   startingPricePerPair: number;
 }
 

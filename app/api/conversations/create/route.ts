@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 import { notifyNewOffer } from "@/lib/notifications";
 
 export async function POST(request: NextRequest) {
   try {
-    const buyerId = await getBuyerId();
-    if (!buyerId) {
+    const userId = await getUserId();
+    if (!userId) {
       return NextResponse.json(
         { error: "You must be logged in to send an offer" },
         { status: 401 }
@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
     // Create or find existing conversation
     let conversation = await prisma.conversation.findUnique({
       where: {
-        buyerId_listingId: {
-          buyerId,
+        userId_listingId: {
+          userId,
           listingId: Number(listingId),
         },
       },
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     if (!conversation) {
       conversation = await prisma.conversation.create({
         data: {
-          buyerId,
+          userId,
           listingId: Number(listingId),
           status: "ACTIVE",
           unreadByAdmin: 1,

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getBuyerId } from "@/lib/buyer-auth";
+import { getUserId } from "@/lib/auth-config";
 import { calculateOrderTotal } from "@/lib/pricing";
 import { OrderStatus, InventoryMode } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   try {
-    const buyerId = await getBuyerId();
-    if (!buyerId) {
+    const userId = await getUserId();
+    if (!userId) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     // Create the order
     const order = await prisma.order.create({
       data: {
-        buyerId,
+        userId,
         listingId: listing.id,
         status: OrderStatus.CONFIRMED, // Instant buy orders start as CONFIRMED
         totalPairs: orderTotal.totalPairs,
