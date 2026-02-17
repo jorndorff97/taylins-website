@@ -20,6 +20,7 @@
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "@prisma/client": "5.16.0",
     "fast-average-color": "^9.5.0",
     "framer-motion": "^12.34.0",
     "next": "latest",
@@ -32,7 +33,6 @@
     "stripe": "^20.3.1"
   },
   "devDependencies": {
-    "@prisma/client": "5.16.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^30.0.0",
     "@types/node": "latest",
