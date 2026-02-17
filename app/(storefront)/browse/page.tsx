@@ -2,7 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { STOREFRONT_CATEGORIES, getCategoryStatus, getActiveCategories } from "@/lib/categories";
 import { ComingSoon } from "@/components/storefront/ComingSoon";
 import { BrowseFilters } from "@/components/storefront/BrowseFilters";
-import { ListingStatus } from "@prisma/client";
+import { ListingStatus, Prisma } from "@prisma/client";
+
+type ListingWithRelations = Prisma.ListingGetPayload<{
+  include: { images: true; sizes: true; tierPrices: true };
+}>;
 
 interface BrowsePageProps {
   searchParams: Promise<{ category?: string; q?: string; sort?: string; brands?: string; price?: string; categories?: string }>;
@@ -32,7 +36,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
     return <ComingSoon categoryLabel={categoryLabel} categorySlug={categorySlug} />;
   }
 
-  let listings;
+  let listings: ListingWithRelations[] = [];
   let allBrands: string[] = [];
   
   try {
@@ -76,7 +80,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   }
 
   // Serialize Decimal fields for client components
-  const serializedListings = listings.map((listing: (typeof listings)[number]) => ({
+  const serializedListings = listings.map((listing) => ({
     ...listing,
     flatPricePerPair: listing.flatPricePerPair ? Number(listing.flatPricePerPair) : null,
     basePricePerPair: listing.basePricePerPair ? Number(listing.basePricePerPair) : null,
