@@ -5,7 +5,12 @@ const COOKIE_NAME = "admin_session";
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 function getSecret() {
-  const secret = process.env.ADMIN_SECRET || process.env.DATABASE_URL || "fallback-secret";
+  const secret = process.env.ADMIN_SECRET;
+  if (!secret) {
+    throw new Error(
+      "ADMIN_SECRET environment variable is required. Generate one with: openssl rand -base64 32"
+    );
+  }
   return secret;
 }
 
@@ -13,29 +18,39 @@ function sign(value: string): string {
   return createHmac("sha256", getSecret()).update(value).digest("hex");
 }
 
-export function createSessionToken(): string {
+export function createSessionToken(adminUserId: number): string {
   const timestamp = Date.now().toString();
-  const sig = sign(timestamp);
-  return Buffer.from(`${timestamp}.${sig}`).toString("base64url");
+  const payload = `${adminUserId}.${timestamp}`;
+  const sig = sign(payload);
+  return Buffer.from(`${payload}.${sig}`).toString("base64url");
 }
 
-export function verifySessionToken(token: string): boolean {
+export function verifySessionToken(token: string): { valid: boolean; adminUserId: number | null } {
   try {
     const decoded = Buffer.from(token, "base64url").toString("utf-8");
-    const [timestamp, sig] = decoded.split(".");
-    if (!timestamp || !sig) return false;
-    const expected = sign(timestamp);
-    if (expected.length !== sig.length) return false;
-    if (!timingSafeEqual(Buffer.from(expected), Buffer.from(sig))) return false;
+    const parts = decoded.split(".");
+    if (parts.length !== 3) return { valid: false, adminUserId: null };
+
+    const [adminId, timestamp, sig] = parts;
+    if (!adminId || !timestamp || !sig) return { valid: false, adminUserId: null };
+
+    const payload = `${adminId}.${timestamp}`;
+    const expected = sign(payload);
+    if (expected.length !== sig.length) return { valid: false, adminUserId: null };
+    if (!timingSafeEqual(Buffer.from(expected), Buffer.from(sig)))
+      return { valid: false, adminUserId: null };
+
     const age = Date.now() - Number(timestamp);
-    return age >= 0 && age < MAX_AGE * 1000;
+    if (age < 0 || age >= MAX_AGE * 1000) return { valid: false, adminUserId: null };
+
+    return { valid: true, adminUserId: Number(adminId) };
   } catch {
-    return false;
+    return { valid: false, adminUserId: null };
   }
 }
 
-export async function setAdminSession(): Promise<string> {
-  const token = createSessionToken();
+export async function setAdminSession(adminUserId: number): Promise<string> {
+  const token = createSessionToken(adminUserId);
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
@@ -53,8 +68,14 @@ export async function clearAdminSession(): Promise<void> {
 }
 
 export async function hasValidAdminSession(): Promise<boolean> {
+  const result = await getAdminSession();
+  return result !== null;
+}
+
+export async function getAdminSession(): Promise<number | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return false;
-  return verifySessionToken(token);
+  if (!token) return null;
+  const { valid, adminUserId } = verifySessionToken(token);
+  return valid ? adminUserId : null;
 }

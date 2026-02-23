@@ -4,10 +4,12 @@ import { StorefrontNav } from "@/components/storefront/StorefrontNav";
 import { Footer } from "@/components/storefront/Footer";
 import { BackgroundColorProvider } from "@/context/BackgroundColorContext";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { CartProvider } from "@/context/CartContext";
 
 export default function StorefrontLayout({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
+      <CartProvider>
       <BackgroundColorProvider>
         <div className="flex min-h-screen flex-col bg-transparent">
           <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
@@ -22,6 +24,7 @@ export default function StorefrontLayout({ children }: { children: ReactNode }) 
           <Footer />
         </div>
       </BackgroundColorProvider>
+      </CartProvider>
     </AuthProvider>
   );
 }

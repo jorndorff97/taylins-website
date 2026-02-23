@@ -17,6 +17,15 @@ type UnifiedMessage = {
   senderType?: string;
 };
 
+function stripUrlsFromMessage(message: string): string {
+  // Remove URLs (http, https, and www)
+  return message
+    .replace(/https?:\/\/[^\s]+/g, '')
+    .replace(/www\.[^\s]+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export default async function MessagesPage() {
   const userId = await getUserId();
 
@@ -83,12 +92,13 @@ export default async function MessagesPage() {
   // Transform orders into unified format
   const orderMessages: UnifiedMessage[] = orders.map((order) => {
     const lastMessage = order.messages[0];
+    const messageText = lastMessage?.body || "Order request sent";
     return {
       id: order.id,
       type: 'order' as const,
       listingTitle: order.listing.title,
       listingImage: order.listing.images[0]?.url || null,
-      lastMessage: lastMessage?.body || "Order request sent",
+      lastMessage: stripUrlsFromMessage(messageText),
       lastMessageAt: lastMessage?.createdAt || order.updatedAt,
       unreadCount: 0, // Orders don't track unread yet
       href: `/order/${order.id}`,
@@ -99,12 +109,13 @@ export default async function MessagesPage() {
   // Transform conversations into unified format
   const conversationMessages: UnifiedMessage[] = conversations.map((conv) => {
     const lastMessage = conv.messages[0];
+    const messageText = lastMessage?.body || "Inquiry started";
     return {
       id: conv.id,
       type: 'conversation' as const,
       listingTitle: conv.listing.title,
       listingImage: conv.listing.images[0]?.url || null,
-      lastMessage: lastMessage?.body || "Inquiry started",
+      lastMessage: stripUrlsFromMessage(messageText),
       lastMessageAt: conv.lastMessageAt,
       unreadCount: conv.unreadByUser,
       href: `/messages/${conv.id}`,
@@ -201,7 +212,7 @@ export default async function MessagesPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-slate-600 truncate mt-1 leading-relaxed pr-4">
+                  <p className="text-sm text-slate-600 mt-1 leading-relaxed pr-4 line-clamp-2">
                     <span className="font-semibold text-slate-800">
                       {msg.senderType === "BUYER" ? "You: " : "Seller: "}
                     </span>

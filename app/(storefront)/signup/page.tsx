@@ -1,20 +1,81 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 
 export default function SignupPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const redirect = searchParams.get("redirect") || "/browse";
   const error = searchParams.get("error");
 
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleGoogleSignIn = () => {
     setGoogleLoading(true);
     signIn("google", { callbackUrl: redirect });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError("");
+
+    if (password.length < 8) {
+      setFormError("Password must be at least 8 characters");
+      return;
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+      setFormError("Password must contain uppercase, lowercase, and a number");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setFormError("Passwords do not match");
+      return;
+    }
+
+    setFormLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setFormError(data.error || "Something went wrong");
+        setFormLoading(false);
+        return;
+      }
+
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setFormError("Account created but could not sign in. Please log in manually.");
+        setFormLoading(false);
+        return;
+      }
+
+      router.push(redirect);
+    } catch {
+      setFormError("Something went wrong. Please try again.");
+      setFormLoading(false);
+    }
   };
 
   return (
@@ -39,12 +100,13 @@ export default function SignupPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && (
+          {(error || formError) && (
             <div className="mb-6 rounded-md bg-red-50 p-4">
               <p className="text-sm text-red-800">
-                {error === "OAuthAccountNotLinked"
-                  ? "This email is already associated with another account."
-                  : "An error occurred during sign up. Please try again."}
+                {formError ||
+                  (error === "OAuthAccountNotLinked"
+                    ? "This email is already associated with another account."
+                    : "An error occurred during sign up. Please try again.")}
               </p>
             </div>
           )}
@@ -52,7 +114,7 @@ export default function SignupPage() {
           {/* Google Sign Up */}
           <button
             onClick={handleGoogleSignIn}
-            disabled={googleLoading}
+            disabled={googleLoading || formLoading}
             className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white py-3 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -83,11 +145,85 @@ export default function SignupPage() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="bg-white px-2 text-gray-500">
-                  Quick and secure sign up
+                  Or sign up with email
                 </span>
               </div>
             </div>
           </div>
+
+          {/* Email/Password Sign Up */}
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                Name (optional)
+              </label>
+              <input
+                id="name"
+                type="text"
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm"
+                placeholder="Your name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm"
+                placeholder="Min 8 chars, upper/lower/number"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Confirm password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm"
+                placeholder="Confirm your password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={formLoading || googleLoading}
+              className="flex w-full justify-center rounded-md bg-slate-900 py-3 px-4 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {formLoading ? "Creating account..." : "Create account"}
+            </button>
+          </form>
 
           <p className="mt-6 text-center text-xs text-gray-500">
             By signing up, you agree to our terms of service and privacy policy.

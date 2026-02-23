@@ -1,20 +1,8 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { OrderMobileCard } from "@/components/admin/orders/OrderMobileCard";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
+import { OrdersListClient } from "@/components/admin/orders/OrdersListClient";
 
 export const dynamic = "force-dynamic";
-
-const STATUS_VARIANT: Record<string, "default" | "success" | "warning" | "muted"> = {
-  PENDING: "warning",
-  CONFIRMED: "default",
-  PAID: "success",
-  SHIPPED: "success",
-  CANCELLED: "muted",
-};
 
 export default async function AdminOrdersPage() {
   let orders: any[] = [];
@@ -22,122 +10,58 @@ export default async function AdminOrdersPage() {
   try {
     orders = await prisma.order.findMany({
       include: {
-        user: true,
-        listing: true,
+        user: { select: { email: true, name: true } },
+        listing: {
+          select: {
+            id: true,
+            title: true,
+            costPerPair: true,
+            images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
+          },
+        },
+        items: { select: { sizeLabel: true, quantity: true } },
       },
       orderBy: { createdAt: "desc" },
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    // orders will remain empty array, showing "No orders yet" message
   }
 
-  // Serialize orders for client components (convert Decimal to number)
   const serializedOrders = orders.map((order) => ({
-    ...order,
+    id: order.id,
+    status: order.status,
+    totalPairs: order.totalPairs,
     totalAmount: Number(order.totalAmount),
+    shippingCost: order.shippingCost ? Number(order.shippingCost) : null,
+    supplierCost: order.supplierCost ? Number(order.supplierCost) : null,
+    trackingNumber: order.trackingNumber,
+    trackingCarrier: order.trackingCarrier,
+    createdAt: order.createdAt.toISOString(),
+    paidAt: order.paidAt?.toISOString() ?? null,
+    fulfilledAt: order.fulfilledAt?.toISOString() ?? null,
+    deliveredAt: order.deliveredAt?.toISOString() ?? null,
+    user: order.user,
+    listing: {
+      id: order.listing.id,
+      title: order.listing.title,
+      costPerPair: order.listing.costPerPair ? Number(order.listing.costPerPair) : null,
+      images: order.listing.images,
+    },
+    items: order.items,
   }));
 
   return (
     <>
       <AdminHeader title="Orders" />
       <main className="flex-1 bg-background px-4 pb-10 pt-6 md:px-6">
-        <div className="mx-auto max-w-6xl space-y-4">
+        <div className="mx-auto max-w-7xl space-y-4">
           <div>
-            <h2 className="text-sm font-medium text-slate-700">Order requests</h2>
+            <h2 className="text-sm font-medium text-slate-700">Order Management</h2>
             <p className="text-xs text-slate-500">
-              View and respond to buyer order requests.
+              Track orders, fulfillment, and profit across all listings.
             </p>
           </div>
-
-          {/* Mobile Card Grid */}
-          <div className="block space-y-4 md:hidden">
-            {serializedOrders.length === 0 ? (
-              <Card className="p-6">
-                <div className="text-center text-sm text-slate-500">
-                  No orders yet.
-                </div>
-              </Card>
-            ) : (
-              serializedOrders.map((order) => (
-                <OrderMobileCard
-                  key={order.id}
-                  order={order}
-                  statusVariant={STATUS_VARIANT}
-                />
-              ))
-            )}
-          </div>
-
-          {/* Desktop Table */}
-          <Card className="hidden p-0 md:block">
-            <Table>
-              <THead>
-                <TR>
-                  <TH>Order</TH>
-                  <TH>Buyer</TH>
-                  <TH>Listing</TH>
-                  <TH>Pairs</TH>
-                  <TH>Total</TH>
-                  <TH>Status</TH>
-                  <TH className="text-right">Actions</TH>
-                </TR>
-              </THead>
-              <TBody>
-                {serializedOrders.length === 0 ? (
-                  <TR>
-                    <TD colSpan={7}>
-                      <div className="py-8 text-center text-sm text-slate-500">
-                        No orders yet.
-                      </div>
-                    </TD>
-                  </TR>
-                ) : (
-                  serializedOrders.map((order) => (
-                    <TR key={order.id}>
-                      <TD>
-                        <span className="font-medium text-slate-900">#{order.id}</span>
-                        <span className="ml-2 text-xs text-slate-500">
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </span>
-                      </TD>
-                      <TD>
-                        <span className="text-slate-700">{order.user.email}</span>
-                        {order.user.name && (
-                          <span className="block text-xs text-slate-500">
-                            {order.user.name}
-                          </span>
-                        )}
-                      </TD>
-                      <TD>
-                        <Link
-                          href={`/admin/listings/${order.listingId}/edit`}
-                          className="text-slate-700 hover:text-slate-900 hover:underline"
-                        >
-                          {order.listing.title}
-                        </Link>
-                      </TD>
-                      <TD>{order.totalPairs}</TD>
-                      <TD>${Number(order.totalAmount).toLocaleString()}</TD>
-                      <TD>
-                        <Badge variant={STATUS_VARIANT[order.status] ?? "default"}>
-                          {order.status}
-                        </Badge>
-                      </TD>
-                      <TD className="text-right">
-                        <Link
-                          href={`/admin/orders/${order.id}`}
-                          className="text-sm font-medium text-slate-700 hover:text-slate-900"
-                        >
-                          View
-                        </Link>
-                      </TD>
-                    </TR>
-                  ))
-                )}
-              </TBody>
-            </Table>
-          </Card>
+          <OrdersListClient orders={serializedOrders} />
         </div>
       </main>
     </>

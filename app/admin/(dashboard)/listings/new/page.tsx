@@ -24,8 +24,9 @@ export default function NewListingPage() {
     const sellerNotes = String(formData.get("sellerNotes") ?? "").trim() || null;
     const stockXLink = String(formData.get("stockXLink") ?? "").trim() || null;
     const productSKU = String(formData.get("productSKU") ?? "").trim() || null;
-    const manualStockXPrice = formData.get("manualStockXPrice") 
-      ? Number(formData.get("manualStockXPrice")) 
+    const manualStockXPriceRaw = formData.get("manualStockXPrice");
+    const manualStockXPrice = manualStockXPriceRaw 
+      ? Math.round(Number(manualStockXPriceRaw) * 100) / 100
       : null;
     const discordLink = String(formData.get("discordLink") ?? "").trim() || null;
     const instagramLink = String(formData.get("instagramLink") ?? "").trim() || null;
@@ -87,8 +88,9 @@ export default function NewListingPage() {
     if (productSKU && !manualStockXPrice) {
       console.log(`[STOCKX FETCH] Attempting to fetch price for SKU: ${productSKU}`);
       try {
-        fetchedStockXPrice = await fetchStockXPrice(productSKU);
-        if (fetchedStockXPrice) {
+        const apiPrice = await fetchStockXPrice(productSKU);
+        if (apiPrice) {
+          fetchedStockXPrice = Math.round(apiPrice * 100) / 100;
           stockXPriceTimestamp = new Date();
           console.log(`[STOCKX FETCH] ✓ Successfully fetched: $${fetchedStockXPrice}`);
         } else {
@@ -136,6 +138,7 @@ export default function NewListingPage() {
           stockXLink,
           productSKU,
           stockXPrice: finalStockXPrice,
+          stockXPriceManual: !!manualStockXPrice,
           stockXPriceUpdatedAt: manualStockXPrice ? new Date() : stockXPriceTimestamp,
           discordLink,
           instagramLink,
@@ -155,20 +158,25 @@ export default function NewListingPage() {
 
       // Sizes
       if (inventoryMode === InventoryMode.SIZE_RUN) {
-        const sizes: { sizeLabel: string; quantity: number; soldOut: boolean }[] =
+        const sizes: { sizeLabel: string; quantity: number; minOrder: number | null; soldOut: boolean }[] =
           [];
 
-        for (let i = 0; i < 12; i++) {
+        // Support up to 50 sizes (dynamic adding)
+        for (let i = 0; i < 50; i++) {
           const sizeLabel = formData.get(`sizes[${i}].sizeLabel`);
           const quantityRaw = formData.get(`sizes[${i}].quantity`);
+          const minOrderRaw = formData.get(`sizes[${i}].minOrder`);
           const soldOutRaw = formData.get(`sizes[${i}].soldOut`);
 
           if (!sizeLabel) continue;
           const label = String(sizeLabel);
           const quantity = Number(quantityRaw ?? 0);
+          // Store minOrder as null if it matches the global MOQ (to inherit), otherwise store the override
+          const minOrderValue = minOrderRaw ? Number(minOrderRaw) : null;
+          const minOrder = minOrderValue === moq ? null : minOrderValue;
           const soldOut = soldOutRaw === "on";
 
-          sizes.push({ sizeLabel: label, quantity, soldOut });
+          sizes.push({ sizeLabel: label, quantity, minOrder, soldOut });
         }
 
         if (sizes.length) {
@@ -229,13 +237,30 @@ export default function NewListingPage() {
         }
       }
 
-      console.log(`[LISTING CREATE] ✓ Listing created successfully:`, {
-        id: created.id,
-        title: created.title,
-        flatPricePerPair: created.flatPricePerPair,
-        stockXPrice: created.stockXPrice,
-        willShowOnHero: !!(created.stockXPrice && created.flatPricePerPair && imageUrls.length > 0),
-      });
+      // Shipping Options
+      const shippingOptions: { label: string; price: number; enabled: boolean; sortOrder: number }[] = [];
+      for (let i = 0; i < 20; i++) {
+        const label = formData.get(`shipping[${i}].label`);
+        const priceRaw = formData.get(`shipping[${i}].price`);
+        const enabledRaw = formData.get(`shipping[${i}].enabled`);
+        if (!label) continue;
+        const labelStr = String(label).trim();
+        if (!labelStr) continue;
+        shippingOptions.push({
+          label: labelStr,
+          price: priceRaw ? Number(priceRaw) : 0,
+          enabled: enabledRaw === "true",
+          sortOrder: i,
+        });
+      }
+      if (shippingOptions.length > 0) {
+        await tx.shippingOption.createMany({
+          data: shippingOptions.map((opt) => ({
+            listingId: created.id,
+            ...opt,
+          })),
+        });
+      }
 
       return created;
     });

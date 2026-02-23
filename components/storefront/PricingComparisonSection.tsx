@@ -30,7 +30,7 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
   }
 
   const currentProduct = products[selectedProduct];
-  const savings = currentProduct.savings;
+  const savings = Math.round(currentProduct.savings * 100) / 100;
   const savingsPercent = Math.round(currentProduct.savingsPercent);
 
   // Auto-rotate products
@@ -56,10 +56,10 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
     const timer = setInterval(() => {
       current += increment;
       if (current >= savings) {
-        setCounter(savings);
+        setCounter(Math.round(savings * 100) / 100);
         clearInterval(timer);
       } else {
-        setCounter(Math.floor(current));
+        setCounter(Math.round(current * 100) / 100);
       }
     }, duration / steps);
 
@@ -143,7 +143,7 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
                 >
                   <div className="text-sm font-medium text-slate-500 mb-2">StockX Price</div>
                   <div className="text-3xl font-bold text-slate-400 line-through">
-                    ${currentProduct.stockXPrice}
+                    ${currentProduct.stockXPrice.toFixed(2)}
                   </div>
                 </motion.div>
 
@@ -157,7 +157,7 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
                 >
                   <div className="text-sm font-medium text-emerald-600 mb-2">Our Price</div>
                   <div className="text-3xl font-bold text-emerald-600">
-                    ${currentProduct.ourPrice}
+                    ${currentProduct.ourPrice.toFixed(2)}
                   </div>
                 </motion.div>
               </div>
@@ -176,7 +176,7 @@ export function PricingComparisonSection({ products }: PricingComparisonSectionP
                     key={counter}
                     className="text-5xl font-bold text-emerald-600"
                   >
-                    ${counter}
+                    ${counter.toFixed(2)}
                   </motion.span>
                   <span className="text-2xl font-semibold text-emerald-600/70">
                     ({savingsPercent}% off)

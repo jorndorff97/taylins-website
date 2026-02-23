@@ -1,20 +1,45 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const redirect = searchParams.get("redirect") || "/browse";
   const error = searchParams.get("error");
 
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleGoogleSignIn = () => {
     setGoogleLoading(true);
     signIn("google", { callbackUrl: redirect });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError("");
+    setFormLoading(true);
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      setFormError("Invalid email or password");
+      setFormLoading(false);
+      return;
+    }
+
+    router.push(redirect);
   };
 
   return (
@@ -27,7 +52,7 @@ export default function LoginPage() {
           Log in to your account
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href={`/signup?redirect=${encodeURIComponent(redirect)}`}
             className="font-medium text-slate-900 hover:text-slate-700"
@@ -39,12 +64,15 @@ export default function LoginPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && (
+          {(error || formError) && (
             <div className="mb-6 rounded-md bg-red-50 p-4">
               <p className="text-sm text-red-800">
-                {error === "OAuthAccountNotLinked"
-                  ? "This email is already associated with another account."
-                  : "An error occurred during sign in. Please try again."}
+                {formError ||
+                  (error === "OAuthAccountNotLinked"
+                    ? "This email is already associated with another account."
+                    : error === "CredentialsSignin"
+                    ? "Invalid email or password."
+                    : "An error occurred during sign in. Please try again.")}
               </p>
             </div>
           )}
@@ -52,7 +80,7 @@ export default function LoginPage() {
           {/* Google Sign In */}
           <button
             onClick={handleGoogleSignIn}
-            disabled={googleLoading}
+            disabled={googleLoading || formLoading}
             className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white py-3 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -83,11 +111,54 @@ export default function LoginPage() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="bg-white px-2 text-gray-500">
-                  Secure sign in powered by Google
+                  Or sign in with email
                 </span>
               </div>
             </div>
           </div>
+
+          {/* Email/Password Sign In */}
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm"
+                placeholder="Your password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={formLoading || googleLoading}
+              className="flex w-full justify-center rounded-md bg-slate-900 py-3 px-4 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {formLoading ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
         </div>
       </div>
     </div>

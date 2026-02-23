@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import clsx from "clsx";
 import { useAdminLayout } from "./AdminLayoutClient";
 
@@ -9,11 +10,29 @@ const navItems = [
   { href: "/admin/listings", label: "Listings" },
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/messages", label: "Messages" },
+  { href: "/admin/settings", label: "Settings" },
 ];
 
 export function AdminSidebar() {
   const pathname = usePathname();
   const { mobileMenuOpen, setMobileMenuOpen } = useAdminLayout();
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    async function fetchUnreadCount() {
+      try {
+        const res = await fetch("/api/admin/messages/unread-count");
+        const data = await res.json();
+        setUnreadMessages(data.count || 0);
+      } catch (error) {
+        console.error("Failed to fetch unread count:", error);
+      }
+    }
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -27,6 +46,7 @@ export function AdminSidebar() {
         <nav className="flex-1 space-y-1 px-2 py-4 text-sm">
           {navItems.map((item) => {
             const active = pathname?.startsWith(item.href);
+            const showBadge = item.label === "Messages" && unreadMessages > 0;
             return (
               <Link
                 key={item.href}
@@ -38,7 +58,17 @@ export function AdminSidebar() {
                     : "text-slate-700 hover:bg-slate-100",
                 )}
               >
-                <span>{item.label}</span>
+                <span className="flex-1">{item.label}</span>
+                {showBadge && (
+                  <span className={clsx(
+                    "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold",
+                    active 
+                      ? "bg-white text-slate-900" 
+                      : "bg-red-500 text-white"
+                  )}>
+                    {unreadMessages > 99 ? "99+" : unreadMessages}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -89,6 +119,7 @@ export function AdminSidebar() {
         <nav className="flex-1 space-y-1 px-2 py-4 text-sm">
           {navItems.map((item) => {
             const active = pathname?.startsWith(item.href);
+            const showBadge = item.label === "Messages" && unreadMessages > 0;
             return (
               <Link
                 key={item.href}
@@ -101,7 +132,17 @@ export function AdminSidebar() {
                     : "text-slate-700 hover:bg-slate-100",
                 )}
               >
-                <span>{item.label}</span>
+                <span className="flex-1">{item.label}</span>
+                {showBadge && (
+                  <span className={clsx(
+                    "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold",
+                    active 
+                      ? "bg-white text-slate-900" 
+                      : "bg-red-500 text-white"
+                  )}>
+                    {unreadMessages > 99 ? "99+" : unreadMessages}
+                  </span>
+                )}
               </Link>
             );
           })}

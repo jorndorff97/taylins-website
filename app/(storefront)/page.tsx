@@ -3,13 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { STOREFRONT_CATEGORIES, getActiveCategories } from "@/lib/categories";
 import { HeroSection } from "@/components/storefront/HeroSection";
 import { AuthenticitySection } from "@/components/storefront/AuthenticitySection";
-import { PricingComparisonSection } from "@/components/storefront/PricingComparisonSection";
+import { SocialProofSection } from "@/components/storefront/SocialProofSection";
 import { TrendingTabs } from "@/components/storefront/TrendingTabs";
 import { ScrollReveal } from "@/components/effects/ScrollReveal";
 import { RedWaveBackground } from "@/components/effects/RedWaveBackground";
 import { ListingStatus } from "@prisma/client";
 import { getTotalPairs } from "@/lib/inventory";
-import { motion } from "framer-motion";
 export default async function HomePage() {
   let activeCategoryLabels: string[];
   let serializedListings: Awaited<ReturnType<typeof loadListings>>["serializedListings"];
@@ -17,8 +16,6 @@ export default async function HomePage() {
   let stats: { totalPairs: number; activeListings: number; avgSavings: number };
   let topDeals: { id: number; title: string; brand: string; imageUrl: string; ourPrice: number; stockXPrice: number; savingsPercent: number; savingsDollar: number }[];
   let sortedBestDeals: Awaited<ReturnType<typeof loadListings>>["sortedBestDeals"];
-  let pricingData: { id: number; product: string; stockXPrice: number; ourPrice: number; savings: number; savingsPercent: number; imageUrl: string | undefined }[];
-
   async function loadListings() {
     const activeCategoryLabelsInner = await getActiveCategories();
 
@@ -100,34 +97,33 @@ export default async function HomePage() {
         )
       : 15;
 
-    const allListingsWithPrices = await prisma.listing.findMany({
-      where: {
-        status: ListingStatus.ACTIVE,
-        stockXPrice: { not: null },
-        flatPricePerPair: { not: null },
-      },
-      include: {
-        images: { orderBy: { sortOrder: "asc" } },
-      },
-      take: 100,
-    });
-
-    const topDealsInner = allListingsWithPrices
-      .map(l => ({
-        id: l.id,
-        title: l.title,
-        brand: l.brand || "Unknown",
-        imageUrl: l.images[0]?.url || "",
-        ourPrice: Number(l.flatPricePerPair),
-        stockXPrice: Number(l.stockXPrice),
-        savingsPercent: Math.round(
-          ((Number(l.stockXPrice) - Number(l.flatPricePerPair)) / Number(l.stockXPrice)) * 100
-        ),
-        savingsDollar: Number(l.stockXPrice) - Number(l.flatPricePerPair),
-      }))
-      .filter(d => d.savingsPercent > 0 && d.imageUrl)
-      .sort((a, b) => b.savingsPercent - a.savingsPercent)
-      .slice(0, 6);
+    // Build top deals from serialized listings — works with flat or tier pricing
+    // Filter out deals where StockX price is lower than our price (no savings to show)
+    const topDealsInner = serializedListingsInner
+      .filter(l => l.images.length > 0)
+      .slice(0, 6)
+      .map(l => {
+        const ourPrice = l.flatPricePerPair
+          ?? (l.tierPrices.length > 0 ? Number(l.tierPrices[0].pricePerPair) : 0);
+        const stockX = l.stockXPrice ?? 0;
+        const savingsDollar = stockX > 0 && ourPrice > 0
+          ? Math.round((stockX - ourPrice) * 100) / 100
+          : 0;
+        const savingsPercent = stockX > 0 && ourPrice > 0
+          ? Math.round(((stockX - ourPrice) / stockX) * 100)
+          : 0;
+        return {
+          id: l.id,
+          title: l.title,
+          brand: l.brand || "Unknown",
+          imageUrl: l.images[0].url,
+          ourPrice,
+          stockXPrice: stockX,
+          savingsPercent: Math.max(savingsPercent, 0),
+          savingsDollar: Math.max(savingsDollar, 0),
+        };
+      })
+      .filter(deal => deal.stockXPrice === 0 || deal.stockXPrice >= deal.ourPrice);
 
     const bestDealsListings = await prisma.listing.findMany({
       where: {
@@ -156,37 +152,6 @@ export default async function HomePage() {
         })),
       }));
 
-    const stockXListings = await prisma.listing.findMany({
-      where: {
-        status: ListingStatus.ACTIVE,
-        stockXPrice: { not: null },
-        flatPricePerPair: { not: null }
-      },
-      include: {
-        images: { orderBy: { sortOrder: "asc" } }
-      },
-      take: 10,
-    });
-
-    const pricingDataInner = stockXListings
-      .map(listing => {
-        const stockXPrice = Number(listing.stockXPrice);
-        const ourPrice = Number(listing.flatPricePerPair);
-        const savings = stockXPrice - ourPrice;
-        const savingsPercent = (savings / stockXPrice) * 100;
-        return {
-          id: listing.id,
-          product: listing.title,
-          stockXPrice,
-          ourPrice,
-          savings,
-          savingsPercent,
-          imageUrl: listing.images[0]?.url
-        };
-      })
-      .sort((a, b) => b.savingsPercent - a.savingsPercent)
-      .slice(0, 3);
-
     return {
       activeCategoryLabels: activeCategoryLabelsInner,
       serializedListings: serializedListingsInner,
@@ -194,7 +159,6 @@ export default async function HomePage() {
       stats: { totalPairs, activeListings: allActiveListings.length, avgSavings },
       topDeals: topDealsInner,
       sortedBestDeals: sortedBestDealsInner,
-      pricingData: pricingDataInner,
     };
   }
 
@@ -206,7 +170,6 @@ export default async function HomePage() {
     stats = data.stats;
     topDeals = data.topDeals;
     sortedBestDeals = data.sortedBestDeals;
-    pricingData = data.pricingData;
   } catch {
     activeCategoryLabels = [];
     serializedListings = [];
@@ -214,7 +177,6 @@ export default async function HomePage() {
     stats = { totalPairs: 0, activeListings: 0, avgSavings: 15 };
     topDeals = [];
     sortedBestDeals = [];
-    pricingData = [];
   }
 
   return (
@@ -228,7 +190,7 @@ export default async function HomePage() {
 
         {/* Trending Now Section - Modern Glassmorphism Style */}
         <ScrollReveal>
-          <section className="relative overflow-hidden border-t border-neutral-200/50 bg-white py-20 sm:py-24 -mt-32 pt-40">
+          <section className="relative overflow-hidden border-t border-neutral-200/50 bg-white py-20 sm:py-24">
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
               <TrendingTabs 
                 trendingListings={serializedListings} 
@@ -243,12 +205,10 @@ export default async function HomePage() {
           <AuthenticitySection />
         </ScrollReveal>
 
-        {/* StockX Pricing Comparison - Only show if there are listings with StockX prices */}
-        {pricingData.length > 0 && (
-          <ScrollReveal>
-            <PricingComparisonSection products={pricingData} />
-          </ScrollReveal>
-        )}
+        {/* Social Proof & Testimonials */}
+        <ScrollReveal>
+          <SocialProofSection />
+        </ScrollReveal>
 
         {/* Browse by Categories - Only show if there's more than 1 category */}
         {activeCategoryLabels.length > 1 && (

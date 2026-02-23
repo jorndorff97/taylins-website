@@ -3,26 +3,11 @@
 import { SiNike, SiAdidas, SiJordan, SiPuma, SiNewbalance, SiReebok } from 'react-icons/si';
 
 const brands = [
-  {
-    name: "Nike",
-    icon: <SiNike className="w-5 h-5" />,
-  },
-  {
-    name: "Adidas",
-    icon: <SiAdidas className="w-5 h-5" />,
-  },
-  {
-    name: "Jordan",
-    icon: <SiJordan className="w-5 h-5" />,
-  },
-  {
-    name: "Puma",
-    icon: <SiPuma className="w-5 h-5" />,
-  },
-  {
-    name: "New Balance",
-    icon: <SiNewbalance className="w-5 h-5" />,
-  },
+  { name: "Nike", icon: <SiNike className="w-5 h-5" /> },
+  { name: "Adidas", icon: <SiAdidas className="w-5 h-5" /> },
+  { name: "Jordan", icon: <SiJordan className="w-5 h-5" /> },
+  { name: "Puma", icon: <SiPuma className="w-5 h-5" /> },
+  { name: "New Balance", icon: <SiNewbalance className="w-5 h-5" /> },
   {
     name: "Converse",
     icon: (
@@ -40,33 +25,34 @@ const brands = [
       </svg>
     ),
   },
-  {
-    name: "Reebok",
-    icon: <SiReebok className="w-5 h-5" />,
-  },
+  { name: "Reebok", icon: <SiReebok className="w-5 h-5" /> },
 ];
 
-export function BrandCarousel() {
-  // Duplicate brands for infinite loop effect
-  const allBrands = [...brands, ...brands];
-
+function BrandItem({ name, icon }: { name: string; icon: React.ReactNode }) {
   return (
-    <div className="relative w-full h-24 overflow-hidden">
-      {/* Scrolling container */}
-      <div className="flex flex-row gap-3 animate-scroll-horizontal py-3">
-        {allBrands.map((brand, index) => (
-          <div
-            key={`${brand.name}-${index}`}
-            className="flex items-center gap-2 flex-shrink-0"
-          >
-            <div className="text-neutral-700">
-              {brand.icon}
-            </div>
-            <span className="text-sm font-medium text-neutral-800">
-              {brand.name}
-            </span>
-          </div>
-        ))}
+    <div className="flex items-center gap-2 flex-shrink-0 px-4">
+      <div className="text-neutral-700">{icon}</div>
+      <span className="text-sm font-medium text-neutral-800 whitespace-nowrap">{name}</span>
+    </div>
+  );
+}
+
+export function BrandCarousel() {
+  return (
+    <div className="relative w-full h-16 overflow-hidden flex items-center">
+      <div className="flex animate-marquee">
+        {/* First set */}
+        <div className="flex shrink-0">
+          {brands.map((brand, i) => (
+            <BrandItem key={`a-${i}`} name={brand.name} icon={brand.icon} />
+          ))}
+        </div>
+        {/* Second set (duplicate for seamless loop) */}
+        <div className="flex shrink-0">
+          {brands.map((brand, i) => (
+            <BrandItem key={`b-${i}`} name={brand.name} icon={brand.icon} />
+          ))}
+        </div>
       </div>
     </div>
   );

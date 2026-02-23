@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { listingId, quantity, items } = body;
+    const { listingId, quantity, items, shippingOptionId } = body;
 
     if (!listingId) {
       return NextResponse.json({ error: "Missing listingId" }, { status: 400 });
@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
         images: { orderBy: { sortOrder: "asc" } },
         sizes: true,
         tierPrices: { orderBy: { minQty: "asc" } },
+        shippingOptions: true,
       },
     });
 
@@ -121,14 +122,35 @@ export async function POST(req: NextRequest) {
       totalPairs,
     });
 
+    // Resolve shipping option
+    let shippingCost = 0;
+    let shippingLabel: string | null = null;
+    const enabledShippingOptions = listing.shippingOptions.filter(o => o.enabled);
+
+    if (enabledShippingOptions.length > 0) {
+      if (!shippingOptionId) {
+        return NextResponse.json({ error: "Shipping option required" }, { status: 400 });
+      }
+      const selectedShipping = enabledShippingOptions.find(o => o.id === Number(shippingOptionId));
+      if (!selectedShipping) {
+        return NextResponse.json({ error: "Invalid shipping option" }, { status: 400 });
+      }
+      shippingCost = Number(selectedShipping.price);
+      shippingLabel = selectedShipping.label;
+    }
+
+    const finalTotal = orderTotal.totalAmount + shippingCost;
+
     // Create the order
     const order = await prisma.order.create({
       data: {
         userId,
         listingId: listing.id,
-        status: OrderStatus.CONFIRMED, // Instant buy orders start as CONFIRMED
+        status: OrderStatus.CONFIRMED,
         totalPairs: orderTotal.totalPairs,
-        totalAmount: orderTotal.totalAmount,
+        totalAmount: finalTotal,
+        shippingCost: shippingCost > 0 ? shippingCost : null,
+        shippingLabel,
         items: {
           create: orderItems,
         },

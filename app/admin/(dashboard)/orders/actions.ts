@@ -3,8 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { SenderType } from "@prisma/client";
-import { notifyNewMessageToUser, notifyPaymentLinkSent, notifyOrderStatusChange } from "@/lib/notifications";
+import { SenderType, OrderStatus } from "@prisma/client";
+import {
+  notifyNewMessageToUser,
+  notifyPaymentLinkSent,
+  notifyOrderStatusChange,
+  notifyOrderProcessing,
+  notifyTrackingAdded,
+} from "@/lib/notifications";
+
+const CARRIER_TRACKING_URLS: Record<string, (num: string) => string> = {
+  USPS: (n) => `https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}`,
+  UPS: (n) => `https://www.ups.com/track?tracknum=${n}`,
+  FedEx: (n) => `https://www.fedex.com/fedextrack/?trknbr=${n}`,
+  DHL: (n) => `https://www.dhl.com/us-en/home/tracking.html?tracking-id=${n}`,
+};
 
 export async function replyToOrder(formData: FormData) {
   const orderId = Number(formData.get("orderId"));
@@ -47,7 +60,7 @@ export async function updateOrderStatus(formData: FormData) {
   const status = String(formData.get("status"));
   if (!orderId || !status) return;
 
-  const valid = ["PENDING", "CONFIRMED", "PAID", "SHIPPED", "CANCELLED"];
+  const valid = ["PENDING", "CONFIRMED", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"];
   if (!valid.includes(status)) return;
 
   // Get order details for notification
@@ -174,4 +187,181 @@ export async function createCustomPaymentLink(formData: FormData) {
     console.error("Error creating custom payment link:", error);
     throw error;
   }
+}
+
+export async function forwardToSupplier(formData: FormData) {
+  const orderId = Number(formData.get("orderId"));
+  const supplierOrderId = String(formData.get("supplierOrderId") ?? "").trim();
+  if (!orderId) return;
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { user: true, listing: true },
+  });
+  if (!order) return;
+
+  const supplierCost = order.listing.costPerPair
+    ? Number(order.listing.costPerPair) * order.totalPairs
+    : null;
+
+  await prisma.$transaction([
+    prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: OrderStatus.PROCESSING,
+        supplierOrderId: supplierOrderId || null,
+        fulfilledAt: new Date(),
+        supplierCost: supplierCost,
+      },
+    }),
+    prisma.orderActivity.create({
+      data: {
+        orderId,
+        type: "supplier_forwarded",
+        description: supplierOrderId
+          ? `Order forwarded to supplier (Ref: ${supplierOrderId})`
+          : "Order forwarded to supplier",
+        metadata: { supplierOrderId, supplierCost },
+      },
+    }),
+  ]);
+
+  await notifyOrderProcessing({
+    userId: order.userId,
+    orderId,
+    listingTitle: order.listing.title,
+  });
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/orders");
+}
+
+export async function addTracking(formData: FormData) {
+  const orderId = Number(formData.get("orderId"));
+  const trackingNumber = String(formData.get("trackingNumber") ?? "").trim();
+  const trackingCarrier = String(formData.get("trackingCarrier") ?? "").trim();
+  const estimatedDelivery = formData.get("estimatedDelivery")
+    ? new Date(String(formData.get("estimatedDelivery")))
+    : null;
+
+  if (!orderId || !trackingNumber || !trackingCarrier) return;
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { user: true, listing: true },
+  });
+  if (!order) return;
+
+  const trackingUrl =
+    CARRIER_TRACKING_URLS[trackingCarrier]?.(trackingNumber) ?? null;
+
+  await prisma.$transaction([
+    prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: OrderStatus.SHIPPED,
+        trackingNumber,
+        trackingCarrier,
+        trackingUrl,
+        estimatedDelivery,
+      },
+    }),
+    prisma.orderActivity.create({
+      data: {
+        orderId,
+        type: "tracking_added",
+        description: `Tracking added: ${trackingCarrier} ${trackingNumber}`,
+        metadata: { trackingNumber, trackingCarrier, trackingUrl },
+      },
+    }),
+  ]);
+
+  await notifyTrackingAdded({
+    userId: order.userId,
+    orderId,
+    listingTitle: order.listing.title,
+    trackingNumber,
+    trackingCarrier,
+    trackingUrl: trackingUrl ?? undefined,
+  });
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/orders");
+}
+
+export async function markDelivered(formData: FormData) {
+  const orderId = Number(formData.get("orderId"));
+  if (!orderId) return;
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { user: true, listing: true },
+  });
+  if (!order) return;
+
+  await prisma.$transaction([
+    prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: OrderStatus.DELIVERED,
+        deliveredAt: new Date(),
+      },
+    }),
+    prisma.orderActivity.create({
+      data: {
+        orderId,
+        type: "status_change",
+        description: "Order marked as delivered",
+      },
+    }),
+  ]);
+
+  await notifyOrderStatusChange({
+    userId: order.userId,
+    orderId,
+    listingTitle: order.listing.title,
+    newStatus: "DELIVERED",
+  });
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/orders");
+}
+
+export async function addOrderNote(formData: FormData) {
+  const orderId = Number(formData.get("orderId"));
+  const note = String(formData.get("note") ?? "").trim();
+  if (!orderId || !note) return;
+
+  await prisma.orderActivity.create({
+    data: {
+      orderId,
+      type: "note_added",
+      description: note,
+    },
+  });
+
+  revalidatePath(`/admin/orders/${orderId}`);
+}
+
+export async function updateSupplierCost(formData: FormData) {
+  const orderId = Number(formData.get("orderId"));
+  const supplierCost = Number(formData.get("supplierCost"));
+  if (!orderId || isNaN(supplierCost)) return;
+
+  await prisma.$transaction([
+    prisma.order.update({
+      where: { id: orderId },
+      data: { supplierCost },
+    }),
+    prisma.orderActivity.create({
+      data: {
+        orderId,
+        type: "cost_updated",
+        description: `Supplier cost updated to $${supplierCost.toFixed(2)}`,
+        metadata: { supplierCost },
+      },
+    }),
+  ]);
+
+  revalidatePath(`/admin/orders/${orderId}`);
 }

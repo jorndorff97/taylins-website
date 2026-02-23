@@ -9,66 +9,76 @@ datasource db {
 }
 
 model AdminUser {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
+  id        Int            @id @default(autoincrement())
+  email     String         @unique
   password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  passkeys  AdminPasskey[]
+}
+
+model AdminPasskey {
+  id                  String    @id @default(cuid())
+  adminUserId         Int
+  credentialId        String    @unique
+  credentialPublicKey Bytes
+  counter             BigInt    @default(0)
+  transports          String[]
+  deviceName          String?
+  createdAt           DateTime  @default(now())
+  lastUsedAt          DateTime?
+  admin               AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
 }
 
 model Listing {
-  id             Int               @id @default(autoincrement())
-  title          String
-  brand          String?           // Brand name (Nike, Adidas, Jordan, etc.)
-  category       String
-  status         ListingStatus     @default(DRAFT)
-  moq            Int
-  
-  // Phase 1: New pricing fields
-  costPerPair      Decimal?        // What admin paid supplier
-  basePricePerPair Decimal?        // Reference wholesale price
-  maxOrderQty      Int?            // Maximum pairs per order (null = unlimited)
-  
-  inventoryMode  InventoryMode     @default(SIZE_RUN)
-  pricingMode    PricingMode       @default(FLAT)
-  flatPricePerPair Decimal?
-  totalPairs     Int?
-  instantBuy     Boolean           @default(false)
-  sellerNotes   String?
-  stockXLink     String?
-  productSKU     String?
-  stockXPrice    Decimal?
+  id                   Int                @id @default(autoincrement())
+  title                String
+  brand                String?
+  category             String
+  status               ListingStatus      @default(DRAFT)
+  moq                  Int
+  costPerPair          Decimal?
+  basePricePerPair     Decimal?
+  maxOrderQty          Int?
+  inventoryMode        InventoryMode      @default(SIZE_RUN)
+  pricingMode          PricingMode        @default(FLAT)
+  flatPricePerPair     Decimal?
+  totalPairs           Int?
+  instantBuy           Boolean            @default(false)
+  sellerNotes          String?
+  stockXLink           String?
+  productSKU           String?
+  stockXPrice          Decimal?
   stockXPriceUpdatedAt DateTime?
-  discordLink   String?
-  instagramLink String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-
-  images         ListingImage[]
-  sizes          ListingSize[]
-  tierPrices     ListingTierPrice[]
-  orders         Order[]
-  conversations  Conversation[]
+  discordLink          String?
+  instagramLink        String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  stockXPriceManual    Boolean            @default(false)
+  conversations        Conversation[]
+  images               ListingImage[]
+  sizes                ListingSize[]
+  tierPrices           ListingTierPrice[]
+  orders               Order[]
+  shippingOptions      ShippingOption[]
 }
 
-// NextAuth.js required models
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  emailVerified   DateTime?
-  passwordHash    String?   // Optional for OAuth users
-  name            String?
-  image           String?
-  phone           String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  accounts        Account[]
-  sessions        Session[]
-  orders          Order[]
-  conversations   Conversation[]
-  notifications   Notification[]
+  id                 String                   @id @default(cuid())
+  email              String                   @unique
+  emailVerified      DateTime?
+  passwordHash       String?
+  name               String?
+  image              String?
+  phone              String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  accounts           Account[]
+  conversations      Conversation[]
   verificationTokens EmailVerificationToken[]
+  notifications      Notification[]
+  orders             Order[]
+  sessions           Session[]
 }
 
 model Account {
@@ -77,15 +87,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -95,8 +104,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -108,11 +116,11 @@ model VerificationToken {
 }
 
 model Order {
-  id                      Int          @id @default(autoincrement())
+  id                      Int            @id @default(autoincrement())
   userId                  String
   listingId               Int
   conversationId          Int?
-  status                  OrderStatus  @default(PENDING)
+  status                  OrderStatus    @default(PENDING)
   totalPairs              Int
   totalAmount             Decimal
   shippingAddress         Json?
@@ -120,56 +128,62 @@ model Order {
   stripeCheckoutSessionId String?
   stripePaymentIntentId   String?
   paidAt                  DateTime?
-  createdAt               DateTime     @default(now())
-  updatedAt               DateTime     @updatedAt
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+  shippingCost            Decimal?
+  shippingLabel           String?
 
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  listing         Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  conversation    Conversation? @relation(fields: [conversationId], references: [id])
-  items           OrderItem[]
-  messages        OrderMessage[]
-  notifications   Notification[]
+  supplierOrderId    String?
+  trackingNumber     String?
+  trackingCarrier    String?
+  trackingUrl        String?
+  estimatedDelivery  DateTime?
+  fulfilledAt        DateTime?
+  deliveredAt        DateTime?
+  supplierCost       Decimal?
+
+  notifications           Notification[]
+  conversation            Conversation?  @relation(fields: [conversationId], references: [id])
+  listing                 Listing        @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user                    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items                   OrderItem[]
+  messages                OrderMessage[]
+  activities              OrderActivity[]
 }
 
 model OrderItem {
-  id          Int     @id @default(autoincrement())
-  orderId     Int
-  sizeLabel   String?
-  quantity    Int
+  id           Int     @id @default(autoincrement())
+  orderId      Int
+  sizeLabel    String?
+  quantity     Int
   pricePerPair Decimal
-
-  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model OrderMessage {
-  id            Int       @id @default(autoincrement())
+  id            Int        @id @default(autoincrement())
   orderId       Int
   senderType    SenderType
   body          String
   invoiceSentAt DateTime?
-  createdAt     DateTime  @default(now())
-
-  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt     DateTime   @default(now())
+  order         Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  PAID
-  SHIPPED
-  CANCELLED
-}
-
-enum SenderType {
-  BUYER
-  SELLER
+model ShippingOption {
+  id        Int     @id @default(autoincrement())
+  label     String
+  price     Decimal
+  enabled   Boolean @default(true)
+  sortOrder Int     @default(0)
+  listingId Int
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 }
 
 model ListingImage {
   id        Int     @id @default(autoincrement())
   url       String
   sortOrder Int     @default(0)
-
   listingId Int
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 }
@@ -179,20 +193,128 @@ model ListingSize {
   sizeLabel String
   quantity  Int     @default(0)
   soldOut   Boolean @default(false)
-
   listingId Int
+  minOrder  Int?
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 }
 
 model ListingTierPrice {
-  id              Int              @id @default(autoincrement())
+  id              Int             @id @default(autoincrement())
   minQty          Int
-  pricePerPair    Decimal?         // Used for FIXED_PRICE mode
-  discountPercent Decimal?         // Used for PERCENTAGE_OFF mode (0-100)
-  pricingType     TierPricingType  @default(FIXED_PRICE)
+  pricePerPair    Decimal?
+  discountPercent Decimal?
+  pricingType     TierPricingType @default(FIXED_PRICE)
+  listingId       Int
+  listing         Listing         @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
 
-  listingId Int
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+model Conversation {
+  id            Int                   @id @default(autoincrement())
+  userId        String
+  listingId     Int
+  status        ConversationStatus    @default(ACTIVE)
+  lastMessageAt DateTime              @default(now())
+  unreadByUser  Int                   @default(0)
+  unreadByAdmin Int                   @default(0)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  listing       Listing               @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      ConversationMessage[]
+  notifications Notification[]
+  orders        Order[]
+
+  @@unique([userId, listingId])
+}
+
+model ConversationMessage {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  senderType     SenderType
+  messageType    MessageType  @default(TEXT)
+  body           String
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id             Int              @id @default(autoincrement())
+  userId         String?
+  type           NotificationType
+  title          String
+  message        String
+  link           String?
+  read           Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  orderId        Int?
+  conversationId Int?
+  conversation   Conversation?    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  order          Order?           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user           User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailLog {
+  id       Int         @id @default(autoincrement())
+  to       String
+  subject  String
+  template String
+  sentAt   DateTime    @default(now())
+  resendId String?
+  status   EmailStatus @default(PENDING)
+  error    String?
+}
+
+model EmailVerificationToken {
+  id        Int       @id @default(autoincrement())
+  token     String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SecurityLog {
+  id          Int           @id @default(autoincrement())
+  event       SecurityEvent
+  ip          String?
+  userAgent   String?
+  userId      String?
+  adminUserId Int?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+
+  @@index([event])
+  @@index([createdAt])
+  @@index([userId])
+  @@index([adminUserId])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model OrderActivity {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  type        String
+  description String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+enum SenderType {
+  BUYER
+  SELLER
 }
 
 enum ListingStatus {
@@ -213,40 +335,8 @@ enum PricingMode {
 }
 
 enum TierPricingType {
-  FIXED_PRICE      // Current: manually set price per tier
-  PERCENTAGE_OFF   // New: percentage discount off base price
-}
-
-model Conversation {
-  id              Int      @id @default(autoincrement())
-  userId          String
-  listingId       Int
-  status          ConversationStatus @default(ACTIVE)
-  lastMessageAt   DateTime @default(now())
-  unreadByUser    Int      @default(0)
-  unreadByAdmin   Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  listing         Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  messages        ConversationMessage[]
-  orders          Order[]
-  notifications   Notification[]
-
-  @@unique([userId, listingId])
-}
-
-model ConversationMessage {
-  id              Int      @id @default(autoincrement())
-  conversationId  Int
-  senderType      SenderType
-  messageType     MessageType @default(TEXT)
-  body            String
-  metadata        Json?
-  createdAt       DateTime @default(now())
-
-  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  FIXED_PRICE
+  PERCENTAGE_OFF
 }
 
 enum ConversationStatus {
@@ -263,24 +353,6 @@ enum MessageType {
   SYSTEM
 }
 
-model Notification {
-  id              Int      @id @default(autoincrement())
-  userId          String?  // Nullable for admin notifications
-  type            NotificationType
-  title           String
-  message         String
-  link            String?
-  read            Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  
-  // Relations
-  orderId         Int?
-  conversationId  Int?
-  user            User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  order           Order?        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  conversation    Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-}
-
 enum NotificationType {
   NEW_OFFER
   NEW_MESSAGE_BUYER
@@ -288,18 +360,9 @@ enum NotificationType {
   PAYMENT_LINK_SENT
   PAYMENT_SUCCESS
   ORDER_STATUS_CHANGE
+  ORDER_PROCESSING
+  TRACKING_ADDED
   EMAIL_VERIFICATION
-}
-
-model EmailLog {
-  id          Int      @id @default(autoincrement())
-  to          String
-  subject     String
-  template    String
-  sentAt      DateTime @default(now())
-  resendId    String?
-  status      EmailStatus @default(PENDING)
-  error       String?
 }
 
 enum EmailStatus {
@@ -309,13 +372,17 @@ enum EmailStatus {
   BOUNCED
 }
 
-model EmailVerificationToken {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique
-  userId    String
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+enum SecurityEvent {
+  ADMIN_LOGIN_SUCCESS
+  ADMIN_LOGIN_FAILURE
+  USER_LOGIN_SUCCESS
+  USER_LOGIN_FAILURE
+  USER_REGISTERED
+  PASSKEY_REGISTERED
+  PASSKEY_AUTH_SUCCESS
+  PASSKEY_AUTH_FAILURE
+  FILE_UPLOADED
+  PERMISSION_DENIED
+  RATE_LIMITED
+  ACCOUNT_LOCKED
 }

@@ -54,17 +54,21 @@ function DealCard({ deal }: { deal: DealData }) {
           <span className="text-3xl font-bold text-neutral-900">
             ${deal.ourPrice.toLocaleString()}
           </span>
-          <span className="text-sm text-neutral-400 line-through">
-            ${deal.stockXPrice.toLocaleString()}
-          </span>
+          {deal.stockXPrice > 0 && (
+            <span className={`text-sm ${deal.stockXPrice > deal.ourPrice ? 'text-neutral-400 line-through' : 'text-neutral-500'}`}>
+              StockX: ${deal.stockXPrice.toLocaleString()}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Savings Badge */}
-      <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-700 font-bold rounded-full px-4 py-2">
-        <span className="text-lg">Save {deal.savingsPercent}%</span>
-        <span className="text-xs opacity-75">${deal.savingsDollar.toFixed(0)}</span>
-      </div>
+      {/* Savings Badge - only show when StockX comparison exists */}
+      {deal.stockXPrice > 0 && deal.savingsPercent > 0 && (
+        <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-700 font-bold rounded-full px-4 py-2">
+          <span className="text-lg">Save {deal.savingsPercent}%</span>
+          <span className="text-xs opacity-75">${deal.savingsDollar.toFixed(0)}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -77,21 +81,18 @@ export function PhoneMockup({ deals }: PhoneMockupProps) {
   useEffect(() => {
     const extractColors = async () => {
       const currentDeal = deals[activeIndex];
-      console.log('Extracting colors for product:', currentDeal?.title, currentDeal?.imageUrl);
       
       if (!currentDeal?.imageUrl) {
-        console.log('No image URL, using white fallback');
-        setColors({ from: '#FFFFFF', via: '#F5F5F5', to: '#E5E5E5' });
+        setColors({ from: '#FFFFFF', via: '#FAFAFA', to: '#FFFFFF' });
         return;
       }
 
       try {
         const gradientColors = await extractGradientColors(currentDeal.imageUrl);
-        console.log('Setting gradient colors:', gradientColors);
         setColors(gradientColors);
       } catch (error) {
         console.error('Color extraction failed:', error);
-        setColors({ from: '#FFFFFF', via: '#F5F5F5', to: '#E5E5E5' });
+        setColors({ from: '#FFFFFF', via: '#FAFAFA', to: '#FFFFFF' });
       }
     };
 
@@ -101,21 +102,12 @@ export function PhoneMockup({ deals }: PhoneMockupProps) {
   // Auto-rotate every 4 seconds
   useEffect(() => {
     if (deals.length <= 1) return;
-
-    console.log('Starting auto-rotation with', deals.length, 'deals');
     
     const interval = setInterval(() => {
-      setActiveIndex((prev) => {
-        const nextIndex = (prev + 1) % deals.length;
-        console.log('Auto-rotating from index', prev, 'to', nextIndex);
-        return nextIndex;
-      });
+      setActiveIndex((prev) => (prev + 1) % deals.length);
     }, 4000);
 
-    return () => {
-      console.log('Cleaning up auto-rotation interval');
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [deals.length]);
 
   if (deals.length === 0) {

@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Listing, ListingSize } from "@prisma/client";
+import type { Listing, ListingSize, ListingTierPrice } from "@prisma/client";
 import { InventoryMode } from "@prisma/client";
+import { calculateOrderTotal } from "@/lib/pricing";
 
 interface OfferFormProps {
-  listing: Listing & { sizes: ListingSize[] };
+  listing: Listing & { sizes: ListingSize[]; tierPrices: ListingTierPrice[] };
 }
 
 export function OfferForm({ listing }: OfferFormProps) {
@@ -74,6 +75,53 @@ export function OfferForm({ listing }: OfferFormProps) {
     ? Object.values(formData.selectedSizes).reduce((sum, qty) => sum + qty, 0)
     : formData.quantity;
 
+  const buyNowPrice = (() => {
+    try {
+      if (listing.pricingMode === "FLAT") {
+        return Number(listing.flatPricePerPair || listing.basePricePerPair || 0);
+      }
+      
+      // Always use MOQ for a stable reference price
+      const calcQty = listing.moq;
+      const { pricePerPair } = calculateOrderTotal({
+        listing,
+        tiers: listing.tierPrices,
+        totalPairs: calcQty,
+      });
+      return pricePerPair;
+    } catch (e) {
+      return Number(listing.flatPricePerPair || listing.basePricePerPair || 0);
+    }
+  })();
+
+  const handleQuantityChange = (valStr: string, sizeLabel?: string) => {
+    // Strip leading zeros unless it's just "0"
+    const cleaned = valStr.replace(/^0+(?=\d)/, "");
+    if (cleaned === "") {
+      if (sizeLabel) {
+        setFormData({
+          ...formData,
+          selectedSizes: { ...formData.selectedSizes, [sizeLabel]: 0 }
+        });
+      } else {
+        setFormData({ ...formData, quantity: 0 });
+      }
+      return;
+    }
+
+    const val = parseInt(cleaned);
+    if (!isNaN(val)) {
+      if (sizeLabel) {
+        setFormData({
+          ...formData,
+          selectedSizes: { ...formData.selectedSizes, [sizeLabel]: val }
+        });
+      } else {
+        setFormData({ ...formData, quantity: val });
+      }
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
@@ -88,34 +136,44 @@ export function OfferForm({ listing }: OfferFormProps) {
           <label className="block text-sm font-medium text-slate-900 mb-3">
             Select Sizes & Quantities
           </label>
-          <div className="space-y-2">
-            {listing.sizes.map((size) => (
-              <div key={size.id} className="flex items-center gap-3">
-                <span className="w-16 text-sm text-slate-700">{size.sizeLabel}</span>
-                <input
-                  type="number"
-                  min="0"
-                  max={size.quantity}
-                  value={formData.selectedSizes[size.sizeLabel] || 0}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      selectedSizes: {
-                        ...formData.selectedSizes,
-                        [size.sizeLabel]: Number(e.target.value),
-                      },
-                    })
-                  }
-                  className="w-24 rounded-md border border-slate-300 px-3 py-2 text-sm"
-                  disabled={size.soldOut}
-                />
-                <span className="text-xs text-slate-500">
-                  {size.soldOut ? "Sold out" : `${size.quantity} available`}
-                </span>
-              </div>
-            ))}
+          <div className="space-y-4">
+            {listing.sizes.map((size) => {
+              const qty = formData.selectedSizes[size.sizeLabel] || 0;
+              const isBelowMOQ = qty > 0 && listing.moq && qty < listing.moq;
+              const isAboveMax = qty > size.quantity;
+              const hasError = isBelowMOQ || isAboveMax;
+
+              return (
+                <div key={size.id} className="flex flex-col gap-1">
+                  <div className="flex items-center gap-3">
+                    <span className="w-16 text-sm text-slate-700">{size.sizeLabel}</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={qty}
+                      onChange={(e) => handleQuantityChange(e.target.value, size.sizeLabel)}
+                      className={`w-24 rounded-md border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
+                        hasError
+                          ? "border-red-500 text-red-600 focus:border-red-500 focus:ring-red-500/20"
+                          : "border-slate-300 text-slate-900 focus:border-hero-accent focus:ring-hero-accent/20"
+                      }`}
+                      disabled={size.soldOut}
+                    />
+                    <span className="text-xs text-slate-500">
+                      {size.soldOut ? "Sold out" : `${size.quantity} available`}
+                    </span>
+                  </div>
+                  {hasError && (
+                    <div className="ml-[76px] text-[10px] font-medium text-red-600">
+                      {isBelowMOQ ? `Min order ${listing.moq}` : `Max stock ${size.quantity}`}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-4 text-sm font-semibold text-slate-900">
             Total: {totalQuantity} pairs (MOQ: {listing.moq})
           </p>
         </div>
@@ -124,20 +182,40 @@ export function OfferForm({ listing }: OfferFormProps) {
           <label htmlFor="quantity" className="block text-sm font-medium text-slate-900 mb-2">
             Quantity (pairs)
           </label>
-          <input
-            type="number"
-            id="quantity"
-            min={listing.moq}
-            max={listing.totalPairs || undefined}
-            value={formData.quantity}
-            onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
-            required
-          />
-          <p className="mt-1 text-xs text-slate-500">
-            Minimum: {listing.moq} pairs
-            {listing.totalPairs && ` • Available: ${listing.totalPairs} pairs`}
-          </p>
+          {(() => {
+            const qty = formData.quantity;
+            const isBelowMOQ = qty > 0 && listing.moq && qty < listing.moq;
+            const isAboveMax = listing.totalPairs && qty > (listing.totalPairs || 0);
+            const hasError = isBelowMOQ || isAboveMax;
+
+            return (
+              <div className="flex flex-col gap-1">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  id="quantity"
+                  value={qty}
+                  onChange={(e) => handleQuantityChange(e.target.value)}
+                  className={`w-full rounded-md border px-3 py-2 transition-all focus:outline-none focus:ring-2 ${
+                    hasError
+                      ? "border-red-500 text-red-600 focus:border-red-500 focus:ring-red-500/20"
+                      : "border-slate-300 text-slate-900 focus:border-hero-accent focus:ring-hero-accent/20"
+                  }`}
+                  required
+                />
+                {hasError && (
+                  <div className="text-[10px] font-medium text-red-600">
+                    {isBelowMOQ ? `Min order ${listing.moq}` : `Max stock ${listing.totalPairs}`}
+                  </div>
+                )}
+                <p className="mt-1 text-xs text-slate-500">
+                  Minimum: {listing.moq} pairs
+                  {listing.totalPairs && ` • Available: ${listing.totalPairs} pairs`}
+                </p>
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -159,9 +237,16 @@ export function OfferForm({ listing }: OfferFormProps) {
             placeholder="e.g., 100.00"
           />
         </div>
-        <p className="mt-1 text-xs text-slate-500">
-          Let the seller know what price you're hoping for
-        </p>
+        <div className="mt-1.5 flex justify-between items-center">
+          <p className="text-xs text-slate-500">
+            Let the seller know what price you're hoping for
+          </p>
+          {buyNowPrice && (
+            <p className="text-xs font-medium text-slate-600">
+              Buy Now: <span className="text-slate-900">${buyNowPrice.toLocaleString()}</span>
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Message */}

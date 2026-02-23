@@ -7,8 +7,8 @@ interface SavingsGaugeProps {
 }
 
 export function SavingsGauge({ yourPrice, stockXPrice, totalPairs }: SavingsGaugeProps) {
-  const savingsPerPair = stockXPrice - yourPrice;
-  const totalSavings = savingsPerPair * totalPairs;
+  const savingsPerPair = Math.round((stockXPrice - yourPrice) * 100) / 100;
+  const totalSavings = Math.round(savingsPerPair * totalPairs * 100) / 100;
   const percentage = Math.round((savingsPerPair / stockXPrice) * 100);
   
   // Only show if there's actual savings

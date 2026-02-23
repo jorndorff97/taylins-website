@@ -36,88 +36,79 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const orderId = session.metadata?.orderId;
 
-        if (!orderId) {
-          console.error("No orderId in session metadata");
+        // Support both single orderId and comma-separated orderIds (cart checkout)
+        const orderIdsRaw = session.metadata?.orderIds ?? session.metadata?.orderId;
+        if (!orderIdsRaw) {
+          console.error("No orderId(s) in session metadata");
           break;
         }
 
-        // Get order details for notification
-        const order = await prisma.order.findUnique({
-          where: { id: Number(orderId) },
-          include: {
-            user: true,
-            listing: true,
-          },
-        });
+        const orderIds = orderIdsRaw.split(",").map(Number).filter(Boolean);
 
-        if (!order) {
-          console.error(`Order ${orderId} not found`);
-          break;
+        for (const oid of orderIds) {
+          const order = await prisma.order.findUnique({
+            where: { id: oid },
+            include: { user: true, listing: true },
+          });
+
+          if (!order) {
+            console.error(`Order ${oid} not found`);
+            continue;
+          }
+
+          await prisma.order.update({
+            where: { id: oid },
+            data: {
+              status: OrderStatus.PAID,
+              stripePaymentIntentId: session.payment_intent as string,
+              paidAt: new Date(),
+            },
+          });
+
+          await notifyPaymentSuccess({
+            userId: order.userId,
+            orderId: order.id,
+            listingTitle: order.listing.title,
+            totalAmount: Number(order.totalAmount),
+          });
+
+          console.log(`Order ${oid} marked as PAID`);
         }
-
-        // Update order status to PAID
-        await prisma.order.update({
-          where: { id: Number(orderId) },
-          data: {
-            status: OrderStatus.PAID,
-            stripePaymentIntentId: session.payment_intent as string,
-            paidAt: new Date(),
-          },
-        });
-
-        // Send payment success notification to user
-        await notifyPaymentSuccess({
-          userId: order.userId,
-          orderId: order.id,
-          listingTitle: order.listing.title,
-          totalAmount: Number(order.totalAmount),
-        });
-
-        console.log(`Order ${orderId} marked as PAID`);
         break;
       }
 
       case "payment_intent.succeeded": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        const orderId = paymentIntent.metadata?.orderId;
+        const orderIdsRaw = paymentIntent.metadata?.orderIds ?? paymentIntent.metadata?.orderId;
 
-        if (!orderId) {
-          console.error("No orderId in payment intent metadata");
+        if (!orderIdsRaw) {
+          console.error("No orderId(s) in payment intent metadata");
           break;
         }
 
-        // Double-check that order is marked as paid
-        const order = await prisma.order.findUnique({
-          where: { id: Number(orderId) },
-        });
-
-        if (order && order.status !== OrderStatus.PAID) {
-          await prisma.order.update({
-            where: { id: Number(orderId) },
-            data: {
-              status: OrderStatus.PAID,
-              stripePaymentIntentId: paymentIntent.id,
-              paidAt: new Date(),
-            },
-          });
-          console.log(`Order ${orderId} marked as PAID via payment_intent.succeeded`);
+        const piOrderIds = orderIdsRaw.split(",").map(Number).filter(Boolean);
+        for (const oid of piOrderIds) {
+          const order = await prisma.order.findUnique({ where: { id: oid } });
+          if (order && order.status !== OrderStatus.PAID) {
+            await prisma.order.update({
+              where: { id: oid },
+              data: {
+                status: OrderStatus.PAID,
+                stripePaymentIntentId: paymentIntent.id,
+                paidAt: new Date(),
+              },
+            });
+            console.log(`Order ${oid} marked as PAID via payment_intent.succeeded`);
+          }
         }
         break;
       }
 
       case "payment_intent.payment_failed": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        const orderId = paymentIntent.metadata?.orderId;
-
-        if (!orderId) {
-          console.error("No orderId in payment intent metadata");
-          break;
-        }
-
-        console.log(`Payment failed for order ${orderId}`);
-        // Optionally update order status or notify admin
+        const failedIds = paymentIntent.metadata?.orderIds ?? paymentIntent.metadata?.orderId;
+        console.log(`Payment failed for order(s) ${failedIds}`);
         break;
       }
 

@@ -20,6 +20,7 @@ export default async function OfferPage({ params }: OfferPageProps) {
     include: {
       images: { orderBy: { sortOrder: "asc" } },
       sizes: { orderBy: { id: "asc" } },
+      tierPrices: { orderBy: { minQty: "asc" } },
     },
   });
 

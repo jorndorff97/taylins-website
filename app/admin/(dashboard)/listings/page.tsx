@@ -1,15 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { ListingRowActions } from "@/components/admin/listings/ListingRowActions";
 import { ListingMobileCard } from "@/components/admin/listings/ListingMobileCard";
-import { Badge } from "@/components/ui/badge";
+import { ListingDesktopCard } from "@/components/admin/listings/ListingDesktopCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
-import { getTotalPairs } from "@/lib/inventory";
-import { ListingStatus, PricingMode } from "@prisma/client";
 export const dynamic = "force-dynamic";
 
 export default async function ListingsPage() {
@@ -94,111 +90,37 @@ export default async function ListingsPage() {
             )}
           </div>
 
-          {/* Desktop Table */}
-          <Card className="hidden p-0 md:block">
-            <Table>
-              <THead>
-                <TR>
-                  <TH>Listing</TH>
-                  <TH>MOQ</TH>
-                  <TH>Total pairs</TH>
-                  <TH>Pricing</TH>
-                  <TH>Status</TH>
-                  <TH className="text-right">Actions</TH>
-                </TR>
-              </THead>
-              <TBody>
-                {listings.length === 0 && (
-                  <TR>
-                    <TD colSpan={6}>
-                      <div className="flex items-center justify-between py-6">
-                        <div>
-                          <p className="text-sm font-medium text-slate-700">
-                            No listings yet
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            Create your first batch to start taking orders.
-                          </p>
-                        </div>
-                        <Link href="/admin/listings/new">
-                          <Button variant="secondary">Create listing</Button>
-                        </Link>
-                      </div>
-                    </TD>
-                  </TR>
-                )}
-                {listings.map((listing) => {
-                  const totalPairs = getTotalPairs(listing);
-                  const primaryImage = listing.images[0]?.url;
-
-                  return (
-                    <TR key={listing.id}>
-                      <TD>
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-12 overflow-hidden rounded-lg bg-slate-100">
-                            {primaryImage ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={primaryImage}
-                                alt={listing.title}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">
-                                No image
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-slate-900">
-                              {listing.title}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {listing.category}
-                            </p>
-                          </div>
-                        </div>
-                      </TD>
-                      <TD>{listing.moq}</TD>
-                      <TD>{totalPairs}</TD>
-                      <TD>
-                        <Badge variant="muted">
-                          {listing.pricingMode === PricingMode.FLAT
-                            ? "Flat"
-                            : "Tier"}
-                        </Badge>
-                      </TD>
-                      <TD>
-                        <ListingStatusBadge status={listing.status} />
-                      </TD>
-                      <TD className="text-right">
-                        <ListingRowActions
-                          listingId={listing.id}
-                          status={listing.status}
-                        />
-                      </TD>
-                    </TR>
-                  );
-                })}
-              </TBody>
-            </Table>
-          </Card>
+          {/* Desktop Card Grid */}
+          <div className="hidden md:block">
+            {serializedListings.length === 0 ? (
+              <Card className="p-12">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                    <svg className="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-slate-900">
+                    No listings yet
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Create your first batch to start taking orders.
+                  </p>
+                  <Link href="/admin/listings/new" className="mt-6 inline-block">
+                    <Button>Create your first listing</Button>
+                  </Link>
+                </div>
+              </Card>
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                {serializedListings.map((listing) => (
+                  <ListingDesktopCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </>
   );
-}
-
-function ListingStatusBadge({ status }: { status: ListingStatus }) {
-  switch (status) {
-    case "ACTIVE":
-      return <Badge variant="success">Active</Badge>;
-    case "SOLD_OUT":
-      return <Badge variant="danger">Sold out</Badge>;
-    case "ARCHIVED":
-      return <Badge variant="muted">Archived</Badge>;
-    case "DRAFT":
-    default:
-      return <Badge variant="default">Draft</Badge>;
-  }
 }

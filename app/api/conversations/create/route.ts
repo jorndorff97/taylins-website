@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserId } from "@/lib/auth-config";
 import { notifyNewOffer } from "@/lib/notifications";
+import { sanitizeMessage } from "@/lib/sanitize";
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,13 +74,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create offer message
+    const sanitizedMessage = sanitizeMessage(message);
+
     const offerMessage = await prisma.conversationMessage.create({
       data: {
         conversationId: conversation.id,
         senderType: "BUYER",
         messageType: "OFFER",
-        body: message,
+        body: sanitizedMessage,
         metadata: {
           sizes,
           quantity,
@@ -95,7 +97,7 @@ export async function POST(request: NextRequest) {
       listingTitle: listing.title,
       quantity: quantity || 0,
       pricePerPair: pricePerPair || undefined,
-      message,
+      message: sanitizedMessage,
     });
 
     return NextResponse.json({

@@ -65,10 +65,10 @@ export function ListingCard({ listing, rank, index = 0, showDiscount = false }: 
           whileHover={{ y: -4 }}
           transition={{ duration: 0.2 }}
         >
-          {/* Discount Badge - GOAT Style */}
+          {/* Discount Badge */}
           {showDiscount && discountPercent > 0 && !soldOut && (
-            <div className="absolute left-2 top-2 z-20 bg-black px-2 py-0.5">
-              <span className="text-xs font-semibold text-white">
+            <div className="absolute left-2 top-2 z-20">
+              <span className="text-sm font-bold text-green-600">
                 -{discountPercent}%
               </span>
             </div>

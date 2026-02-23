@@ -15,9 +15,9 @@ export default async function AdminDashboardLayout({
 
   return (
     <AdminLayoutClient>
-      <div className="flex min-h-screen bg-background">
+      <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background">
         <AdminSidebar />
-        <div className="flex min-h-screen flex-1 flex-col">{children}</div>
+        <div className="flex min-h-screen flex-1 flex-col min-w-0 max-w-full overflow-x-hidden">{children}</div>
       </div>
     </AdminLayoutClient>
   );

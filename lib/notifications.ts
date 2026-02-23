@@ -246,3 +246,58 @@ export async function notifyOrderStatusChange({
     },
   });
 }
+
+export async function notifyOrderProcessing({
+  userId,
+  orderId,
+  listingTitle,
+}: {
+  userId: string;
+  orderId: number;
+  listingTitle: string;
+}) {
+  return createNotification({
+    userId,
+    type: 'ORDER_PROCESSING',
+    title: 'Order Being Prepared',
+    message: `Your order for ${listingTitle} has been sent to our supplier and is being prepared`,
+    link: `/order/${orderId}`,
+    orderId,
+    emailData: {
+      listingTitle,
+      orderId,
+    },
+  });
+}
+
+export async function notifyTrackingAdded({
+  userId,
+  orderId,
+  listingTitle,
+  trackingNumber,
+  trackingCarrier,
+  trackingUrl,
+}: {
+  userId: string;
+  orderId: number;
+  listingTitle: string;
+  trackingNumber: string;
+  trackingCarrier: string;
+  trackingUrl?: string;
+}) {
+  return createNotification({
+    userId,
+    type: 'TRACKING_ADDED',
+    title: 'Tracking Number Added',
+    message: `Your order for ${listingTitle} has shipped via ${trackingCarrier}. Tracking: ${trackingNumber}`,
+    link: `/order/${orderId}`,
+    orderId,
+    emailData: {
+      listingTitle,
+      orderId,
+      trackingNumber,
+      trackingCarrier,
+      trackingUrl,
+    },
+  });
+}

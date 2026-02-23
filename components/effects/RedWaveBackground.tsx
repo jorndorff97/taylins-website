@@ -8,14 +8,14 @@ export function RedWaveBackground() {
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      {/* Dynamic vertical gradient background with smooth transitions */}
+      {/* Simple color-to-white gradient with smooth transitions */}
       <motion.div
         className="absolute inset-0"
         animate={{
-          background: `linear-gradient(to bottom, ${colors.from}, ${colors.via}, ${colors.to})`,
+          background: `linear-gradient(180deg, ${colors.from} 0%, ${colors.via} 40%, ${colors.to} 80%)`,
         }}
         transition={{
-          duration: 1.5,
+          duration: 1.2,
           ease: 'easeInOut',
         }}
       />

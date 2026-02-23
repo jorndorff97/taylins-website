@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { Listing, ListingSize, ListingTierPrice, ListingImage } from "@prisma/client";
+import type { Listing, ListingSize, ListingTierPrice, ListingImage, ShippingOption } from "@prisma/client";
 import { InventoryMode, PricingMode } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,10 +10,18 @@ import { Input } from "@/components/ui/input";
 import { ImageUploader } from "./ImageUploader";
 import { extractStockXSlug, extractBrandFromSlug } from "@/lib/stockx";
 
-type ListingFormListing = Listing & {
+type ListingFormListing = Omit<Listing, 'costPerPair' | 'basePricePerPair' | 'flatPricePerPair' | 'stockXPrice'> & {
+  costPerPair?: number | null;
+  basePricePerPair?: number | null;
+  flatPricePerPair?: number | null;
+  stockXPrice?: number | null;
   sizes?: ListingSize[];
-  tierPrices?: ListingTierPrice[];
+  tierPrices?: (Omit<ListingTierPrice, 'pricePerPair' | 'discountPercent'> & {
+    pricePerPair?: number | null;
+    discountPercent?: number | null;
+  })[];
   images?: ListingImage[];
+  shippingOptions?: (Omit<ShippingOption, 'price'> & { price: number })[];
 };
 
 interface ListingFormProps {
@@ -62,10 +70,13 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
   const [title, setTitle] = useState<string>(initialListing?.title ?? "");
   const [brand, setBrand] = useState<string>(initialListing?.brand ?? "");
   const [category, setCategory] = useState<string>(initialListing?.category ?? "");
-  const [useManualPrice, setUseManualPrice] = useState<boolean>(false);
+  const [useManualPrice, setUseManualPrice] = useState<boolean>(
+    initialListing?.stockXPriceManual ?? false
+  );
   const [manualPrice, setManualPrice] = useState<string>(
     initialListing?.stockXPrice ? String(initialListing.stockXPrice) : ""
   );
+  const [moq, setMoq] = useState<number>(initialListing?.moq ?? 1);
 
   const handleImageUpload = (url: string) => {
     setImageUrls(prev => [...prev, url]);
@@ -304,7 +315,8 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
                 name="moq"
                 type="number"
                 min={1}
-                defaultValue={initialListing?.moq ?? 1}
+                value={moq}
+                onChange={(e) => setMoq(Number(e.target.value) || 1)}
                 required
               />
               <p className="text-[10px] text-slate-500">Buyers must order at least this many</p>
@@ -365,7 +377,7 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
           <input type="hidden" name="inventoryMode" value={inventoryMode} />
 
           {inventoryMode === InventoryMode.SIZE_RUN ? (
-            <SizeRunGrid initialSizes={initialListing?.sizes} />
+            <SizeRunGrid initialSizes={initialListing?.sizes} globalMoq={moq} />
           ) : (
             <MixedBatchInput totalPairs={initialListing?.totalPairs ?? 0} />
           )}
@@ -482,6 +494,19 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
         </div>
       </Card>
 
+      {/* Shipping Options */}
+      <Card>
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-sm font-medium text-slate-800">Shipping Options</h2>
+            <p className="text-xs text-slate-500">
+              Add shipping time options with different prices. Buyers will choose one at checkout.
+            </p>
+          </div>
+          <ShippingOptionsEditor initialOptions={initialListing?.shippingOptions} />
+        </div>
+      </Card>
+
       {/* Additional Information */}
       <Card>
         <div className="space-y-4">
@@ -544,63 +569,171 @@ export function ListingForm({ initialListing, onSubmit, mode }: ListingFormProps
   );
 }
 
-function SizeRunGrid({ initialSizes }: { initialSizes?: ListingSize[] }) {
-  const rows = initialSizes && initialSizes.length > 0 ? initialSizes : [];
+interface SizeEntry {
+  id: string;
+  sizeLabel: string;
+  quantity: string;
+  minOrder: string;
+  soldOut: boolean;
+}
 
-  // For MVP, render up to 6 editable rows keyed by index
-  const rowCount = Math.max(rows.length, 6);
-  const indices = Array.from({ length: rowCount }, (_, i) => i);
+function SizeRunGrid({ 
+  initialSizes, 
+  globalMoq 
+}: { 
+  initialSizes?: ListingSize[];
+  globalMoq: number;
+}) {
+  const [sizes, setSizes] = useState<SizeEntry[]>(() => {
+    if (initialSizes && initialSizes.length > 0) {
+      return initialSizes.map((size, idx) => ({
+        id: `size-${idx}-${Date.now()}`,
+        sizeLabel: size.sizeLabel,
+        quantity: String(size.quantity),
+        minOrder: size.minOrder != null ? String(size.minOrder) : String(globalMoq),
+        soldOut: size.soldOut,
+      }));
+    }
+    // Start with 2 empty rows by default
+    return [
+      { id: `size-0-${Date.now()}`, sizeLabel: "", quantity: "", minOrder: String(globalMoq), soldOut: false },
+      { id: `size-1-${Date.now()}`, sizeLabel: "", quantity: "", minOrder: String(globalMoq), soldOut: false },
+    ];
+  });
+
+  const addSize = () => {
+    setSizes(prev => [
+      ...prev,
+      { 
+        id: `size-${prev.length}-${Date.now()}`, 
+        sizeLabel: "", 
+        quantity: "", 
+        minOrder: String(globalMoq), 
+        soldOut: false 
+      }
+    ]);
+  };
+
+  const removeSize = (id: string) => {
+    setSizes(prev => prev.filter(s => s.id !== id));
+  };
+
+  const updateSize = (id: string, field: keyof SizeEntry, value: string | boolean) => {
+    setSizes(prev => prev.map(s => 
+      s.id === id ? { ...s, [field]: value } : s
+    ));
+  };
+
+  // Update all minOrder values when globalMoq changes (only for those matching the old default)
+  const [prevMoq, setPrevMoq] = useState(globalMoq);
+  if (globalMoq !== prevMoq) {
+    setSizes(prev => prev.map(s => ({
+      ...s,
+      minOrder: s.minOrder === String(prevMoq) ? String(globalMoq) : s.minOrder
+    })));
+    setPrevMoq(globalMoq);
+  }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
-      {indices.map((index) => {
-        const existing = rows[index];
-        return (
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {sizes.map((size, index) => (
           <div
-            key={index}
-            className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3"
+            key={size.id}
+            className="relative space-y-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3"
           >
+            {/* Remove button */}
+            {sizes.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeSize(size.id)}
+                className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-600 hover:bg-red-100 hover:text-red-600 transition-colors"
+                title="Remove size"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                  <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
+                </svg>
+              </button>
+            )}
+
             <div className="space-y-1">
               <label className="text-[11px] font-medium text-slate-700">
                 Size (US Men)
               </label>
               <select
                 name={`sizes[${index}].sizeLabel`}
-                defaultValue={existing?.sizeLabel ?? ""}
+                value={size.sizeLabel}
+                onChange={(e) => updateSize(size.id, "sizeLabel", e.target.value)}
                 className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
               >
                 <option value="">Select size</option>
-                {US_MEN_SIZES.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
+                {US_MEN_SIZES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
                   </option>
                 ))}
               </select>
             </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-medium text-slate-700">
-                Quantity
-              </label>
-              <Input
-                name={`sizes[${index}].quantity`}
-                type="number"
-                min={0}
-                defaultValue={existing?.quantity ?? ""}
-                className="h-8 text-xs"
-              />
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-slate-700">
+                  Quantity
+                </label>
+                <Input
+                  name={`sizes[${index}].quantity`}
+                  type="number"
+                  min={0}
+                  value={size.quantity}
+                  onChange={(e) => updateSize(size.id, "quantity", e.target.value)}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-slate-700">
+                  Min order
+                </label>
+                <Input
+                  name={`sizes[${index}].minOrder`}
+                  type="number"
+                  min={1}
+                  value={size.minOrder}
+                  onChange={(e) => updateSize(size.id, "minOrder", e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder={String(globalMoq)}
+                />
+              </div>
             </div>
+
             <div className="flex items-center justify-between">
               <span className="text-[11px] text-slate-600">Sold out</span>
               <input
                 type="checkbox"
                 name={`sizes[${index}].soldOut`}
-                defaultChecked={existing?.soldOut ?? false}
+                checked={size.soldOut}
+                onChange={(e) => updateSize(size.id, "soldOut", e.target.checked)}
                 className="h-3.5 w-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900/40"
               />
             </div>
           </div>
-        );
-      })}
+        ))}
+      </div>
+
+      {/* Add size button */}
+      <button
+        type="button"
+        onClick={addSize}
+        className="flex items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
+          <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+        </svg>
+        Add size
+      </button>
+
+      <p className="text-[10px] text-slate-500">
+        Min order defaults to the MOQ from Order Limits. Override per size as needed.
+      </p>
     </div>
   );
 }
@@ -626,7 +759,7 @@ function MixedBatchInput({ totalPairs }: { totalPairs: number }) {
   );
 }
 
-function TierPricingTable({ tiers }: { tiers: ListingTierPrice[] }) {
+function TierPricingTable({ tiers }: { tiers: NonNullable<ListingFormListing['tierPrices']> }) {
   const rowCount = Math.max(tiers.length, 4);
   const rows = Array.from({ length: rowCount }, (_, i) => tiers[i]);
 
@@ -667,11 +800,179 @@ function TierPricingTable({ tiers }: { tiers: ListingTierPrice[] }) {
   );
 }
 
+interface ShippingEntry {
+  id: string;
+  label: string;
+  price: string;
+  enabled: boolean;
+}
+
+const DEFAULT_SHIPPING_PRESETS = [
+  { label: "1 Week", price: "" },
+  { label: "2 Weeks", price: "" },
+  { label: "3 Weeks", price: "" },
+  { label: "4 Weeks", price: "" },
+];
+
+function ShippingOptionsEditor({ initialOptions }: { initialOptions?: ListingFormListing['shippingOptions'] }) {
+  const [options, setOptions] = useState<ShippingEntry[]>(() => {
+    if (initialOptions && initialOptions.length > 0) {
+      return initialOptions
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((opt, idx) => ({
+          id: `ship-${idx}-${Date.now()}`,
+          label: opt.label,
+          price: String(opt.price),
+          enabled: opt.enabled,
+        }));
+    }
+    return [];
+  });
+
+  const addOption = (preset?: { label: string; price: string }) => {
+    setOptions((prev) => [
+      ...prev,
+      {
+        id: `ship-${prev.length}-${Date.now()}`,
+        label: preset?.label ?? "",
+        price: preset?.price ?? "",
+        enabled: true,
+      },
+    ]);
+  };
+
+  const removeOption = (id: string) => {
+    setOptions((prev) => prev.filter((o) => o.id !== id));
+  };
+
+  const updateOption = (id: string, field: keyof ShippingEntry, value: string | boolean) => {
+    setOptions((prev) =>
+      prev.map((o) => (o.id === id ? { ...o, [field]: value } : o))
+    );
+  };
+
+  const unusedPresets = DEFAULT_SHIPPING_PRESETS.filter(
+    (preset) => !options.some((o) => o.label === preset.label)
+  );
+
+  return (
+    <div className="space-y-3">
+      {options.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-4 text-center">
+          <p className="text-xs text-slate-500">
+            No shipping options configured. Add options below.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {options.map((option, index) => (
+            <div
+              key={option.id}
+              className={`relative flex items-center gap-3 rounded-xl border p-3 transition-colors ${
+                option.enabled
+                  ? "border-slate-200 bg-slate-50/60"
+                  : "border-slate-200/60 bg-slate-100/40 opacity-60"
+              }`}
+            >
+              {/* Enable/Disable Toggle */}
+              <input
+                type="checkbox"
+                checked={option.enabled}
+                onChange={(e) => updateOption(option.id, "enabled", e.target.checked)}
+                className="h-4 w-4 shrink-0 rounded border-slate-300 text-slate-900 focus:ring-slate-900/40"
+                title={option.enabled ? "Disable this option" : "Enable this option"}
+              />
+
+              {/* Label */}
+              <div className="min-w-0 flex-1 space-y-1">
+                <label className="text-[11px] font-medium text-slate-700">Delivery Time</label>
+                <Input
+                  name={`shipping[${index}].label`}
+                  value={option.label}
+                  onChange={(e) => updateOption(option.id, "label", e.target.value)}
+                  placeholder="e.g. 1 Week, 2-3 Weeks"
+                  className="h-8 text-xs"
+                />
+              </div>
+
+              {/* Price */}
+              <div className="w-28 shrink-0 space-y-1">
+                <label className="text-[11px] font-medium text-slate-700">Price ($)</label>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">$</span>
+                  <Input
+                    name={`shipping[${index}].price`}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={option.price}
+                    onChange={(e) => updateOption(option.id, "price", e.target.value)}
+                    placeholder="0.00"
+                    className="h-8 pl-5 text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Hidden fields for enabled state */}
+              <input type="hidden" name={`shipping[${index}].enabled`} value={option.enabled ? "true" : "false"} />
+
+              {/* Remove */}
+              <button
+                type="button"
+                onClick={() => removeOption(option.id)}
+                className="flex h-6 w-6 shrink-0 items-center justify-center self-end rounded-full text-slate-400 hover:bg-red-100 hover:text-red-600 transition-colors"
+                title="Remove option"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
+                  <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add buttons */}
+      <div className="flex flex-wrap gap-2">
+        {unusedPresets.length > 0 && (
+          unusedPresets.map((preset) => (
+            <button
+              key={preset.label}
+              type="button"
+              onClick={() => addOption(preset)}
+              className="flex items-center gap-1 rounded-lg border border-dashed border-slate-300 px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+              </svg>
+              {preset.label}
+            </button>
+          ))
+        )}
+        <button
+          type="button"
+          onClick={() => addOption()}
+          className="flex items-center gap-1 rounded-lg border border-dashed border-slate-300 px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+            <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+          </svg>
+          Custom
+        </button>
+      </div>
+
+      <p className="text-[10px] text-slate-500">
+        Buyers will select a shipping speed at checkout. Disabled options are hidden from buyers.
+      </p>
+    </div>
+  );
+}
+
 function PercentageTierTable({ 
   tiers, 
   basePricePerPair
 }: { 
-  tiers: ListingTierPrice[], 
+  tiers: NonNullable<ListingFormListing['tierPrices']>,
   basePricePerPair: string
 }) {
   const rowCount = Math.max(tiers.length, 4);

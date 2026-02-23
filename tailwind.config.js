@@ -88,10 +88,15 @@ module.exports = {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        marquee: {
+          "0%": { transform: "translateX(0%)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "scroll-vertical": "scroll-vertical 20s linear infinite",
         "scroll-horizontal": "scroll-horizontal 12s linear infinite",
+        marquee: "marquee 20s linear infinite",
       },
     },
   },

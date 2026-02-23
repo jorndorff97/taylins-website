@@ -15,3 +15,6 @@ if (process.env.NODE_ENV !== "production") {
   global.prisma = prisma;
 }
 
+export async function disconnectPrisma() {
+  await prisma.$disconnect();
+}

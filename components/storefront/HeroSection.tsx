@@ -32,7 +32,7 @@ export function HeroSection({ heroProducts, topDeals }: HeroSectionProps) {
   const parallaxY = useParallax(50);
 
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-transparent pt-24 sm:pt-32">
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-transparent pt-24 pb-32 sm:pt-32 sm:pb-40">
       {/* Hero Content */}
       <div className="relative z-10 mx-auto max-w-7xl px-4 w-full">
         {/* 3-Column Layout (Desktop) / Stacked (Mobile) */}
@@ -68,14 +68,23 @@ export function HeroSection({ heroProducts, topDeals }: HeroSectionProps) {
             </Link>
           </motion.div>
 
-          {/* MOBILE ONLY: Phone Mockup - Order 3 */}
+          {/* MOBILE ONLY: Phone Mockup with Brand Carousel behind - Order 3 */}
           <motion.div
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5, ease: [0.4, 0, 0.2, 1] }}
-            className="flex justify-center order-3 md:hidden"
+            className="relative order-3 md:hidden"
           >
-            <PhoneMockup deals={topDeals} />
+            {/* Brand Carousel - scrolls edge-to-edge behind the phone */}
+            <div className="absolute inset-0 flex items-center -mx-4 overflow-hidden pointer-events-none">
+              <div className="w-screen">
+                <BrandCarousel />
+              </div>
+            </div>
+            {/* Phone Mockup - centered on top */}
+            <div className="relative z-10 flex justify-center">
+              <PhoneMockup deals={topDeals} />
+            </div>
           </motion.div>
 
           {/* DESKTOP ONLY: Headline + Phone Mockup Combined - Order 2 (center) */}

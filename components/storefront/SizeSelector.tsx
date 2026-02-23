@@ -1,14 +1,21 @@
 "use client";
 
 import type { ListingSize } from "@prisma/client";
+import { QuantityStepper } from "./QuantityStepper";
 
 interface SizeSelectorProps {
   sizes: ListingSize[];
   selectedSizeQuantities: Record<number, number>;
   onQuantityChange: (sizeId: number, quantity: number) => void;
+  moq?: number;
 }
 
-export function SizeSelector({ sizes, selectedSizeQuantities, onQuantityChange }: SizeSelectorProps) {
+export function SizeSelector({
+  sizes,
+  selectedSizeQuantities,
+  onQuantityChange,
+  moq = 0,
+}: SizeSelectorProps) {
   const availableSizes = sizes.filter((s) => !s.soldOut && s.quantity > 0);
   
   if (availableSizes.length === 0) {
@@ -41,33 +48,13 @@ export function SizeSelector({ sizes, selectedSizeQuantities, onQuantityChange }
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => onQuantityChange(size.id, Math.max(0, quantity - 1))}
-                  disabled={quantity === 0}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-50 disabled:border-slate-200 disabled:text-slate-300 disabled:hover:bg-white"
-                  aria-label="Decrease"
-                >
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-                  </svg>
-                </button>
-
-                <span className="w-8 text-center text-base font-semibold text-slate-900">
-                  {quantity}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => onQuantityChange(size.id, Math.min(size.quantity, quantity + 1))}
-                  disabled={quantity >= size.quantity}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-50 disabled:border-slate-200 disabled:text-slate-300 disabled:hover:bg-white"
-                  aria-label="Increase"
-                >
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
+                <QuantityStepper
+                  value={quantity}
+                  max={size.quantity}
+                  firstIncrementValue={moq}
+                  onChange={(newQty) => onQuantityChange(size.id, newQty)}
+                  compact={true}
+                />
               </div>
             </div>
           </div>

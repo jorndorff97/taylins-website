@@ -21,6 +21,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       images: { orderBy: { sortOrder: "asc" } },
       sizes: { orderBy: { id: "asc" } },
       tierPrices: { orderBy: { minQty: "asc" } },
+      shippingOptions: { orderBy: { sortOrder: "asc" } },
     },
   });
 
@@ -37,6 +38,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
       ...tp,
       pricePerPair: Number(tp.pricePerPair),
     })),
+    shippingOptions: listing.shippingOptions
+      .filter(so => so.enabled)
+      .map(so => ({
+        ...so,
+        price: Number(so.price),
+      })),
   };
 
   const soldOut = isSoldOut(listing);

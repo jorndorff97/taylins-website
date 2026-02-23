@@ -10,17 +10,20 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "postinstall": "prisma generate",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "admin:create": "tsx --env-file=.env prisma/create-admin.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
+    "@prisma/client": "5.16.0",
     "@react-email/components": "^1.0.7",
+    "@simplewebauthn/browser": "^9.0.1",
+    "@simplewebauthn/server": "^9.0.3",
     "@stripe/stripe-js": "^8.7.0",
     "@vercel/blob": "^2.2.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "@prisma/client": "5.16.0",
     "fast-average-color": "^9.5.0",
     "framer-motion": "^12.34.0",
     "next": "latest",

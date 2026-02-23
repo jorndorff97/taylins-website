@@ -2,10 +2,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getUserId } from "@/lib/auth-config";
-import { OrderThread } from "./OrderThread";
 import { PaymentButton } from "@/components/storefront/PaymentButton";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { stripe } from "@/lib/stripe";
+import { OrderStatus } from "@prisma/client";
 
 interface OrderPageProps {
   params: Promise<{ id: string }>;
@@ -33,7 +33,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
 
   const { id } = await params;
   const { payment } = await searchParams;
-  const order = await prisma.order.findUnique({
+  let order = await prisma.order.findUnique({
     where: { id: Number(id) },
     include: {
       listing: {
@@ -41,124 +41,393 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
           images: { take: 1, orderBy: { sortOrder: "asc" } }
         }
       },
-      items: true,
-      messages: { orderBy: { createdAt: "asc" } },
+      user: true,
     },
   });
 
   if (!order || order.userId !== userId) notFound();
 
-  return (
-    <div className="mx-auto max-w-4xl px-4 py-8 md:py-12">
-      <Link href="/messages" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors mb-8">
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Back to messages
-      </Link>
+  // If order has a checkout session but isn't marked as paid, verify with Stripe
+  if (order.stripeCheckoutSessionId && order.status !== "PAID" && !order.paidAt) {
+    try {
+      const session = await stripe.checkout.sessions.retrieve(order.stripeCheckoutSessionId);
+      
+      if (session.payment_status === "paid") {
+        // Update the order in the database
+        order = await prisma.order.update({
+          where: { id: order.id },
+          data: {
+            status: OrderStatus.PAID,
+            stripePaymentIntentId: session.payment_intent as string,
+            paidAt: new Date(),
+          },
+          include: {
+            listing: {
+              include: {
+                images: { take: 1, orderBy: { sortOrder: "asc" } }
+              }
+            },
+            user: true,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error verifying Stripe session:", error);
+    }
+  }
 
-      <div className="grid gap-8 md:grid-cols-3">
-        {/* Left Column: Order Summary */}
-        <div className="md:col-span-1 space-y-6">
-          <Card className="p-6 border-slate-200/60 shadow-sm overflow-hidden">
-            <div className="space-y-6">
-              <div className="flex flex-col items-center text-center pb-6 border-b border-slate-100">
-                {order.listing.images[0]?.url && (
-                  <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white border border-slate-100 mb-4 shadow-sm p-2">
-                    <img src={order.listing.images[0].url} alt={order.listing.title} className="w-full h-full object-contain" />
-                  </div>
-                )}
-                <h2 className="text-lg font-bold text-slate-900 leading-tight mb-1">
-                  {order.listing.title}
-                </h2>
-                <Link href={`/listing/${order.listingId}`} className="text-xs font-semibold text-red-600 hover:underline">
-                  View Product
-                </Link>
-              </div>
+  const isPaid = order.status === "PAID" || order.paidAt !== null || (order.stripePaymentIntentId && order.status !== "CANCELLED");
+  const isPaymentSuccess = payment === "success";
+  const isPaymentCancelled = payment === "cancelled";
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Order ID</span>
-                  <span className="font-bold text-slate-900">#{order.id}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Status</span>
-                  <Badge variant={order.status === 'CANCELLED' ? 'danger' : 'default'} className="font-bold text-[10px] uppercase">
-                    {order.status}
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Quantity</span>
-                  <span className="font-bold text-slate-900">{order.totalPairs} pairs</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Total Price</span>
-                  <span className="text-lg font-black text-slate-900">${Number(order.totalAmount).toLocaleString()}</span>
-                </div>
-              </div>
+  if (isPaymentSuccess || isPaid) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12 md:py-20">
+        <Card className="p-8 md:p-12 text-center border-emerald-100 bg-gradient-to-b from-emerald-50/50 to-white">
+          <div className="mb-6">
+            <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-200">
+              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+          
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+            {isPaymentSuccess ? "Payment Successful!" : "Order Confirmed"}
+          </h1>
+          <p className="text-slate-600 mb-8">
+            {isPaymentSuccess 
+              ? "Thank you for your purchase. A confirmation email has been sent to your inbox."
+              : "Your order has been paid and is being processed."}
+          </p>
 
-              {/* Payment Section */}
-              <div className="pt-6 border-t border-slate-100">
-                {order.paidAt ? (
-                  <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center">
-                    <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-2 text-white shadow-sm">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="text-xs font-bold text-emerald-800 uppercase tracking-tight">Paid in full</p>
-                    <p className="text-[10px] text-emerald-600 mt-0.5">{new Date(order.paidAt).toLocaleDateString()}</p>
-                  </div>
-                ) : order.stripeCheckoutSessionId ? (
-                  <div className="space-y-3">
-                    <p className="text-xs font-bold text-slate-700 uppercase tracking-tight mb-2 text-center">Payment Required</p>
-                    <PaymentButton orderId={order.id} />
-                    <p className="text-[10px] text-slate-400 text-center leading-relaxed">
-                      Secure checkout powered by Stripe.
-                    </p>
-                  </div>
-                ) : order.status === "PENDING" ? (
-                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center">
-                    <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-2 text-slate-400">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-12 0 9 9 0 0112 0z" />
-                      </svg>
-                    </div>
-                    <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">Processing</p>
-                    <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">Waiting for seller to send payment link.</p>
-                  </div>
-                ) : null}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 text-left">
+            <div className="flex items-center gap-4 pb-4 border-b border-slate-100 mb-4">
+              {order.listing.images[0]?.url && (
+                <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 p-1.5 flex-shrink-0">
+                  <img src={order.listing.images[0].url} alt={order.listing.title} className="w-full h-full object-contain" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-slate-900 truncate">{order.listing.title}</h3>
+                <p className="text-sm text-slate-500">Order #{order.id}</p>
               </div>
             </div>
-          </Card>
-
-          {/* Success/Error Toasts */}
-          {(payment === "success" || payment === "cancelled") && (
-            <div className={`p-4 rounded-2xl border ${payment === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-red-50 border-red-100 text-red-800 shadow-sm'}`}>
-              <div className="flex gap-3">
-                {payment === 'success' ? (
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                )}
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-tight">{payment === 'success' ? 'Payment Success' : 'Payment Failed'}</p>
-                  <p className="text-[11px] mt-0.5 opacity-90">{payment === 'success' ? 'Your order is being processed. Thank you!' : 'The transaction was cancelled. Please try again or contact support.'}</p>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Quantity</span>
+                <span className="font-medium text-slate-900">{order.totalPairs} pairs</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Total Paid</span>
+                <span className="font-bold text-lg text-slate-900">${Number(order.totalAmount).toLocaleString()}</span>
+              </div>
+              {order.paidAt && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">Payment Date</span>
+                  <span className="font-medium text-slate-900">{new Date(order.paidAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                 </div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-blue-50 rounded-xl border border-blue-100 p-4 mb-8">
+            <div className="flex items-start gap-3 text-left">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-blue-900">Confirmation email sent</p>
+                <p className="text-xs text-blue-700 mt-0.5">
+                  We've sent a receipt to <span className="font-medium">{order.user.email}</span>
+                </p>
               </div>
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Right Column: Chat Interface */}
-        <div className="md:col-span-2">
-          <OrderThread orderId={order.id} messages={order.messages} />
-        </div>
+          <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 mb-8">
+            <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-3">What happens next?</h4>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</div>
+                <p className="text-sm text-slate-600">Payment confirmed</p>
+              </div>
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-6 h-6 bg-slate-300 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</div>
+                <p className="text-sm text-slate-600">Seller prepares your order</p>
+              </div>
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-6 h-6 bg-slate-300 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">3</div>
+                <p className="text-sm text-slate-600">Shipping details sent to you</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition-all"
+            >
+              Continue Shopping
+            </Link>
+            <Link
+              href="/messages"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 transition-all"
+            >
+              View Messages
+            </Link>
+          </div>
+        </Card>
       </div>
+    );
+  }
+
+  if (isPaymentCancelled) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12 md:py-20">
+        <Card className="p-8 md:p-12 text-center border-red-100 bg-gradient-to-b from-red-50/50 to-white">
+          <div className="mb-6">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+              <svg className="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+          </div>
+          
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Payment Cancelled</h1>
+          <p className="text-slate-600 mb-8">
+            Your payment was not completed. No charges have been made to your account.
+          </p>
+
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 text-left">
+            <div className="flex items-center gap-4">
+              {order.listing.images[0]?.url && (
+                <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 p-1.5 flex-shrink-0">
+                  <img src={order.listing.images[0].url} alt={order.listing.title} className="w-full h-full object-contain" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-slate-900 truncate">{order.listing.title}</h3>
+                <p className="text-sm text-slate-500">{order.totalPairs} pairs · ${Number(order.totalAmount).toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {order.stripeCheckoutSessionId && (
+              <PaymentButton orderId={order.id} />
+            )}
+            <Link
+              href="/messages"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 transition-all"
+            >
+              Contact Seller
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  const hasPaymentLink = !!order.stripeCheckoutSessionId;
+
+  if (hasPaymentLink) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12 md:py-20">
+        <Card className="p-8 md:p-12 text-center border-slate-200 bg-white">
+          <div className="mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-200">
+              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+          </div>
+          
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+            Complete Your Purchase
+          </h1>
+          <p className="text-slate-600 mb-8">
+            Your offer has been accepted! Click below to securely complete your payment.
+          </p>
+
+          <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6 mb-8 text-left">
+            <div className="flex items-center gap-4 pb-4 border-b border-slate-200 mb-4">
+              {order.listing.images[0]?.url && (
+                <div className="w-16 h-16 rounded-xl overflow-hidden bg-white border border-slate-100 p-1.5 flex-shrink-0">
+                  <img src={order.listing.images[0].url} alt={order.listing.title} className="w-full h-full object-contain" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-slate-900 truncate">{order.listing.title}</h3>
+                <p className="text-sm text-slate-500">Order #{order.id}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Quantity</span>
+                <span className="font-medium text-slate-900">{order.totalPairs} pairs</span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="text-slate-500 text-sm">Total Due</span>
+                <span className="font-bold text-2xl text-slate-900">${Number(order.totalAmount).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <PaymentButton orderId={order.id} />
+            <p className="text-xs text-slate-400">
+              Secure checkout powered by Stripe. Your payment information is encrypted.
+            </p>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-slate-200">
+            <Link
+              href="/messages"
+              className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              Message the seller
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (order.status === "CANCELLED") {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12 md:py-20">
+        <Card className="p-8 md:p-12 text-center border-red-100 bg-gradient-to-b from-red-50/50 to-white">
+          <div className="mb-6">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+              <svg className="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+          </div>
+          
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Order Cancelled</h1>
+          <p className="text-slate-600 mb-8">
+            This order has been cancelled and is no longer active.
+          </p>
+
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 text-left">
+            <div className="flex items-center gap-4">
+              {order.listing.images[0]?.url && (
+                <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 p-1.5 flex-shrink-0">
+                  <img src={order.listing.images[0].url} alt={order.listing.title} className="w-full h-full object-contain" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-slate-900 truncate">{order.listing.title}</h3>
+                <p className="text-sm text-slate-500">{order.totalPairs} pairs</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href={`/listing/${order.listingId}`}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition-all"
+            >
+              View Listing
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 transition-all"
+            >
+              Browse Products
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-12 md:py-20">
+      <Card className="p-8 md:p-12 text-center border-amber-100 bg-gradient-to-b from-amber-50/50 to-white">
+        <div className="mb-6">
+          <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
+            <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+        </div>
+        
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Offer Under Review</h1>
+        <p className="text-slate-600 mb-8">
+          The seller is reviewing your offer. You'll be notified once they respond.
+        </p>
+
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 text-left">
+          <div className="flex items-center gap-4 pb-4 border-b border-slate-100 mb-4">
+            {order.listing.images[0]?.url && (
+              <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 p-1.5 flex-shrink-0">
+                <img src={order.listing.images[0].url} alt={order.listing.title} className="w-full h-full object-contain" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-slate-900 truncate">{order.listing.title}</h3>
+              <p className="text-sm text-slate-500">Order #{order.id}</p>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Quantity</span>
+              <span className="font-medium text-slate-900">{order.totalPairs} pairs</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Offered Price</span>
+              <span className="font-bold text-lg text-slate-900">${Number(order.totalAmount).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 mb-8">
+          <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-3">What happens next?</h4>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-left">
+              <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</div>
+              <p className="text-sm text-slate-600">Seller reviews your offer</p>
+            </div>
+            <div className="flex items-center gap-3 text-left">
+              <div className="w-6 h-6 bg-slate-300 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</div>
+              <p className="text-sm text-slate-600">You'll receive a payment link if accepted</p>
+            </div>
+            <div className="flex items-center gap-3 text-left">
+              <div className="w-6 h-6 bg-slate-300 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">3</div>
+              <p className="text-sm text-slate-600">Complete payment to confirm your order</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            href="/messages"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            View Messages
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 transition-all"
+          >
+            Continue Shopping
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 }
