@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { startAuthentication, browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import { Card } from "@/components/ui/card";
@@ -18,6 +18,8 @@ export function AdminLoginForm({ error }: AdminLoginFormProps) {
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const [csrfToken, setCsrfToken] = useState<string>("");
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     setSupportsWebAuthn(browserSupportsWebAuthn());
@@ -75,6 +77,45 @@ export function AdminLoginForm({ error }: AdminLoginFormProps) {
 
   const showPasskeyOption = supportsWebAuthn && hasPasskeys;
 
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError(null);
+
+    const formData = new FormData(e.currentTarget);
+
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        body: formData,
+        redirect: "manual",
+      });
+
+      if (res.type === "opaqueredirect" || res.status === 307 || res.status === 302) {
+        router.push("/admin/listings");
+        router.refresh();
+        return;
+      }
+
+      if (res.redirected) {
+        const url = new URL(res.url);
+        if (url.searchParams.get("error")) {
+          setFormError("Invalid email or password.");
+        } else {
+          router.push(url.pathname);
+          router.refresh();
+        }
+        return;
+      }
+
+      setFormError("Invalid email or password.");
+    } catch (err) {
+      setFormError("An error occurred. Please try again.");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   return (
     <Card className="w-full max-w-sm">
       {showPasskeyOption && (
@@ -129,7 +170,7 @@ export function AdminLoginForm({ error }: AdminLoginFormProps) {
         </div>
       )}
 
-      <form action="/api/admin/login" method="POST">
+      <form onSubmit={handleSubmit}>
         <input type="hidden" name="csrf_token" value={csrfToken} />
         {!showPasskeyOption && (
           <>
@@ -140,9 +181,9 @@ export function AdminLoginForm({ error }: AdminLoginFormProps) {
           </>
         )}
 
-        {error === "invalid" && (
+        {(error === "invalid" || formError) && (
           <p className="mt-2 text-xs text-red-600">
-            Invalid email or password.
+            {formError || "Invalid email or password."}
           </p>
         )}
 
@@ -161,6 +202,7 @@ export function AdminLoginForm({ error }: AdminLoginFormProps) {
               required
               autoComplete="email"
               className="mt-1"
+              disabled={formLoading}
             />
           </div>
           <div>
@@ -177,10 +219,11 @@ export function AdminLoginForm({ error }: AdminLoginFormProps) {
               required
               autoComplete="current-password"
               className="mt-1"
+              disabled={formLoading}
             />
           </div>
-          <Button type="submit" variant={showPasskeyOption ? "ghost" : "primary"} className={`w-full ${showPasskeyOption ? "border border-slate-200" : ""}`}>
-            Sign in
+          <Button type="submit" variant={showPasskeyOption ? "ghost" : "primary"} className={`w-full ${showPasskeyOption ? "border border-slate-200" : ""}`} disabled={formLoading}>
+            {formLoading ? "Signing in…" : "Sign in"}
           </Button>
         </div>
       </form>
