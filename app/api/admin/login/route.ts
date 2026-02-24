@@ -21,8 +21,9 @@ export async function POST(request: NextRequest) {
   const csrfToken = String(formData.get("csrf_token") ?? "");
   const csrfValid = await validateCsrfToken(csrfToken);
   if (!csrfValid) {
-    return NextResponse.redirect(
-      new URL("/admin/login?error=invalid", request.url),
+    return NextResponse.json(
+      { error: "Invalid request. Please refresh and try again." },
+      { status: 400 },
     );
   }
 
@@ -30,8 +31,9 @@ export async function POST(request: NextRequest) {
   const password = String(formData.get("password") ?? "");
 
   if (!email || !password) {
-    return NextResponse.redirect(
-      new URL("/admin/login?error=invalid", request.url),
+    return NextResponse.json(
+      { error: "Email and password are required." },
+      { status: 400 },
     );
   }
 
@@ -42,8 +44,9 @@ export async function POST(request: NextRequest) {
       userAgent,
       metadata: { email },
     });
-    return NextResponse.redirect(
-      new URL("/admin/login?error=invalid", request.url),
+    return NextResponse.json(
+      { error: "Account temporarily locked. Please try again later." },
+      { status: 429 },
     );
   }
 
@@ -59,8 +62,9 @@ export async function POST(request: NextRequest) {
       userAgent,
       metadata: { email, reason: "user_not_found" },
     });
-    return NextResponse.redirect(
-      new URL("/admin/login?error=invalid", request.url),
+    return NextResponse.json(
+      { error: "Invalid email or password." },
+      { status: 401 },
     );
   }
 
@@ -74,8 +78,9 @@ export async function POST(request: NextRequest) {
       adminUserId: admin.id,
       metadata: { email, reason: "wrong_password" },
     });
-    return NextResponse.redirect(
-      new URL("/admin/login?error=invalid", request.url),
+    return NextResponse.json(
+      { error: "Invalid email or password." },
+      { status: 401 },
     );
   }
 
@@ -89,5 +94,5 @@ export async function POST(request: NextRequest) {
     adminUserId: admin.id,
   });
 
-  return NextResponse.redirect(new URL("/admin/listings", request.url));
+  return NextResponse.json({ success: true, redirectTo: "/admin/listings" });
 }

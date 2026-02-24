@@ -88,27 +88,19 @@ export function AdminLoginForm({ error }: AdminLoginFormProps) {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         body: formData,
-        redirect: "manual",
       });
 
-      if (res.type === "opaqueredirect" || res.status === 307 || res.status === 302) {
-        router.push("/admin/listings");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setFormError(data.error || "Invalid email or password.");
+        return;
+      }
+
+      if (data.success) {
+        router.push(data.redirectTo || "/admin/listings");
         router.refresh();
-        return;
       }
-
-      if (res.redirected) {
-        const url = new URL(res.url);
-        if (url.searchParams.get("error")) {
-          setFormError("Invalid email or password.");
-        } else {
-          router.push(url.pathname);
-          router.refresh();
-        }
-        return;
-      }
-
-      setFormError("Invalid email or password.");
     } catch (err) {
       setFormError("An error occurred. Please try again.");
     } finally {
